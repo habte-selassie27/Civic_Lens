@@ -1,0 +1,30 @@
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Secrets and local env — never committed
+.env
+
+# Dependencies and build output
+node_modules
+/frontend/dist/
+*.compiled.js
+
+# Python bytecode and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+.pytest_cache/
+
+/context
+/frontend/.next
+/frontend/bun.lock
