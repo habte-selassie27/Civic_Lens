@@ -1,0 +1,92 @@
+/**
+ * Design tokens — UI-CivicLens section 2.
+ *
+ * The vernacular is the public record: citations, footnotes, filing stamps,
+ * reading rooms, margin notes. Two deliberate choices carry the whole tone:
+ *
+ *   contradicts is PLUM, not red   -> never reads as an alarm
+ *   inconclusive is GRAPHITE, not amber -> "no determination", not "bad"
+ *
+ * Nothing in this file may introduce a warning/red semantic. If a future
+ * contributor reaches for `--danger`, that is the design failing.
+ */
+
+:root {
+  /* -- palette (section 2.1) ------------------------------------------------ */
+  --microfiche: #ebefee; /* page background — cool grey-green */
+  --record-ink: #1b2430; /* text, headings */
+  --citation: #2a5da8; /* links, primary actions, focus ring */
+  --verdigris: #2d7a68; /* evidence supports */
+  --plum: #78396a; /* evidence contradicts */
+  --graphite: #5c6672; /* inconclusive — neutral on purpose */
+  --rule: #c5cfcd; /* borders, dividers */
+  --sheet: #ffffff; /* document surfaces */
+
+  /* -- derived ink (same hues, for text on --sheet and --microfiche) --------
+     --ink-faint is darkened from the obvious #6B7783: that value is 3.94:1 on
+     --microfiche and fails WCAG AA (4.5:1) for hint text, which sits on the
+     page background in .hint and .field__hint. This value measures 4.76:1 on
+     --microfiche and 5.52:1 on --sheet. Verified by tests/contrast.test.ts. */
+  --ink-strong: #16202b;
+  --ink-muted: #4a5561;
+  --ink-faint: #5f6a75;
+
+  /* Control boundaries. WCAG 1.4.11 requires 3:1 for the edge of an
+     interactive control; --rule (1.59:1 on --sheet) is for decorative and
+     structural rules only, which are exempt. Form inputs use this instead.
+     Measures 3.74:1 on --sheet and 3.23:1 on --microfiche. */
+  --control-rule: #788786;
+
+  /* -- tinted surfaces (2% mixes of the palette into --sheet) --------------- */
+  --verdigris-tint: #f0f6f4;
+  --plum-tint: #f7f1f5;
+  --graphite-tint: #f2f4f5;
+  --citation-tint: #eef2f9;
+
+  /* -- focus (section 10: 3:1 against adjacent colors) ---------------------- */
+  --focus-ring: 0 0 0 2px var(--microfiche), 0 0 0 4px var(--citation);
+
+  /* -- type (section 2.2) --------------------------------------------------- */
+  --font-document: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-interface: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* -- scale: 14 / 16 / 18 / 22 / 28 / 40 ---------------------------------- */
+  --t-14: 0.875rem;
+  --t-16: 1rem;
+  --t-18: 1.125rem;
+  --t-22: 1.375rem;
+  --t-28: 1.75rem;
+  --t-40: 2.5rem;
+
+  /* -- shape (section 2.3: hierarchy, not one radius everywhere) ------------- */
+  --radius-chip: 2px; /* chips — nearly square, like a rubber stamp */
+  --radius-control: 3px; /* inputs, buttons */
+  --radius-panel: 4px; /* panels */
+  --radius-sheet: 2px; /* document surfaces */
+
+  /* -- rhythm --------------------------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --measure: 72ch; /* section 2.2: line length under 80 characters */
+  --tap: 44px; /* section 10: minimum touch target */
+
+  /* -- motion (section 2.3: only in response to action) --------------------- */
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+  --fast: 120ms;
+  --calm: 220ms;
+
+  /* -- document grammar ----------------------------------------------------- */
+  --sheet-left-rule: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --fast: 0ms;
+    --calm: 0ms;
+  }
+}
