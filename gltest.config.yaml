@@ -8,5 +8,10 @@ networks:
 
 paths:
   contracts: "contracts"
+  # gltest rmtree's this directory at every session start, so it MUST NOT be the
+  # repo's `artifacts/` — that holds the committed screenshot evidence pack and
+  # was silently wiped by an integration run. A dedicated directory keeps the
+  # two apart.
+  artifacts: ".gltest-artifacts"
 
 environment: .env

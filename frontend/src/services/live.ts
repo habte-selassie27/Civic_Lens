@@ -9,7 +9,14 @@
 import CivicLens from "@/genlayer/CivicLens";
 import { CONTRACT_ADDRESS, FALLBACK_CONSTANTS, READ_METHODS, WRITE_METHODS } from "@/config/contracts";
 import { RPC_URL } from "@/config/network";
-import type { CommitmentSummary, ContractConstants } from "@/domain/types";
+import type {
+  ChallengeRecord,
+  Commitment,
+  CommitmentSummary,
+  ContractConstants,
+  EvidenceItem,
+  Outcome,
+} from "@/domain/types";
 import type { ReceiptLike } from "@/domain/finality";
 import type {
   CivicLensReads,
@@ -18,6 +25,7 @@ import type {
   CreateCommitmentInput,
   OpenChallengeInput,
   SubmitEvidenceInput,
+  SupersedeCommitmentInput,
   TxHash,
 } from "./types";
 
@@ -63,10 +71,36 @@ class LiveService implements CivicLensReads, CivicLensWrites {
     return { commitment, evidence, rounds, outcome, challenges };
   }
 
+  // Granular reads: one contract call each, for bounded-window scans.
+
+  async getCommitment(commitmentId: number): Promise<Commitment> {
+    return this.contract.getCommitment(commitmentId);
+  }
+
+  async getEvidence(commitmentId: number): Promise<EvidenceItem[]> {
+    return this.contract.getEvidence(commitmentId);
+  }
+
+  async getOutcome(commitmentId: number): Promise<Outcome> {
+    return this.contract.getOutcome(commitmentId);
+  }
+
+  async getChallenges(commitmentId: number): Promise<ChallengeRecord[]> {
+    return this.contract.getChallenges(commitmentId);
+  }
+
   // -- writes --------------------------------------------------------------
 
   createCommitment(input: CreateCommitmentInput): Promise<TxHash> {
     return this.contract.createCommitment(input);
+  }
+
+  supersedeCommitment(input: SupersedeCommitmentInput): Promise<TxHash> {
+    return this.contract.supersedeCommitment(input);
+  }
+
+  withdrawCommitment(commitmentId: number): Promise<TxHash> {
+    return this.contract.withdrawCommitment(commitmentId);
   }
 
   submitEvidence(input: SubmitEvidenceInput): Promise<TxHash> {

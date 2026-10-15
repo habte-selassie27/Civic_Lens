@@ -256,3 +256,275 @@ BLOCKED:
 - Bradbury/Asimov deployment: faucet claim is browser-based.
 - Rubric Mapping table: AGENTS §22 makes it conditional on published criteria;
   the builder portal exposes none, so it is not written.
+
+## Session 5 — 2026-10-15 — contract hardening from external review
+
+A detailed review of `contracts/civic_lens.py` was supplied. Every claim was
+verified against the code before acting; three "verify before trusting" items
+turned out to be **already settled** by the saved schema and the passing
+integration run, and are recorded as such rather than re-litigated.
+
+VERIFIED-BEFORE-ACTING (not taken on trust):
+- `_valid_date("2024-02-30")` → `True`, `_valid_date("2023-02-29")` → `True`,
+  `_valid_date("2024-04-31")` → `True`. Confirmed.
+- `json.loads('{"x": NaN}')` → `{'x': nan}`; `int(float("inf"))` raises a bare
+  `OverflowError`. Confirmed.
+- `review_pending` is in `STATUSES` and read in a branch but never assigned.
+  Confirmed dead.
+- `target` / `new_evidence_ids` are stored and never read by `request_review`.
+  Confirmed.
+- `DynArray[u32]` as a public parameter: the SAVED schema already records
+  `["new_evidence_ids", [{"$rep": "int"}]]`, and gate 3 passed against the
+  deployed contract — so this concern is resolved, not open.
+- Storage dataclasses built with Python list literals, `gl.message_raw
+  ["datetime"]`, `gl.nondet.web.get`, `exec_prompt(response_format="json")`,
+  and calling public `create_commitment` from `supersede_commitment` are all
+  exercised by the 10 passing integration tests against the live network.
+
+FIXED — no public API change:
+1. **`_valid_date` is now a real calendar check** with leap-year logic.
+   Previously 2024-02-30 and 2024-04-31 were accepted into a window that
+   decides which evidence counts.
+2. **`_is_finite_number` / `_is_int` guards** on every numeric input and every
+   LLM figure. `NaN`/`Infinity` now yield a stable `EXPECTED`/`LLM_ERROR`
+   instead of a raw `OverflowError`.
+3. **SSRF denylist** (`_url_is_fetchable`): loopback, RFC1918, link-local,
+   CGNAT, `.internal`/`.local`, embedded credentials, non-http(s) schemes —
+   applied at submission AND at fetch. Validators were previously steered
+   wherever any submitter pointed.
+4. **Evidence fences**: documents are wrapped in `<<<EVIDENCE_DOCUMENT id=N>>`
+   and any fence-like sequence inside a document is neutralised, so a hostile
+   document can no longer close its own block.
+5. **Out-of-window evidence is excluded from the prompt text** entirely, not
+   just listed as uncitable.
+6. **`unit_hint` deleted.** It told the model to use the FIRST threshold
+   criterion's unit for every numeric criterion. Each criterion line now
+   carries its own unit and the prompt says so.
+7. **`review_incomplete` reason added.** Model failures (missing criterion,
+   unknown enum) were reported as `criterion_ambiguous`, which told a reader
+   their criterion's wording was unclear when the review had simply glitched —
+   a false criticism of the subject.
+8. **Numeric verdicts derived in code.** The model extracts the figure; the
+   arithmetic supplies the status. A single inconsistent verdict no longer
+   fails the whole review with `LLM_ERROR` — it is corrected. An inconclusive
+   verdict is deliberately NOT promoted from a figure (a wrong promotion
+   manufactures a finding; a lost promotion stays honestly inconclusive).
+9. **Content pipeline**: HTML chrome dropped (nav/header/footer/aside/form/
+   svg/iframe/script/style/noscript/button/select), budget raised to 6 000
+   chars from 1 500, and **keyword-directed passage selection** replaces
+   head-truncation, so figures deep in a report are visible.
+10. **Binary detection**: PDF/zip/gzip magic numbers and >5% control characters
+    map to `evidence_unavailable` instead of feeding byte soup to the model.
+11. **Dead code removed**: `update_criteria` (which could only ever revert) is
+    gone, so the contract is now **13 methods**. Frontend service, schema
+    constants, tests and docs updated to match.
+12. **`_figures_close` comment corrected** — it claimed a 10 milli floor that
+    the code never had.
+
+NEW TESTS: `tests/direct/test_hardening.py` (28 cases) covering the calendar,
+finite-number guards, SSRF allow/deny lists, fence neutralisation, binary
+detection, and passage-selection determinism. It loads the REAL contract source
+with a temporary `genlayer` stub that is installed and then restored — a
+permanent `sys.modules` entry shadowed the real SDK for every other test module
+(caught: 67 spurious failures) and is now scoped to a context manager.
+
+BUG FOUND IN MY OWN NEW CODE: the first version of `_select_passages` appended
+chunks until the budget overflowed and then trimmed in document order, which
+dropped the highest-scoring chunk whenever a later one overflowed — returning
+pure filler. Caught by the determinism test. Fixed to test fit before appending.
+
+PROOF:
+- Gate 1: `genvm-lint check contracts/civic_lens.py --json` → `ok: true`,
+  `CivicLens, 13 methods` (7 views / 6 writes).
+- Gate 2: `pytest tests/direct/ -q` → **113 passed** (was 85).
+- Gate 4: frontend `tsc --noEmit` clean; `vitest run` → **135 passed**.
+- Gate 3 (integration) NOT re-run: it needs studionet and takes ~7 minutes,
+  and the changed prompt text means its LLM mocks would need re-checking. It
+  was last green at 10 passed on the pre-hardening build.
+
+STILL OPEN — all require a public API change and therefore a redeploy:
+- **Must fix #1 `evidence_cutoff`**: separating "period the commitment covers"
+  from "latest publish date accepted". Highest value of the open items: most
+  real reports are published AFTER the period they describe, so today they are
+  ineligible and produce false `inconclusive`.
+- **Must fix #2** LLM-extracted publication date, with validators agreeing on
+  it, so eligibility stops trusting a self-declared (or omitted) date.
+- **Must fix #3** `summary` is stored on-chain with no consensus check; free
+  text from a model that may have read an injected document is a fairness risk.
+- **Must fix #4** review triggering: registrant-only, runnable before the
+  period ends (burning one of 3 rounds), no `pending` state.
+- **Must fix #6/#7** evidence-slot griefing; `subject_address` and a reserved
+  challenge slot for the subject.
+- **Should fix** `superseded_by` in the view, so the UI can show a version
+  chain and criteria-shopping via supersede is visible.
+
+NEXT: decide on the API-changing batch above. It invalidates the deployed
+address `0x96f373…62183F9f`, requires a fresh `genlayer deploy` +
+`genlayer schema`, and a matching frontend update.
+
+## Session 6 — 2026-10-15 — second external review: challenge flow, retrieval status, SSRF breadth
+
+A second review of `contracts/civic_lens.py` was supplied. Each finding was
+checked against the code first; the two P0s were real, and are fixed here.
+
+DONE (P0):
+1. **Challenges now reach the review.** `open_challenge` stored `target`,
+   `grounds` and `new_evidence_ids`, but `_build_payload`/`_build_prompt`
+   never read them — a recorded challenge could not influence the round it
+   opened. The payload now carries the open challenge and the prompt (a)
+   states the round was challenge-triggered, (b) names the disputed criterion
+   or the whole outcome, (c) fences the **grounds as DATA and labels them a
+   claim, not evidence**, and (d) marks the attached evidence as NEW EVIDENCE.
+   The prompt explicitly says a challenge by itself does not change a verdict.
+2. **Per-source retrieval status is tracked and persisted.** `_fetch_texts`
+   collapsed every failure to an empty string. `_fetch_document` now returns a
+   status (`fetched`/`unreachable`/`http_error`/`blocked`/`unsupported_format`/
+   `empty`); a new `RetrievalRecord` is stored on every `RoundRecord`; the
+   prompt shows the status so an unreadable source is never read as evidence;
+   and `get_rounds` exposes it. Retrieval status is deliberately NOT a
+   consensus field (the network differs between nodes; equivalence is judged
+   on verdicts) — it is taken from the leader that achieved consensus.
+
+DONE (P1):
+3. **SSRF screening breadth.** The host check now parses decimal/octal/hex
+   IPv4 integer forms (`2130706433`, `0x7f.0.0.1`, `0177.0.0.1`, `127.1`),
+   expands IPv6 with `::`, folds embedded IPv4 (mapped `::ffff:7f00:1` and
+   compatible `::7f00:1`) into the range check, and blocks ULA `fc00::/7` and
+   link-local `fe80::/10`. The authority parser now rejects embedded
+   credentials, malformed/oversized ports and stray colons instead of falling
+   back to a fetch. Statement links are screened at registration too.
+4. **Provenance surfaced.** `get_evidence` adds `published_date_verified:
+   false` (a declared date is not a proven one); `get_rounds` adds the
+   retrieval roster and the round's `data_mode`.
+5. **Field semantics stated and tested.** `get_constants` returns
+   `date_semantics` (ISO calendar dates, date-only; timezone does not shift
+   the window), `threshold_semantics` (fixed-point milli-units, gte/lte
+   inclusive) and `data_mode_semantics` (provenance label only; does not change
+   behavior, so a sample run exercises the live code path).
+
+Honest limitation kept: the SSRF check is string-level and cannot see through
+DNS resolution or an HTTP redirect to an internal host — stated in the code,
+`docs/equivalence-design.md` and the README, not claimed as solved.
+
+NEW TESTS: `tests/direct/test_retrieval_and_challenge.py` (12 cases) —
+challenge grounds/new-evidence reach the prompt, whole-outcome challenge, a
+challenge alone cannot flip a verdict, retrieval statuses recorded per source,
+partial failure recorded and not contradiction, all-sources-dead records
+nothing, statement retrieval, unverified-date label, round data_mode, constants
+semantics, blocked statement rejected. `test_hardening.py` gained encoded-IP and
+malformed-authority cases (now 20 blocked / 7 allowed URLs plus host-parser
+units).
+
+PROOF:
+- Gate 1: `genvm-lint check contracts/civic_lens.py --json` → `ok: true`,
+  `CivicLens, 13 methods` (7 views / 6 writes).
+- Gate 2: `pytest tests/direct/ -q` → **147 passed** (was 113).
+- Gate 3: `.venv/bin/gltest tests/integration/test_civic_lens.py --network
+  studionet -q` → **8 passed, 2 failed, 339.71s**. Both failures were
+  `DeploymentError ... 502: Bad gateway` from the Studio API during
+  `eth_estimateGas` (infrastructure, not the contract); retried individually →
+  **2 passed in 91.05s**, so the suite is **10/10** with the same transient
+  502 pattern recorded in Session 2. The challenge round and prompt-keyed
+  `Criteria:` mocks are unchanged and pass against the live network.
+
+NEXT: redeploy (the new storage fields require a fresh `genlayer deploy` +
+`genlayer schema`) and update the frontend `RoundRecord`/`EvidenceItem` types
+with `retrieval`, `data_mode` and `published_date_verified`.
+
+BLOCKED: a redeploy needs a funded account if targeting Bradbury/Asimov; the
+new storage fields invalidate the currently deployed address.
+
+## Session 7 — 2026-10-15 — real data on chain; four defects found by running it
+
+DONE:
+- **Deployed the current contract and populated it with real, working data.** The
+  previous deployment was the pre-hardening 14-method build (its `get_evidence`
+  returned no `declared_source_class`), so the app was reading a contract that
+  predated the whole session. Redeployed and drove real transactions from the CLI:
+  four commitments, all reviewed by real consensus against real public WHO fact
+  sheets. Deployment `0x07d77BF87b8c76A0d6A6F925bAA18cae2f098B12`, deploy tx
+  `0x0cf870f5…19e4a`. Full record in docs/deployment.md.
+- **Four contract/UI defects found ONLY by running against real pages.** None were
+  visible to any test, because every test used fixture bodies without entities and
+  a single fixed figure.
+  1. `_strip_html` never decoded HTML entities. WHO's page says `4.2&nbsp;million`;
+     the model quotes "4.2 million"; the stored text contained `&nbsp;`, so the
+     verbatim-quote check failed and CORRECT numeric findings were demoted to
+     `figure_unverified`. Added `_decode_entities` (two passes, fixed table,
+     numeric refs), wired into `_strip_html` after tag removal and before
+     whitespace collapsing.
+  2. My own prompt's worked examples (`'4.2 million' -> 4200000`) told the model
+     to ignore the criterion's unit, so the ledger displayed **"4200 million
+     deaths"** for a figure of 4.2 million. The numeric prompt block now prints
+     each criterion's unit and threshold and states the unit arithmetic
+     explicitly ("4.2 in that unit, so figure_milli is 4200 — NOT 4200000").
+  3. `str(frac).rstrip("0")` rendered 4050 milli as `4.5` instead of `4.05`
+     (no zero-padding). Fixed in both places it appeared, added `_milli_text`,
+     and documented the padding rule so a third occurrence is less likely.
+  4. `.sr-only` was `position:absolute; white-space:nowrap` with no inset. Inside
+     a horizontally scrolled data table it anchored far to the right and — being
+     absolutely positioned — was not clipped by the scroll container, silently
+     widening the page from 360px to 385px. Fixed with `left/top: 0` and
+     `clip-path`. Also fixed `.table-wrap`, whose `overflow-x:auto` never engaged
+     because a flex child defaults to `min-width:auto`.
+- **Figure verification extended to scale words.** A report saying "4.2 million"
+     and a criterion carrying 4,200,000 milli-units describe the same measurement;
+     without /1e3, /1e6 and /1e9 renderings every large-magnitude numeric
+     criterion demoted to `figure_unverified` for a cosmetic reason.
+- **Bundled demo rebuilt on real data, split by provenance.** Four records are now
+     faithful replays of recorded on-chain rounds (real subject, real document,
+     real verdict, creating tx linked). Four remain authored illustrations for edge
+     cases no real run produced; those use fictional subjects and `sample://`
+     references that render as plain text and are never clickable, because a
+     link to a document nobody read is a fake citation.
+- New tooling: `scripts/save-schema.mjs` (regenerates the schema and FAILS if
+  `frontend/src/config/contracts.ts` drifts from the deployed method names),
+  `scripts/dump-chain.mjs` (dumps live state as JSON for faithful replays).
+- **`gltest` was silently deleting the committed evidence pack.** Its pytest
+  plugin calls `shutil.rmtree()` on the configured artifacts directory at every
+  session start, and `gltest.config.yaml` left that at the default `artifacts/` —
+  the same path as the screenshots. An integration run wiped 17 committed files
+  and it looked like a git problem. Pointed `paths.artifacts` at
+  `.gltest-artifacts`, added it to `.gitignore`, and re-ran the suite to confirm
+  the screenshots survive a full session (they do).
+
+PROOF:
+```
+genvm-lint    contracts/civic_lens.py -> ok (13 methods: 7 views, 6 writes)
+direct        pytest tests/direct/ -q  -> 184 passed
+integration   gltest --network studionet -> 10 passed in 433.82s
+frontend      vitest run -> 272 passed (28 files) · tsc --noEmit clean · vite build ok
+responsive    11/11 routes: scrollWidth == clientWidth == 360 (no overflow)
+```
+- The four defects each carry a regression test: entity decoding (12 cases),
+  figure verification (18 cases incl. scale words and the `4.05` remainder),
+  `_milli_text` (6 cases), and the layout check is enforced by
+  `artifacts/capture.mjs`, which fails the run on horizontal overflow.
+- Live outcomes: #1 `supported` with `figure_milli: 4200`, `figure_verified: true`;
+  #2 `supported` while a PDF recorded `unsupported_format` and a dead link
+  `http_error`; #3 `supported`; #4 `supported` after a real challenge round that
+  considered new evidence and kept the prior finding.
+- Screenshots recaptured at 1280px and 360px from the live deployment.
+
+NEXT:
+- Drive the frontend write path from a connected browser wallet (all six write
+  methods are proven from the CLI, not the browser).
+- Bradbury/Asimov deployment (M7) — the faucet claim is browser-based, so it needs
+  the user.
+
+BLOCKED:
+- Nothing on the critical path. Standing design gaps, unchanged and still open:
+  `request_review` is registrant-only and may be called before the evaluation
+  period ends; evidence-slot griefing remains (`MAX_ROUNDS` x
+  `MAX_EVIDENCE_PER_SUBMITTER` can exceed `MAX_EVIDENCE`); there is no
+  `subject_address`; and the `reconsidered` invariant still hard-fails a challenge
+  round if the model omits that one flag.
+
+NOTE (challenge semantics changed):
+- `test_challenge_round_changes_outcome` could no longer pass as written. It opened
+  a challenge with NO new evidence and expected the next round to flip the
+  finding; the contract forbids exactly that (grounds are a claim, not evidence).
+  The test now attaches the new evidence id and sets `reconsidered=True`. Worth
+  confirming this is the intended product rule: a challenger who attaches nothing
+  pays for a round and sees nothing move.
+

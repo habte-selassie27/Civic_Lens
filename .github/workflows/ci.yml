@@ -39,3 +39,18 @@ jobs:
           node-version: 20
       - run: npm ci
       - run: cd frontend && npm run lint && npm test
+
+  schema-drift:
+    # The frontend transcribes contract method names by hand. This job fails a
+    # PR when the contract source, the saved schema, and the frontend config
+    # disagree — instead of the first read failing in a reviewer's browser.
+    # Offline only: the live deployed-schema check stays a release step.
+    name: Schema Drift Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --test scripts/save-schema.test.mjs
+      - run: node scripts/save-schema.mjs --check

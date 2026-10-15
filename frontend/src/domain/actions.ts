@@ -9,6 +9,9 @@
  *                   registrant only
  *   open_challenge   allowed in outcome_accepted, round < MAX_ROUNDS,
  *                   and at most one per party
+ *   withdraw         registrant only, evidence_open only (terminal)
+ *   supersede        registrant only, not already superseded or withdrawn;
+ *                   the only way to change criteria
  *
  * The contract is authoritative and will re-check all of this. The client
  * check exists so the UI can explain a disabled control instead of offering a
@@ -176,6 +179,79 @@ export function canOpenChallenge(ctx: ActionContext): ActionAvailability {
     return {
       enabled: false,
       reason: `The contract allows ${constants.max_challenges_per_party} challenge per party, and you have used it.`,
+    };
+  }
+  return OK;
+}
+
+/**
+ * Shared context for the two registrant-only lifecycle actions. Deliberately
+ * narrower than ActionContext: neither withdraw nor supersede consults the
+ * contract's bounds, so callers need not supply them.
+ */
+export interface RegistrantActionContext {
+  commitment: Commitment;
+  /** Whether this browser's account can write at all. */
+  writesAvailable: boolean;
+  /** True when this account is the registrant. */
+  isRegistrant: boolean;
+}
+
+export function canWithdraw(ctx: RegistrantActionContext): ActionAvailability {
+  const guard = sampleGuard(ctx.writesAvailable, ctx.commitment);
+  if (guard) return guard;
+
+  const { commitment: c } = ctx;
+
+  if (!ctx.isRegistrant) {
+    return {
+      enabled: false,
+      reason: "Only the registrant who registered this commitment can withdraw it.",
+    };
+  }
+  // Contract rule: withdraw_commitment accepts only evidence_open.
+  if (c.status === "withdrawn") {
+    return { enabled: false, reason: "This commitment is already withdrawn." };
+  }
+  if (c.status === "superseded") {
+    return {
+      enabled: false,
+      reason: "A newer version replaced this commitment, so there is nothing to withdraw.",
+    };
+  }
+  if (c.status !== "evidence_open") {
+    return {
+      enabled: false,
+      reason: "Withdrawal is only possible while the evidence window is open.",
+    };
+  }
+  return OK;
+}
+
+export function canSupersede(ctx: RegistrantActionContext): ActionAvailability {
+  const guard = sampleGuard(ctx.writesAvailable, ctx.commitment);
+  if (guard) return guard;
+
+  const { commitment: c } = ctx;
+
+  if (!ctx.isRegistrant) {
+    return {
+      enabled: false,
+      reason: "Only the registrant who registered this commitment can create a new version.",
+    };
+  }
+  // Contract rule: supersede_commitment rejects an already superseded or
+  // withdrawn record; every other status may be superseded.
+  if (c.status === "superseded") {
+    return {
+      enabled: false,
+      reason: "A newer version of this commitment already exists.",
+    };
+  }
+  if (c.status === "withdrawn") {
+    return {
+      enabled: false,
+      reason: "This commitment was withdrawn. Register a new commitment instead.",
     };
   }
   return OK;

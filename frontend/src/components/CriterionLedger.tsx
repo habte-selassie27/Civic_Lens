@@ -31,6 +31,7 @@ import { REASON_CODES } from "@/domain/types";
 import { displayUnit, formatDate, formatMilli, thresholdPhrase } from "@/domain/format";
 import { ResultChip } from "./ResultChip";
 import { ExternalMark } from "./Marks";
+import { isFetchableSourceUrl, SourceLink } from "./SourceLink";
 
 /** Excerpts are supplied by the caller and are always from the record. */
 export interface EvidenceExcerpt {
@@ -218,6 +219,36 @@ export function CriterionLedger({
                 </details>
               )}
 
+              {/* --- the passage the verdict rests on ------------------------- */}
+              {result?.source_quote && (
+                <div>
+                  <p className="ledger__sub">Passage this rests on</p>
+                  <blockquote className="excerpt">{result.source_quote}</blockquote>
+                  <p className="hint">
+                    Copied verbatim from source #{result.source_evidence_id} and checked against
+                    the document the review read.
+                    {criterion.has_threshold && !result.figure_verified && (
+                      <>
+                        {" "}
+                        This figure was <strong>not</strong> confirmed in that passage, so the
+                        verdict is reported as inconclusive.
+                      </>
+                    )}
+                  </p>
+                </div>
+              )}
+
+              {/* --- a challenge round kept the previous finding --------------- */}
+              {result?.held_from_prior && (
+                <div className="resolution">
+                  <p>
+                    <span className="resolution__key">Kept from the previous round:</span> a
+                    challenge was opened on this criterion, but the new review cited no evidence
+                    added since that round, so the earlier finding stands.
+                  </p>
+                </div>
+              )}
+
               {/* --- reason ------------------------------------------------- */}
               <div>
                 <p className="ledger__sub">Reason</p>
@@ -275,9 +306,9 @@ function EvidenceLine({
     <div className="ev">
       <div className="ev__body">
         <p className="ev__title">
-          <a href={item.url} target="_blank" rel="noopener noreferrer">
-            {titleOf(item.url)} <ExternalMark />
-          </a>
+          <SourceLink url={item.url}>
+            {titleOf(item.url)} {isFetchableSourceUrl(item.url) && <ExternalMark />}
+          </SourceLink>
         </p>
         <p className="ev__meta">
           <span>{EVIDENCE_TYPE_LABEL[item.evidence_type] ?? item.evidence_type}</span>

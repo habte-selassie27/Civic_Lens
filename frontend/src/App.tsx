@@ -23,7 +23,11 @@ const Demo = lazy(() => import("@/pages/Demo"));
 const Commitments = lazy(() => import("@/pages/Commitments"));
 const CommitmentNew = lazy(() => import("@/pages/CommitmentNew"));
 const CommitmentDetail = lazy(() => import("@/pages/CommitmentDetail"));
+const Versions = lazy(() => import("@/pages/Versions"));
 const Rounds = lazy(() => import("@/pages/Rounds"));
+const Activity = lazy(() => import("@/pages/Activity"));
+const Stats = lazy(() => import("@/pages/Stats"));
+const Status = lazy(() => import("@/pages/Status"));
 const HowItWorks = lazy(() => import("@/pages/HowItWorks"));
 const Fairness = lazy(() => import("@/pages/Fairness"));
 
@@ -112,7 +116,12 @@ export function App() {
                   <Route path="/commitments" element={<Commitments />} />
                   <Route path="/commitments/new" element={<CommitmentNew />} />
                   <Route path="/commitments/:id" element={<CommitmentDetail />} />
+                  <Route path="/commitments/:id/supersede" element={<CommitmentNew />} />
                   <Route path="/commitments/:id/rounds" element={<Rounds />} />
+                  <Route path="/commitments/:id/versions" element={<Versions />} />
+                  <Route path="/activity" element={<Activity />} />
+                  <Route path="/stats" element={<Stats />} />
+                  <Route path="/status" element={<Status />} />
                   <Route path="/how-it-works" element={<HowItWorks />} />
                   <Route path="/fairness" element={<Fairness />} />
                   <Route path="*" element={<NotFound />} />

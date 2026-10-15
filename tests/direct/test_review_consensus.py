@@ -7,6 +7,8 @@ classification path, and failed-review retry with no recorded outcome.
 """
 
 from tests.direct.conftest import (
+    DOC_BODY,
+    figure_body,
     make_commitment,
     numeric_criteria_json,
     verdict,
@@ -16,7 +18,7 @@ from tests.direct.conftest import (
 EVIDENCE_URL = "https://reports.example.org/2024"
 
 
-def _mock_docs(vm, url_pattern=r".*", body="Report text: emissions were 90 tonnes."):
+def _mock_docs(vm, url_pattern=r".*", body=DOC_BODY):
     vm.mock_web(url_pattern, {"status": 200, "body": body})
 
 
@@ -167,22 +169,22 @@ def test_figure_different_side_of_threshold_rejected(direct_vm, direct_deploy, d
     direct_vm.sender = direct_bob
     c.submit_evidence(cid, EVIDENCE_URL, "government_dataset", "2024-06-01", "")
     direct_vm.sender = direct_alice
-    _mock_docs(direct_vm)
+    _mock_docs(direct_vm, body=figure_body((100000, "co2e_tonnes")))
     _mock_llm(
         direct_vm,
         verdict_json(
-            verdict(1, "supported", "threshold_met", [1], has_figure=True, figure_milli=100000, unit="co2e_tonnes")
+            verdict(1, "supported", "threshold_met", [1], has_figure=True, figure_milli=100000, unit="co2e_tonnes", period_matches=True)
         ),
     )
     c.request_review(cid)
 
     # within tolerance but on the WRONG side of the threshold -> not equivalent
     direct_vm.clear_mocks()
-    _mock_docs(direct_vm)
+    _mock_docs(direct_vm, body=figure_body((99000, "co2e_tonnes")))
     _mock_llm(
         direct_vm,
         verdict_json(
-            verdict(1, "supported", "threshold_met", [1], has_figure=True, figure_milli=99000, unit="co2e_tonnes")
+            verdict(1, "supported", "threshold_met", [1], has_figure=True, figure_milli=99000, unit="co2e_tonnes", period_matches=True)
         ),
     )
     assert direct_vm.run_validator() is False
@@ -287,13 +289,19 @@ def test_partial_unreachable_evidence_degrades_to_unavailable(direct_vm, direct_
     c.submit_evidence(cid, "https://dead.example.org/report", "news_article", "2024-07-01", "")
 
     direct_vm.mock_web(EVIDENCE_URL, {"status": 200, "body": "The report documents 90 tonnes."})
-    # dead.example.org is intentionally unmocked -> web.get fails -> marked
-    # unreachable; the framing check still applies.
+    # dead.example.org is intentionally unmocked -> web.get fails -> the prompt
+    # marks it UNRETRIEVABLE rather than including text.
     direct_vm.mock_llm(
-        r"(?s).*document text could not be retrieved.*",
+        r"(?s).*NOT RETRIEVABLE.*",
         verdict_json(verdict(1, "supported", "supporting_evidence_found", [1])),
     )
     assert c.request_review(cid) == 1
     res = c.get_rounds(cid)[0]["criteria"][0]
     assert res["evidence_used"] == [1]
     assert res["evidence_considered_not_used"] == [2]
+    # The failed source is visible in the recorded retrieval report, so a
+    # reader can tell it was not read rather than judged irrelevant.
+    round_rec = c.get_rounds(cid)[0]
+    statuses = {r["evidence_id"]: r["status"] for r in round_rec["retrieval"]}
+    assert statuses[1] == "fetched"
+    assert statuses[2] == "unreachable"

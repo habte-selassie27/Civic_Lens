@@ -54,8 +54,32 @@ export const REASON_CODES = [
   "source_conflict",
   "criterion_ambiguous",
   "unit_mismatch",
+  "review_incomplete",
+  "figure_unverified",
+  "period_mismatch",
 ] as const;
 export type ReasonCode = (typeof REASON_CODES)[number];
+
+/** Per-source retrieval status recorded on every round (contract RETRIEVAL_*). */
+export const RETRIEVAL_STATUSES = [
+  "fetched",
+  "unreachable",
+  "http_error",
+  "blocked",
+  "unsupported_format",
+  "empty",
+  "unknown",
+] as const;
+export type RetrievalStatus = (typeof RETRIEVAL_STATUSES)[number];
+
+/** Declared source class, derived from the declared evidence type. Unverified. */
+export const SOURCE_CLASSES = [
+  "primary",
+  "self_published",
+  "secondary",
+  "unclassified",
+] as const;
+export type SourceClass = (typeof SOURCE_CLASSES)[number];
 
 export const ROUND_TRIGGERS = ["initial", "challenge"] as const;
 export type RoundTrigger = (typeof ROUND_TRIGGERS)[number];
@@ -95,6 +119,8 @@ export interface Commitment {
   status: CommitmentStatus;
   version: number;
   supersedes: number;
+  /** 0 until a newer version replaces this one (version chain). */
+  superseded_by: number;
   round_count: number;
   challenge_count: number;
   evidence_count: number;
@@ -108,6 +134,8 @@ export interface CommitmentSummary {
   data_mode: DataMode;
   registrant_role: RegistrantRole;
   version: number;
+  /** 0 until a newer version replaces this one (version chain). */
+  superseded_by: number;
   round_count: number;
   evidence_count: number;
   period_start: string;
@@ -118,7 +146,12 @@ export interface EvidenceItem {
   id: number;
   url: string;
   evidence_type: EvidenceType;
+  /** Derived from the declared type; a submitter label, never verified. */
+  declared_source_class: SourceClass;
+  source_class_verified: boolean;
   published_date: string;
+  /** Always false: the contract cannot verify a submitter-declared date. */
+  published_date_verified: boolean;
   note: string;
   submitter: string;
   submitted_at: string;
@@ -134,6 +167,22 @@ export interface CriterionResult {
   figure_milli: number;
   unit: string;
   summary: string;
+  /** Verbatim passage the verdict rests on; "" when none was verified. */
+  source_quote: string;
+  /** Evidence id the verified quote came from; 0 when none. */
+  source_evidence_id: number;
+  /** True only when a numeric figure was tied to a verbatim passage. */
+  figure_verified: boolean;
+  /** True when a challenge round did not change this and the prior was kept. */
+  held_from_prior: boolean;
+}
+
+/** What actually happened when a validator tried to read one source. */
+export interface RetrievalRecord {
+  evidence_id: number;
+  source: "evidence" | "statement";
+  status: RetrievalStatus;
+  url: string;
 }
 
 export interface RoundRecord {
@@ -145,6 +194,8 @@ export interface RoundRecord {
   overall_outcome: ReviewStatus;
   overall_reason: string;
   evidence_considered: number[];
+  retrieval: RetrievalRecord[];
+  data_mode: DataMode;
   evaluated_at: string;
 }
 
@@ -167,6 +218,13 @@ export interface Outcome {
   evaluated_at?: string;
   required_total?: number;
   counts?: OutcomeCounts;
+  /** Criteria whose result a challenge round kept from the previous round. */
+  held_from_prior_count?: number;
+  /** How many sources were fetched vs could not be read. */
+  retrieval_counts?: Partial<Record<RetrievalStatus, number>>;
+  superseded_by?: number;
+  /** The contract's own statement of what an outcome means. */
+  outcome_meaning?: string;
 }
 
 export interface ChallengeRecord {
@@ -187,14 +245,24 @@ export interface ContractConstants {
   max_challenges_per_party: number;
   max_new_evidence_per_challenge: number;
   max_page_size: number;
+  max_quote_len?: number;
   subject_kinds: SubjectKind[];
   registrant_roles: RegistrantRole[];
   data_modes: DataMode[];
   evidence_types: EvidenceType[];
+  source_classes?: Record<string, string>;
   operators: Operator[];
   review_statuses: ReviewStatus[];
   reason_codes: ReasonCode[];
+  retrieval_statuses?: RetrievalStatus[];
   commitment_statuses: CommitmentStatus[];
+  /** Plain-language semantics, authored in the contract and mirrored here. */
+  date_semantics?: string;
+  threshold_semantics?: string;
+  data_mode_semantics?: string;
+  outcome_meaning?: string;
+  challenge_semantics?: string;
+  figure_verification_semantics?: string;
 }
 
 // ---------------------------------------------------------------------------

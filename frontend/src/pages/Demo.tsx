@@ -17,6 +17,8 @@ import { CONTRACT_ADDRESS } from "@/config/contracts";
 import { overallReasonCopy } from "@/domain/copy";
 import { formatDate, formatPeriod } from "@/domain/format";
 import type { Scenario } from "@/domain/fixtures";
+import { PROVENANCE_LABEL, PROVENANCE_NOTE } from "@/domain/copy";
+import { explorerTxUrl } from "@/config/explorer";
 import { CriterionLedger } from "@/components/CriterionLedger";
 import { OutcomePanel } from "@/components/OutcomePanel";
 import { DataModeBadge } from "@/components/DataModeBadge";
@@ -83,7 +85,7 @@ export function Demo() {
                 <span className="scenario__name">
                   {index + 1}. {scenario.name}
                 </span>
-                <DataModeBadge mode="sample" />
+                <span className="tag tag--provenance">{PROVENANCE_LABEL[scenario.provenance]}</span>
               </div>
               <div className="scenario__body">
                 <p className="scenario__tests">{scenario.whatThisTests}</p>
@@ -117,7 +119,18 @@ function ScenarioDetail({ scenario }: { scenario: Scenario }) {
       <div style={{ display: "flex", gap: "var(--space-3)", alignItems: "center", flexWrap: "wrap" }}>
         <h2 id="scenario-heading">{scenario.name}</h2>
         <DataModeBadge mode="sample" />
-        <span className="tag">Replay of a recorded result</span>
+        <span className="tag tag--provenance">{PROVENANCE_LABEL[scenario.provenance]}</span>
+        {explorerTxUrl(scenario.recordedTx ?? "") && (
+          <a
+            className="btn btn--quiet btn--small"
+            href={explorerTxUrl(scenario.recordedTx ?? "")!}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Creating transaction
+            <span className="sr-only"> on the GenLayer Studio explorer (opens in a new tab)</span>
+          </a>
+        )}
         <Link className="btn btn--quiet btn--small" to={`/commitments/${commitment.id}`}>
           Open as a full page
         </Link>
@@ -125,6 +138,8 @@ function ScenarioDetail({ scenario }: { scenario: Scenario }) {
 
       <Banner title="What this tests">
         <p>{scenario.whatThisTests}</p>
+        <p className="hint">{scenario.note}</p>
+        <p className="hint">{PROVENANCE_NOTE[scenario.provenance]}</p>
       </Banner>
 
       <div className="split">

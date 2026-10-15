@@ -20,12 +20,22 @@ import {
   canOpenChallenge,
   canRequestReview,
   canSubmitEvidence,
+  canSupersede,
+  canWithdraw,
   statusSentence,
 } from "@/domain/actions";
 import { FALLBACK_CONSTANTS } from "@/config/contracts";
 import { CONTRACT_ADDRESS } from "@/config/contracts";
-import { EVIDENCE_TYPE_LABEL, STATUS_LABEL, ROLE_LABEL } from "@/domain/copy";
-import { formatDate, formatPeriod, shortenUrl } from "@/domain/format";
+import {
+  EVIDENCE_TYPE_LABEL,
+  OUTCOME_LABEL,
+  RESULT_LABEL,
+  STATUS_LABEL,
+  ROLE_LABEL,
+  RETRIEVAL_LABEL,
+  RETRIEVAL_IS_READ,
+} from "@/domain/copy";
+import { formatDate, shortenUrl } from "@/domain/format";
 import type { Commitment, ContractConstants } from "@/domain/types";
 import { CriterionLedger } from "@/components/CriterionLedger";
 import { OutcomePanel } from "@/components/OutcomePanel";
@@ -35,6 +45,11 @@ import { EvidenceSubmitForm } from "@/components/EvidenceSubmitForm";
 import { ChallengePanel } from "@/components/ChallengePanel";
 import { RoundTimeline } from "@/components/RoundTimeline";
 import { TxStatus } from "@/components/TxStatus";
+import { WindowStrip } from "@/components/WindowStrip";
+import { ConsensusNote } from "@/components/ConsensusNote";
+import { BadgeShare } from "@/components/BadgeShare";
+import { buildAuditPack, auditPackFilename } from "@/domain/auditPack";
+import type { BadgeInput } from "@/domain/badge";
 import { ActionButton } from "@/components/DisabledReason";
 import { CopyField } from "@/components/CopyField";
 import { DocumentMark, ExternalMark } from "@/components/Marks";
@@ -46,6 +61,7 @@ import {
   SampleBanner,
 } from "@/components/Chrome";
 import { reads } from "@/services";
+import { isFetchableSourceUrl, SourceLink } from "@/components/SourceLink";
 
 export function CommitmentDetail() {
   const params = useParams();
@@ -60,6 +76,7 @@ export function CommitmentDetail() {
 
   const tx = useTxLifecycle();
   const [panel, setPanel] = useState<"none" | "evidence" | "challenge">("none");
+  const [auditStatus, setAuditStatus] = useState<string | null>(null);
 
   const commitment = data?.commitment;
   const finality = useFinality(commitmentId);
@@ -89,6 +106,8 @@ export function CommitmentDetail() {
   const evidenceAvail = actionCtx ? canSubmitEvidence(actionCtx) : null;
   const reviewAvail = actionCtx ? canRequestReview(actionCtx) : null;
   const challengeAvail = actionCtx ? canOpenChallenge(actionCtx) : null;
+  const withdrawAvail = actionCtx ? canWithdraw(actionCtx) : null;
+  const supersedeAvail = actionCtx ? canSupersede(actionCtx) : null;
 
   if (isLoading) return <LoadingRegion label="Loading the commitment record" />;
 
@@ -105,6 +124,45 @@ export function CommitmentDetail() {
   const latestRound = data.rounds[data.rounds.length - 1];
   const roundResults = latestRound?.criteria ?? [];
   const hasOutcome = latestRound !== undefined;
+
+  // The share badge repeats the page's own neutral label — never a different
+  // verdict wording — and says "sample data" when the record is a sample.
+  const overall = data.outcome.has_outcome ? data.outcome.overall_outcome : undefined;
+  const badgeInput: BadgeInput = {
+    recordId: commitment.id,
+    subject: commitment.subject,
+    outcome:
+      commitment.status === "withdrawn"
+        ? STATUS_LABEL.withdrawn
+        : commitment.status === "superseded"
+          ? STATUS_LABEL.superseded
+          : overall
+            ? OUTCOME_LABEL[overall]
+            : RESULT_LABEL.pending,
+    tone:
+      overall === "supported"
+        ? "supported"
+        : overall === "contradicted"
+          ? "contradicted"
+          : "neutral",
+    finality:
+      finality.state === "final"
+        ? "final"
+        : finality.state === "accepted"
+          ? "accepted, not final"
+          : "",
+    sample: reads.isSample || commitment.data_mode === "sample",
+    url:
+      typeof window !== "undefined"
+        ? `${window.location.origin}/commitments/${commitment.id}`
+        : "",
+  };
+
+  /** What the review recorded when it tried to read a given source. */
+  const retrievalById = new Map(
+    (latestRound?.retrieval ?? []).map((r) => [r.evidence_id, r.status]),
+  );
+  const retrievalFor = (evidenceId: number) => retrievalById.get(evidenceId);
 
   async function submitEvidence(input: {
     url: string;
@@ -143,6 +201,44 @@ export function CommitmentDetail() {
     if (phase === "accepted" || phase === "final") await refetch();
   }
 
+  async function withdraw() {
+    const w = requireWrites();
+    await tx.start("Withdraw commitment", () => w.withdrawCommitment(commitmentId));
+    const phase = await tx.waitForAcceptance();
+    if (phase === "accepted" || phase === "final") await refetch();
+  }
+
+  /**
+   * One JSON file a journalist or auditor can keep: the record as the contract
+   * returns it, the finality context this browser could verify, and the CLI
+   * commands to re-read the same record themselves.
+   */
+  function downloadAudit() {
+    // Hoisted function, so it re-checks what the render body already knows.
+    if (!data || !commitment) return;
+    const pack = buildAuditPack({
+      bundle: data,
+      dataSource: reads.isSample ? "sample" : "live",
+      contractAddress: CONTRACT_ADDRESS || null,
+      finality: { state: finality.state, hash: finality.hash },
+      votes: finality.votes,
+    });
+    try {
+      const blob = new Blob([JSON.stringify(pack, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = auditPackFilename(commitment.id);
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      URL.revokeObjectURL(url);
+      setAuditStatus("Audit record downloaded.");
+    } catch {
+      setAuditStatus("Download isn't available in this browser.");
+    }
+  }
+
   return (
     <div className="stack-lg">
       {reads.isSample && reads.sampleReason && <SampleBanner reason={reads.sampleReason} />}
@@ -157,6 +253,7 @@ export function CommitmentDetail() {
           <span className="tag">{STATUS_LABEL[commitment.status]}</span>
           {commitment.version > 1 && <span className="tag">Version {commitment.version}</span>}
           <span className="tag">Round {commitment.current_round}</span>
+          <Link to={`/commitments/${commitmentId}/versions`}>Version history</Link>
           {isFetching && <span className="hint">Refreshing…</span>}
         </div>
 
@@ -181,10 +278,16 @@ export function CommitmentDetail() {
           challenges={data.challenges}
         />
 
-        <p className="hint">
-          Evaluation period {formatPeriod(commitment.period_start, commitment.period_end, commitment.timezone)}
-          {commitment.source_guidance ? ` · Source guidance: ${commitment.source_guidance}` : ""}
-        </p>
+        <WindowStrip
+          periodStart={commitment.period_start}
+          periodEnd={commitment.period_end}
+          timezone={commitment.timezone}
+          status={commitment.status}
+          hasOutcome={hasOutcome}
+        />
+        {commitment.source_guidance && (
+          <p className="hint">Source guidance: {commitment.source_guidance}</p>
+        )}
       </header>
 
       {/* ---------------- outcome + rounds ---------------- */}
@@ -197,6 +300,7 @@ export function CommitmentDetail() {
             criteria={commitment.criteria}
             results={roundResults}
           />
+          <ConsensusNote votes={finality.votes} finality={finality.state} />
           {statusSentence(commitment) && <p className="hint">{statusSentence(commitment)}</p>}
         </div>
 
@@ -250,7 +354,10 @@ export function CommitmentDetail() {
         <div className="panel__head">
           <h2 id="evidence-heading">Evidence</h2>
           <span className="hint" style={{ margin: 0 }}>
-            {data.evidence.length} source{data.evidence.length === 1 ? "" : "s"} on file
+            {data.evidence.length} of {constants.max_evidence} sources on file
+            {account
+              ? ` · ${evidenceByAccount} of ${constants.max_evidence_per_submitter} from your account`
+              : ""}
           </span>
           <button
             type="button"
@@ -290,9 +397,10 @@ export function CommitmentDetail() {
                     return (
                       <tr key={item.id}>
                         <td>
-                          <a href={item.url} target="_blank" rel="noopener noreferrer">
-                            {shortenUrl(item.url)} <ExternalMark />
-                          </a>
+                          <SourceLink url={item.url}>
+                            {shortenUrl(item.url)}{" "}
+                            {isFetchableSourceUrl(item.url) && <ExternalMark />}
+                          </SourceLink>
                           {item.note && (
                             <p className="hint" style={{ marginTop: 4 }}>
                               Note (not used by the review): {item.note}
@@ -302,6 +410,11 @@ export function CommitmentDetail() {
                         <td>{EVIDENCE_TYPE_LABEL[item.evidence_type] ?? item.evidence_type}</td>
                         <td className="num">
                           {item.published_date ? formatDate(item.published_date) : "—"}
+                          {!item.published_date_verified && item.published_date && (
+                            <span className="hint" style={{ display: "block", marginTop: 4 }}>
+                              Declared by the submitter; not verified.
+                            </span>
+                          )}
                         </td>
                         <td>
                           <CopyField
@@ -311,9 +424,37 @@ export function CommitmentDetail() {
                           />
                         </td>
                         <td>
-                          <span className="tag">
-                            {used ? "Evaluated" : hasOutcome ? "Not cited" : "Awaiting review"}
-                          </span>
+                          {/*
+                            Retrieval status is what the review actually recorded.
+                            A source that could not be read is NOT "not cited" —
+                            it was never read, which is a different and more
+                            honest thing to say (UI-CivicLens, contract
+                            RETRIEVAL_*).
+                          */}
+                          {retrievalFor(item.id) ? (
+                            <>
+                              <span
+                                className={
+                                  RETRIEVAL_IS_READ[retrievalFor(item.id)!]
+                                    ? "tag"
+                                    : "tag tag--unread"
+                                }
+                              >
+                                {RETRIEVAL_LABEL[retrievalFor(item.id)!]}
+                              </span>
+                              <span className="hint" style={{ display: "block", marginTop: 4 }}>
+                                {used
+                                  ? "Cited in the verdict"
+                                  : hasOutcome
+                                    ? "Read, but not cited"
+                                    : ""}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="tag">
+                              {used ? "Evaluated" : hasOutcome ? "Not cited" : "Awaiting review"}
+                            </span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -329,6 +470,7 @@ export function CommitmentDetail() {
                 constants={constants}
                 existingCount={data.evidence.length}
                 submitterCount={evidenceByAccount}
+                accountKnown={Boolean(account)}
                 disabledReason={evidenceAvail?.enabled ? null : evidenceAvail?.reason}
                 onSubmit={submitEvidence}
                 busy={tx.isBusy}
@@ -368,12 +510,36 @@ export function CommitmentDetail() {
             >
               Open challenge
             </ActionButton>
+
+            <ActionButton
+              variant="quiet"
+              disabledReason={withdrawAvail?.enabled ? null : withdrawAvail?.reason}
+              onClick={() => void withdraw()}
+              busy={tx.isBusy}
+            >
+              Withdraw
+            </ActionButton>
+
+            {supersedeAvail?.enabled ? (
+              <Link
+                className="btn btn--quiet"
+                to={`/commitments/${commitmentId}/supersede`}
+                aria-label={`Create a new version of commitment ${commitmentId}`}
+              >
+                Create new version
+              </Link>
+            ) : (
+              <ActionButton variant="quiet" disabledReason={supersedeAvail?.reason ?? null}>
+                Create new version
+              </ActionButton>
+            )}
           </div>
 
           {tx.phase !== "idle" && (
             <TxStatus
               phase={tx.phase}
               hash={tx.hash}
+              votes={tx.votes}
               error={tx.error}
               onRefresh={() => void tx.refresh()}
               detail={
@@ -462,6 +628,25 @@ export function CommitmentDetail() {
               </p>
             </Banner>
           )}
+
+          <div className="actions" style={{ marginTop: "var(--space-4)" }}>
+            <button type="button" className="btn btn--quiet btn--small" onClick={downloadAudit}>
+              Download audit record (JSON)
+            </button>
+            <span className="hint" style={{ margin: 0 }} role="status">
+              {auditStatus ?? ""}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------------- share ---------------- */}
+      <section className="panel" aria-labelledby="share-heading">
+        <div className="panel__head">
+          <h2 id="share-heading">Share and embed</h2>
+        </div>
+        <div className="panel__body">
+          <BadgeShare input={badgeInput} />
         </div>
       </section>
     </div>

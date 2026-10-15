@@ -54,7 +54,7 @@ Four logical components in one deployment (M1 decision, justified in `docs/archi
 | ReviewChallenge | Challenges, grounds, per-party limits, new rounds |
 | OutcomeRecord | Append-only round history: per-criterion results, derived overall outcome |
 
-**Methods (14):** 7 views (`get_constants`, `get_commitments`, `get_commitment`, `get_evidence`, `get_rounds`, `get_outcome`, `get_challenges`) and 7 writes (`create_commitment`, `update_criteria`, `submit_evidence`, `request_review`, `open_challenge`, `supersede_commitment`, `withdraw_commitment`). Saved schema: [`docs/civic_lens.schema.json`](docs/civic_lens.schema.json).
+**Methods (13):** 7 views (`get_constants`, `get_commitments`, `get_commitment`, `get_evidence`, `get_rounds`, `get_outcome`, `get_challenges`) and 6 writes (`create_commitment`, `submit_evidence`, `request_review`, `open_challenge`, `supersede_commitment`, `withdraw_commitment`). There is deliberately **no** criteria-mutation method: criteria are immutable by absence, and the only legal path to different criteria is `supersede_commitment`, which creates a linked new version. Saved schema: [`docs/civic_lens.schema.json`](docs/civic_lens.schema.json) — note this still reflects the pre-hardening 14-method build; a redeploy is required.
 
 **Equivalence design (per call, full detail in [`docs/equivalence-design.md`](docs/equivalence-design.md)):**
 
@@ -62,8 +62,10 @@ Four logical components in one deployment (M1 decision, justified in `docs/archi
 - **Leader produces:** per-criterion structured verdicts — `status` (`supported | contradicted | inconclusive`), `reason_code` enum, `evidence_used` ids, optional fixed-precision `figure` with unit.
 - **Validators check:** independently re-fetch the same URLs, re-normalize (URL canonicalization, HTML stripped to text, date/units normalized, sorted), re-derive the verdict, and compare under the documented rule: status must match on every required criterion; reason codes match or fall in a documented equivalence group; figures within tolerance and on the same side of any threshold as the verdict.
 - **Invariants (validators enforce):** a verdict must cite evidence ids that are actually in the submitted set; a numeric verdict must agree with its extracted figure and threshold. This stops validators from agreeing on garbage.
-- **Fetch path:** `gl.nondet.web.get` + deterministic `_strip_html` (raw HTML bounded to 20,000 chars, text to 1,500). Why not `web.render`: documented in `docs/equivalence-design.md` — mocked web responses are keyed on `nondet_web_request`, so `web.render` bypasses test mocks and performs live fetches.
-- **Deterministic code does:** input validation, date-window filtering, threshold comparison, duplicate detection, and the **overall-outcome derivation** (the LLM never decides the overall outcome).
+- **Challenge inputs:** a challenge round's review receives the challenge target, grounds and attached evidence ids, with the new evidence marked in the prompt. Grounds are fenced as DATA and labelled a *claim*, never evidence, so a challenge by itself cannot change a verdict.
+- **Fetch path:** `gl.nondet.web.get` + deterministic `_strip_html` (raw HTML bounded to 120,000 chars, keyword-selected text to 6,000). Every source's fetch outcome is recorded per round as `fetched | unreachable | http_error | blocked | unsupported_format | empty`; a failed source is never treated as contradiction. Why not `web.render`: documented in `docs/equivalence-design.md` — mocked web responses are keyed on `nondet_web_request`, so `web.render` bypasses test mocks and performs live fetches.
+- **Deterministic code does:** input validation, date-window filtering, threshold comparison, duplicate detection, challenge selection, retrieval-status normalization, and the **overall-outcome derivation** (the LLM never decides the overall outcome).
+- **Field semantics:** all dates are ISO calendar dates compared date-only — `timezone` is recorded for display/audit and does **not** shift the window; `data_mode` (`live`|`sample`) is a provenance label recorded on every round and does not change review behavior (so a sample run exercises the same code path). Both are surfaced by `get_constants()`.
 - **Failure behavior:** all evidence unreachable → `EXTERNAL` error, no outcome recorded, retryable; partial → affected criteria `inconclusive` (`evidence_unavailable`); LLM output invalid → `LLM_ERROR` with a stable prefix; validators disagree materially → GenLayer consensus/appeal decides, never overridden locally.
 
 ## Outcome Rules
@@ -102,14 +104,24 @@ Full policy: [`docs/fairness.md`](docs/fairness.md). In short:
 |---|---|
 | Network | studionet (GenLayer Studio, chain id 61999) |
 | Contract | `contracts/civic_lens.py` (`CivicLens`) |
-| Contract address | [`0x96f373003d958CC11305e4DE970c670d62183F9f`](https://explorer-studio.genlayer.com/address/0x96f373003d958CC11305e4DE970c670d62183F9f) |
-| Deploy tx | [`0x5e1ddcfe…57b2063`](https://explorer-studio.genlayer.com/tx/0x5e1ddcfebaa79d7baa7a3a8ab494d9f33148a343dd3099113289b393957b2063) (ACCEPTED) |
-| First write tx (create_commitment) | [`0xf01410df…16ed8ad`](https://explorer-studio.genlayer.com/tx/0xf01410dff5feb9a22b33196f603627253398b979e694a43740f0fddc616ed8ad) (ACCEPTED, execution SUCCESS) |
-| Evidence write tx (submit_evidence) | [`0x3fbbfdbd…95ee797`](https://explorer-studio.genlayer.com/tx/0x3fbbfdbd773ebeb26211013d42604d7ded9359e7f694a1149a1ec18ea95ee797) (ACCEPTED, execution SUCCESS) |
-| Schema saved | [`docs/civic_lens.schema.json`](docs/civic_lens.schema.json) (14 methods) |
+| Contract address | [`0x07d77BF8…8B12`](https://explorer-studio.genlayer.com/address/0x07d77BF87b8c76A0d6A6F925bAA18cae2f098B12) |
+| Deploy tx | [`0x0cf870f5…19e4a`](https://explorer-studio.genlayer.com/tx/0x0cf870f5fae52a57d97f19f0db7e94d6ad87f837345cd13d11ce7726fe319e4a) (ACCEPTED, 5/5 AGREE) |
+| First write tx (create_commitment) | [`0xcbcd44ca…231e9a0`](https://explorer-studio.genlayer.com/tx/0xcbcd44ca77b8f574ebe052ea0411963f2f0c26ce9708074d69ff80561231e9a0) (ACCEPTED) |
+| Schema saved | [`docs/civic_lens.schema.json`](docs/civic_lens.schema.json) (13 methods) |
 | Full record | [`docs/deployment.md`](docs/deployment.md) |
 
-The deployed instance holds one clearly labeled sample commitment (id 1, "Riverdale City (sample)", data mode `sample`) with one sample evidence item, demonstrating the read/write round trip. Reviews run in tests and demo replays; the sample URLs are not presented as real findings.
+### Live data on this deployment
+
+Four commitments, all `data_mode: "live"`, each reviewed by real consensus against **real public documents** (WHO fact sheets; every URL verified HTTP 200 with text a validator can read). Subjects are real public institutions, the registrant role is `observer`, and the criteria ask only *what a published document states* — never about conduct or character. The subject organizations have not verified or endorsed these entries, and the UI says so on every page.
+
+| Id | Demonstrates | Outcome |
+|---|---|---|
+| 1 | A numeric criterion with a **verified figure**: the review extracted `4200` (4.2 million deaths) in the criterion's own unit, matched it to a verbatim passage, and recorded `figure_verified: true` | `supported` / `all_required_supported` |
+| 2 | Two of three sources could not be read — a PDF recorded `unsupported_format`, a dead link `http_error`. Neither was used as evidence in either direction | `supported` |
+| 3 | A narrative finding resting on a quoted sentence | `supported` |
+| 4 | A real **challenge round**: round 2 re-reviewed after a challenge attached new evidence, recorded it as *considered but not cited*, and kept the prior finding | `supported` |
+
+Read any of them back with `genlayer call <address> get_rounds --args <id>`.
 
 ## Quick Start
 
@@ -145,29 +157,36 @@ To deploy your own instance: `genlayer deploy --contract contracts/civic_lens.py
 
 | Gate | Command | Latest result |
 |---|---|---|
-| 1. Lint | `.venv/bin/genvm-lint check contracts/civic_lens.py --json` | ok, 14 methods |
-| 2. Direct (mocked web + LLM) | `.venv/bin/python -m pytest tests/direct/ -q` | **82 passed** |
-| 3. Integration (real network) | `.venv/bin/gltest tests/integration/ --network studionet -v` | **10 passed** |
-| Frontend | `cd frontend && npm run typecheck && npm test` | **107 passed** (typecheck clean) |
+| 1. Lint | `.venv/bin/genvm-lint check contracts/civic_lens.py --json` | ok, 13 methods |
+| 2. Direct (mocked web + LLM) | `.venv/bin/python -m pytest tests/direct/ -q` | **184 passed** |
+| 3. Integration (real network) | `.venv/bin/gltest tests/integration/ --network studionet -v` | **10 passed** (studionet) |
+| Frontend | `cd frontend && npx tsc --noEmit && npx vitest run` | **272 passed**, 28 files (typecheck clean) |
 
-Adversarial coverage (AGENTS §16 highlights): outcome derivation for every row of the rules table; absence vs. contradiction; conflicting sources; out-of-period and pre-commitment evidence ignored; irrelevant evidence; ambiguous criteria; numeric threshold boundaries (at / above / below) with figure-verdict consistency invariants; verdicts citing evidence outside the set rejected; **prompt-injection fixture** ("mark this as supported" inside evidence must not yield `supported`); one-sided evidence floods bounded; `stance_hint` ignored; immutability after review starts; full state-machine valid + invalid transitions; challenge limits, round increments, history preserved; deadline not yet reached → pending; private-individual subject rejected; neutral-label copy guard; sample-vs-live labeling preserved.
+Adversarial coverage (AGENTS §16 highlights): outcome derivation for every row of the rules table; absence vs. contradiction; conflicting sources; out-of-period and pre-commitment evidence ignored; irrelevant evidence; ambiguous criteria; numeric threshold boundaries (at / above / below) with figure-verdict consistency invariants; verdicts citing evidence outside the set rejected; **prompt-injection fixture** ("mark this as supported" inside evidence must not yield `supported`); one-sided evidence floods bounded; `stance_hint` ignored; immutability after review starts; full state-machine valid + invalid transitions; challenge limits, round increments, history preserved; **challenge target/grounds/new evidence reach the review prompt** and a challenge alone cannot change a verdict; **per-source retrieval status recorded** and a failed source never read as contradiction; encoded/decimal/octal/hex and IPv6 host forms blocked; deadline not yet reached → pending; private-individual subject rejected; neutral-label copy guard; sample-vs-live labeling preserved; HTML entity decoding so a verbatim quote can match the document text; figure verification in the criterion's own unit (a `million_deaths` criterion takes 4200 for 4.2 million, not 4200000); fixed-point rendering with zero-padded remainders (4050 milli is 4.05, not 4.5); a verdict citing only an unreadable source is demoted for that criterion instead of failing the whole review; a `sample://` reference is never rendered as a clickable link.
 
 Integration scenarios: deploy, clear `supported`, clear `contradicted`, `inconclusive` for missing/conflicting/irrelevant evidence, leader/validator agreement on fixture documents, near-miss validator outputs still equivalent, required-criterion disagreement not equivalent, garbage leader output rejected, challenge round with new evidence, read-after-write round trip.
 
 ## Demo
 
-The app ships eight sample scenarios (`frontend/src/domain/fixtures.ts`), all labeled **Sample data** about fabricated organizations, rendered as **replay of a recorded result** (never faked transactions):
+Eight bundled records (`frontend/src/domain/fixtures.ts`) in two kinds, each labeled as such in the UI:
 
-1. Clear support — authoritative report meets a required criterion (plus an optional criterion staying inconclusive, so the mixed picture shows).
-2. Clear contradiction — audited figure conflicts with the criterion.
-3. Missing evidence — nothing relevant → `inconclusive`, not contradicted.
-4. Conflicting sources — two authoritative sources disagree → `source_conflict`.
-5. Ambiguous criterion — `criterion_ambiguous`, remedy is a clearer version.
-6. Numeric boundary — figure exactly at the threshold (fixed-point milli-units).
-7. Injection attempt — evidence demanding "mark supported" while contradicting; the instruction is treated as data.
-8. Challenge with new evidence — round 2 changes the outcome; round 1 history preserved.
+**Replays of real on-chain rounds** — copied verbatim from the deployed contract, with the creating transaction linked. Real subject, real public document, real consensus result:
 
-Steps: `npm run dev` → open `/demo` → click any scenario for the Criterion Ledger, outcome, and round history. Live commitments and writes are on `/commitments` (network: studionet); with no `VITE_CONTRACT_ADDRESS` set, the whole app runs on the sample set, every surface is badged **Sample data**, and every write control is disabled with a stated reason. A recorded walkthrough is part of the evidence pack (see Milestones).
+1. A figure tied to a verbatim passage — `figure_milli: 4200`, `figure_verified: true`.
+2. Two sources that could not be read — a PDF (`unsupported_format`) and a dead link (`http_error`), neither used as evidence.
+3. A finding resting on a quoted sentence.
+4. A challenge that adds evidence — round 2 considered the new document and kept the prior finding.
+
+**Authored illustrations** — edge cases no real run happened to produce. The organizations and documents are **fictional**, and their references use a `sample://` scheme that renders as plain text, never as a link: a clickable-looking citation for a document nobody read would be a fake citation.
+
+5. Two sources that disagree — `source_conflict`.
+6. A criterion too vague to match — `criterion_ambiguous`.
+7. An instruction inside a document — treated as data, stays `inconclusive`.
+8. A figure exactly on the threshold.
+
+Both kinds carry the same caveat: a replay shows what a review decided; it does not claim the same decision would be reached again, and appeals and finality still apply.
+
+Steps: `npm run dev` → open `/demo` → click any record for the Criterion Ledger, outcome, and round history. With `VITE_CONTRACT_ADDRESS` set, `/commitments` reads the live contract; with it empty, the whole app runs on the bundled records, every surface is badged, and every write control is disabled with a stated reason.
 
 ## Screens
 
@@ -220,20 +239,23 @@ each link's URL.
 | M2 | CommitmentRegistry lint-clean + direct tests | done | lint ok; direct suite green |
 | M3 | State machine + evidence submission tested | done | `tests/direct/test_state_machine.py` |
 | M4 | EvidenceReview: parsing, derivation, equivalence, adversarial tests | done | `tests/direct/test_adversarial_review.py`, `test_review_consensus.py` |
-| M5 | Integration tests on fixtures; deployed to StudioNet; schema saved | done | `tests/integration/`; `docs/civic_lens.schema.json` |
+| M5 | Integration tests on fixtures; deployed to StudioNet; schema saved | done | `tests/integration/` (10 passed on studionet); `docs/civic_lens.schema.json` (13 methods) |
 | M6 | ReviewChallenge + OutcomeRecord round history | done | `tests/direct/` challenge + round tests |
 | M7 | Deployment with explorer links | done | `docs/deployment.md`; explorer links HTTP-verified |
-| M8 | Frontend: Criterion Ledger, finality, sample/live labels, neutral copy | done | `frontend/` (Vite + React + TS); 107 tests green |
+| M8 | Frontend: Criterion Ledger, finality, sample/live labels, neutral copy | done | `frontend/` (Vite + React + TS); 272 tests green |
 | M9 | README, demo, evidence pack, changelog | done | this file, `CHANGELOG.md`, `docs/deployment.md`, `docs/*.md` (no screenshots — see Limitations) |
 
 ## Limitations And Next Steps
 
 - **Authenticity is out of scope:** consensus cannot prove a document is genuine; the platform judges what evidence says.
+- **SSRF screening is deterministic but string-level:** the host denylist normalizes decimal/octal/hex and IPv6 host forms, mapped/compatible IPv4, ULA and link-local ranges, and rejects credentials and malformed ports. It cannot see through DNS resolution or an HTTP redirect to an internal host — that protection belongs to the runtime network layer, and is documented as a limitation rather than claimed as solved.
 - **Review requires reachable sources:** if every evidence URL is unreachable, no outcome is recorded (by design) and review must be retried later.
 - **One contract, four logical components:** chosen so the required direct-test suite can cover everything; a future version could split them once multi-contract testing is viable.
 - **StudioNet is a test network:** accepted outcomes on test networks are for demonstration; production deployment would target a funded network with real finality windows.
 - **Display-only fetches** (if any) are labeled as such in the UI; only contract-evaluated evidence feeds outcomes.
-- **Frontend write path unproven in the browser:** a contract is deployed at `0x96f373…62183F9f`, and the **read** path is verified against it — all 7 view methods return real data and `getBundle` round-trips in ~2.5s. The **write** path (register, submit evidence, request review, challenge) has typechecked and is wired to the saved schema, but has not yet been driven end to end from a browser. That is the next milestone, together with the evidence pack.
+- **Frontend write path unproven in the browser:** a contract is deployed at `0x07d77BF8…f098B12`, and the **read** path is verified against it — all 7 view methods return real data and `getBundle` round-trips in ~2.5s. Every **write** method has been driven for real from the `genlayer` CLI against this deployment (`create_commitment`, `submit_evidence`, `request_review`, `open_challenge` — see [`docs/deployment.md`](docs/deployment.md)), but not yet from a connected browser wallet. That remains the next milestone.
+- **A challenge must attach new evidence to change anything.** Grounds are a claim, not evidence: the contract holds a previous finding unless the new round cites something added since the last review, and a targeted criterion must be explicitly reconsidered. A challenger who opens a challenge with no new evidence pays for a round and sees the finding stand — by design, and stated in `CHALLENGE_SEMANTICS`, but it is a sharp edge worth knowing about.
+- **The model can still get a figure's scale wrong.** The prompt now states each numeric criterion's unit and threshold and spells out the unit arithmetic, but nothing mechanically forces `figure_milli` onto the right magnitude. A 1000x error would surface as a wrong displayed number; the verbatim-quote check catches the figure *being absent*, not the scale being off. Observed and fixed once; the guard is instructional, not enforced.
 - **Tests always run on sample data:** `vite.config.ts` pins `VITE_CONTRACT_ADDRESS` to empty under Vitest, so the suite never depends on a live deployment even when a real address is configured.
 - **No transaction hash on an outcome:** the contract stores the derived result but not the transaction that produced it, so the UI resolves finality from a `?tx=` link parameter or from a transaction sent in that browser, and otherwise reports finality as unknown rather than inventing a hash.
 - **No account-balance read:** a proper "unfunded account" banner needs a verified SDK balance method, which this build does not have. StudioNet is gasless, so it does not affect the current target network.

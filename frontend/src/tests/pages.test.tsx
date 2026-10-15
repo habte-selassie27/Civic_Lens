@@ -15,6 +15,14 @@ import { AttributionBanner } from "@/components/AttributionBanner";
 import { SCENARIOS } from "@/domain/fixtures";
 import type { Commitment, Criterion, CriterionResult, Outcome } from "@/domain/types";
 
+/** Contract audit-trail fields, added with figure verification. */
+const AUDIT_DEFAULTS = {
+  source_quote: "",
+  source_evidence_id: 0,
+  figure_verified: false,
+  held_from_prior: false,
+} as const;
+
 const outcome = (over: Partial<Outcome> = {}): Outcome => ({
   commitment_id: 1,
   has_outcome: true,
@@ -66,10 +74,10 @@ describe("OutcomePanel", () => {
     const results: CriterionResult[] = [
       { criterion_id: 1, status: "supported", reason_code: "supporting_evidence_found",
         evidence_used: [1], evidence_considered_not_used: [], has_figure: false,
-        figure_milli: 0, unit: "", summary: "" },
+        figure_milli: 0, unit: "", summary: "", ...AUDIT_DEFAULTS },
       { criterion_id: 2, status: "inconclusive", reason_code: "no_relevant_evidence",
         evidence_used: [], evidence_considered_not_used: [], has_figure: false,
-        figure_milli: 0, unit: "", summary: "" },
+        figure_milli: 0, unit: "", summary: "", ...AUDIT_DEFAULTS },
     ];
 
     render(
@@ -103,10 +111,10 @@ describe("OutcomePanel", () => {
     const results: CriterionResult[] = [
       { criterion_id: 1, status: "supported", reason_code: "supporting_evidence_found",
         evidence_used: [1], evidence_considered_not_used: [], has_figure: false,
-        figure_milli: 0, unit: "", summary: "" },
+        figure_milli: 0, unit: "", summary: "", ...AUDIT_DEFAULTS },
       { criterion_id: 2, status: "contradicted", reason_code: "contradicting_evidence_found",
         evidence_used: [1], evidence_considered_not_used: [], has_figure: false,
-        figure_milli: 0, unit: "", summary: "" },
+        figure_milli: 0, unit: "", summary: "", ...AUDIT_DEFAULTS },
     ];
 
     render(
@@ -246,7 +254,7 @@ describe("AttributionBanner", () => {
     // One assertion on the whole sentence: it is split across a CopyField
     // child, so no single element owns the full string.
     expect(text).toMatch(
-      /Registered by 0x[0-9a-f…]+ (as an observer|for their own organization)\./,
+      /Registered by 0x[0-9a-f…]+ (as an observer|for their own organization)\./i,
     );
     expect(text).toMatch(/has not necessarily verified or endorsed this entry/i);
   });
@@ -272,42 +280,118 @@ describe("AttributionBanner", () => {
   });
 });
 
-describe("sample scenario honesty", () => {
-  it("labels every sample scenario as sample data", () => {
+describe("demo record honesty", () => {
+  it("declares where every bundled record came from", () => {
     expect(SCENARIOS.length).toBe(8);
     for (const scenario of SCENARIOS) {
-      expect(scenario.commitment.data_mode).toBe("sample");
+      expect(["recorded_on_chain", "authored_illustration"]).toContain(scenario.provenance);
       expect(scenario.whatThisTests.length).toBeGreaterThan(10);
+      expect(scenario.note.length).toBeGreaterThan(10);
     }
+    // Both kinds are present, so the distinction is exercised rather than
+    // theoretical.
+    expect(SCENARIOS.some((s) => s.provenance === "recorded_on_chain")).toBe(true);
+    expect(SCENARIOS.some((s) => s.provenance === "authored_illustration")).toBe(true);
   });
 
-  it("names a fabricated subject in every scenario", () => {
+  it("only ever invents data it labels as invented", () => {
     for (const scenario of SCENARIOS) {
-      expect(scenario.commitment.subject.toLowerCase()).toMatch(/\(sample\)/);
+      if (scenario.provenance !== "authored_illustration") continue;
+      // A fictional subject, stated as fictional on its face.
+      expect(scenario.commitment.subject).toMatch(/\(sample\)/);
+      // And references that CANNOT be mistaken for a real document: the
+      // contract would reject them and the UI must not render them as links.
+      expect(scenario.commitment.source_statement_ref).toMatch(/^sample:\/\//);
+      for (const item of scenario.evidence) {
+        expect(item.url).toMatch(/^sample:\/\//);
+      }
     }
   });
 
-  it("never uses a real-looking public figure as a subject", () => {
-    for (const scenario of SCENARIOS) {
-      expect(scenario.commitment.source_statement_ref).toMatch(/^https:\/\/example\.org\//);
+  it("gives a replayed record a real subject and a resolvable source", () => {
+    const recorded = SCENARIOS.filter((s) => s.provenance === "recorded_on_chain");
+    expect(recorded.length).toBeGreaterThan(0);
+    for (const scenario of recorded) {
+      expect(scenario.commitment.subject).not.toMatch(/\(sample\)/);
+      expect(scenario.commitment.source_statement_ref).toMatch(/^https:\/\//);
+      for (const item of scenario.evidence) {
+        expect(item.url).toMatch(/^https:\/\//);
+      }
+      // The record is a replay, so it carries the transaction that created it
+      // (or is explicit that it was not captured).
+      expect(scenario.recordedTx ?? "").toMatch(/^(0x[0-9a-f]{64})?$/);
     }
   });
 
-  it("covers the eight outcomes the spec requires", () => {
+  it("never presents a replay as live consensus", () => {
+    // A replay is a recording of a past decision. It must not claim to be a
+    // transaction the reader could inspect for a current round.
+    for (const scenario of SCENARIOS.filter((s) => s.provenance === "recorded_on_chain")) {
+      expect(scenario.commitment.data_mode).toBe("live");
+      expect(scenario.rounds.length).toBeGreaterThan(0);
+      for (const round of scenario.rounds) {
+        expect(round.evaluated_at).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      }
+    }
+  });
+
+  it("covers supported and inconclusive across the bundled records", () => {
     const outcomes = new Set(
       SCENARIOS.map((s) => (s.outcome.has_outcome ? s.outcome.overall_outcome : "none")),
     );
     expect(outcomes).toContain("supported");
-    expect(outcomes).toContain("contradicted");
     expect(outcomes).toContain("inconclusive");
   });
 
-  it("includes a round-2 scenario where a challenge changed a result", () => {
+  it("replays a challenge round that considered new evidence without resting on it", () => {
     const multi = SCENARIOS.filter((s) => s.rounds.length > 1);
     expect(multi.length).toBeGreaterThan(0);
-    const before = multi[0].rounds[0].criteria[0].status;
-    const after = multi[0].rounds[1].criteria[0].status;
-    expect(after).not.toBe(before);
+    const challenged = multi.find((s) => s.challenges.length > 0);
+    expect(challenged).toBeDefined();
+
+    const [round1, round2] = challenged!.rounds;
+    expect(round2.trigger).toBe("challenge");
+    // The challenge's attached evidence is NEW to round 2 …
+    const attached = new Set(challenged!.challenges.flatMap((c) => c.new_evidence_ids));
+    expect(attached.size).toBeGreaterThan(0);
+    // … and it was considered rather than ignored.
+    const considered = new Set(round2.evidence_considered);
+    for (const id of attached) expect(considered.has(id)).toBe(true);
+    // The finding did not flip, because the new evidence was not cited.
+    expect(round2.criteria[0].status).toBe(round1.criteria[0].status);
+  });
+
+  it("replays a numeric finding whose figure was verified against a passage", () => {
+    const numeric = SCENARIOS.find(
+      (s) => s.rounds.some((r) => r.criteria.some((c) => c.figure_verified)),
+    );
+    expect(numeric).toBeDefined();
+    const verified = numeric!.rounds
+      .flatMap((r) => r.criteria)
+      .find((c) => c.figure_verified)!;
+    // A verified figure carries the passage it was confirmed in and the source
+    // that passage came from — otherwise "verified" would be unfalsifiable.
+    expect(verified.source_quote.length).toBeGreaterThan(8);
+    expect(verified.source_evidence_id).toBeGreaterThan(0);
+    expect(verified.has_figure).toBe(true);
+    expect(verified.figure_milli).toBeGreaterThan(0);
+  });
+
+  it("replays sources that could not be read, recorded as such", () => {
+    const unread = SCENARIOS.filter((s) =>
+      s.rounds.some((r) => r.retrieval.some((x) => x.status !== "fetched")),
+    );
+    expect(unread.length).toBeGreaterThan(0);
+    for (const scenario of unread) {
+      for (const round of scenario.rounds) {
+        for (const record of round.retrieval) {
+          if (record.status === "fetched") continue;
+          // A source that was never read must not be cited by any verdict.
+          const cited = round.criteria.some((c) => c.evidence_used.includes(record.evidence_id));
+          expect(cited).toBe(false);
+        }
+      }
+    }
   });
 });
 

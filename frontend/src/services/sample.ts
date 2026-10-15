@@ -22,8 +22,12 @@ import {
   DATA_MODES,
 } from "@/domain/types";
 import type {
-  ContractConstants,
+  ChallengeRecord,
+  Commitment,
   CommitmentSummary,
+  ContractConstants,
+  EvidenceItem,
+  Outcome,
 } from "@/domain/types";
 import { FALLBACK_CONSTANTS } from "@/config/contracts";
 import {
@@ -71,10 +75,7 @@ class SampleService implements CivicLensReads {
   }
 
   async getBundle(commitmentId: number): Promise<CommitmentBundle> {
-    const scenario = SCENARIOS.find((s) => s.commitment.id === commitmentId);
-    if (!scenario) {
-      throw new Error(`EXPECTED: commitment ${commitmentId} is not in the sample set`);
-    }
+    const scenario = this.scenario(commitmentId);
     return delay({
       commitment: scenario.commitment,
       evidence: scenario.evidence,
@@ -82,6 +83,32 @@ class SampleService implements CivicLensReads {
       outcome: scenario.outcome,
       challenges: scenario.challenges,
     });
+  }
+
+  // -- granular reads (same fixtures, one record each) ----------------------
+
+  async getCommitment(commitmentId: number): Promise<Commitment> {
+    return delay(this.scenario(commitmentId).commitment);
+  }
+
+  async getEvidence(commitmentId: number): Promise<EvidenceItem[]> {
+    return delay(this.scenario(commitmentId).evidence);
+  }
+
+  async getOutcome(commitmentId: number): Promise<Outcome> {
+    return delay(this.scenario(commitmentId).outcome);
+  }
+
+  async getChallenges(commitmentId: number): Promise<ChallengeRecord[]> {
+    return delay(this.scenario(commitmentId).challenges);
+  }
+
+  private scenario(commitmentId: number): Scenario {
+    const scenario = SCENARIOS.find((s) => s.commitment.id === commitmentId);
+    if (!scenario) {
+      throw new Error(`EXPECTED: commitment ${commitmentId} is not in the sample set`);
+    }
+    return scenario;
   }
 }
 

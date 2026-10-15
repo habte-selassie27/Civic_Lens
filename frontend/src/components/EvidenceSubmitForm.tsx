@@ -18,9 +18,11 @@ import { ActionButton } from "./DisabledReason";
 
 export interface EvidenceSubmitFormProps {
   constants: ContractConstants;
-  /** Items already on file, for the "n of m used" line. */
+  /** Items already on file, for the "n of m" line. */
   existingCount: number;
   submitterCount: number;
+  /** True when an account is connected, so its own count is meaningful. */
+  accountKnown?: boolean;
   /** Set when the window/state machine forbids submission. */
   disabledReason?: string | null;
   onSubmit(input: {
@@ -38,6 +40,7 @@ export function EvidenceSubmitForm({
   constants,
   existingCount,
   submitterCount,
+  accountKnown = false,
   disabledReason,
   onSubmit,
   busy = false,
@@ -50,9 +53,6 @@ export function EvidenceSubmitForm({
     null,
   );
   const [fieldError, setFieldError] = useState<string | null>(null);
-
-  const remainingTotal = Math.max(0, constants.max_evidence - existingCount);
-  const remainingMine = Math.max(0, constants.max_evidence_per_submitter - submitterCount);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -165,8 +165,10 @@ export function EvidenceSubmitForm({
       </div>
 
       <p className="hint">
-        {remainingTotal} of {constants.max_evidence} sources left on this commitment ·{" "}
-        {remainingMine} of {constants.max_evidence_per_submitter} left for you.
+        {existingCount} of {constants.max_evidence} sources on file
+        {accountKnown
+          ? ` · ${submitterCount} of ${constants.max_evidence_per_submitter} submissions used by this account`
+          : ". Connect an account to see its submission count."}
       </p>
 
       {fault && (

@@ -9,7 +9,9 @@ inconclusive, never contradicted.
 """
 
 from tests.direct.conftest import (
+    DOC_BODY,
     criteria_json,
+    figure_body,
     make_commitment,
     numeric_criteria_json,
     two_criteria_json,
@@ -21,8 +23,8 @@ from tests.direct.conftest import (
 EVIDENCE_URL = "https://reports.example.org/2024"
 
 
-def _mock_review(vm, response_body):
-    vm.mock_web(r".*", {"status": 200, "body": "Report text with data."})
+def _mock_review(vm, response_body, body=DOC_BODY):
+    vm.mock_web(r".*", {"status": 200, "body": body})
     vm.mock_llm(r"(?s).*Criteria:.*", response_body)
 
 
@@ -200,8 +202,9 @@ def test_numeric_threshold_exact_boundary(direct_vm, direct_deploy, direct_alice
     _mock_review(
         direct_vm,
         verdict_json(
-            verdict(1, "supported", "threshold_met", [1], has_figure=True, figure_milli=100000, unit="co2e_tonnes")
+            verdict(1, "supported", "threshold_met", [1], has_figure=True, figure_milli=100000, unit="co2e_tonnes", period_matches=True)
         ),
+        body=figure_body((100000, "co2e_tonnes")),
     )
     c.request_review(cid)
     outcome = c.get_outcome(cid)
@@ -221,9 +224,10 @@ def test_numeric_threshold_exact_boundary(direct_vm, direct_deploy, direct_alice
         direct_vm,
         verdict_json(
             verdict(
-                1, "contradicted", "threshold_not_met", [2], has_figure=True, figure_milli=99000, unit="co2e_tonnes"
+                1, "contradicted", "threshold_not_met", [2], has_figure=True, figure_milli=99000, unit="co2e_tonnes", period_matches=True
             )
         ),
+        body=figure_body((99000, "co2e_tonnes")),
     )
     c.request_review(cid2)
     assert c.get_outcome(cid2)["overall_outcome"] == "contradicted"
@@ -237,8 +241,9 @@ def test_lte_threshold_direction(direct_vm, direct_deploy, direct_alice):
     _mock_review(
         direct_vm,
         verdict_json(
-            verdict(1, "supported", "threshold_met", [1], has_figure=True, figure_milli=45000, unit="co2e_tonnes")
+            verdict(1, "supported", "threshold_met", [1], has_figure=True, figure_milli=45000, unit="co2e_tonnes", period_matches=True)
         ),
+        body=figure_body((45000, "co2e_tonnes")),
     )
     c.request_review(cid)
     assert c.get_outcome(cid)["overall_outcome"] == "supported"

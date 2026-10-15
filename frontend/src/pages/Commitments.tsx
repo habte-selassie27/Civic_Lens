@@ -1,15 +1,21 @@
 /**
  * Browse (UI-CivicLens section 3): `/commitments`.
- * Filters: sample | live, outcome, finality.
+ *
+ * Filters: sample | live, outcome, state, registrant role. Search matches the
+ * subject or the record number. Sorting reorders the loaded page.
+ *
+ * Every control applies to the page the contract returns (the 20 most recent
+ * records — its largest single page). The scope note under the controls says
+ * so; nothing here implies a search over the whole network.
  */
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useCommitmentList } from "@/hooks/useReads";
 import { reads } from "@/services";
-import { RESULT_LABEL, STATUS_LABEL } from "@/domain/copy";
+import { RESULT_LABEL, ROLE_SHORT_LABEL, STATUS_LABEL } from "@/domain/copy";
 import { formatDate } from "@/domain/format";
-import type { DataMode, ReviewStatus } from "@/domain/types";
+import type { DataMode, RegistrantRole, ReviewStatus } from "@/domain/types";
 import { DataModeBadge } from "@/components/DataModeBadge";
 import { ResultChip } from "@/components/ResultChip";
 import { ExternalMark } from "@/components/Marks";
@@ -21,6 +27,7 @@ import {
 } from "@/components/Chrome";
 
 type OutcomeFilter = "all" | ReviewStatus | "none";
+type SortKey = "newest" | "ending_soonest" | "most_reviewed" | "most_sources";
 
 const OUTCOME_OPTIONS: Array<{ value: OutcomeFilter; label: string }> = [
   { value: "all", label: "Any outcome" },
@@ -30,11 +37,21 @@ const OUTCOME_OPTIONS: Array<{ value: OutcomeFilter; label: string }> = [
   { value: "none", label: "Not yet reviewed" },
 ];
 
+const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
+  { value: "newest", label: "Newest first" },
+  { value: "ending_soonest", label: "Ending soonest" },
+  { value: "most_reviewed", label: "Most reviewed" },
+  { value: "most_sources", label: "Most sources" },
+];
+
 export function Commitments() {
   const { data, isLoading, error, refetch, isFetching } = useCommitmentList();
+  const [query, setQuery] = useState("");
   const [mode, setMode] = useState<"all" | DataMode>("all");
   const [outcome, setOutcome] = useState<OutcomeFilter>("all");
   const [status, setStatus] = useState<"all" | string>("all");
+  const [role, setRole] = useState<"all" | RegistrantRole>("all");
+  const [sort, setSort] = useState<SortKey>("newest");
 
   /**
    * The list view returns summaries only — it carries no outcome. So the
@@ -44,7 +61,14 @@ export function Commitments() {
    */
   const filtered = useMemo(() => {
     let rows = data ?? [];
+    const needle = query.trim().toLowerCase();
+    if (needle) {
+      rows = rows.filter(
+        (r) => r.subject.toLowerCase().includes(needle) || String(r.id) === needle,
+      );
+    }
     if (mode !== "all") rows = rows.filter((r) => r.data_mode === mode);
+    if (role !== "all") rows = rows.filter((r) => r.registrant_role === role);
     if (status !== "all") rows = rows.filter((r) => r.status === status);
     if (outcome === "none") rows = rows.filter((r) => r.round_count === 0);
     else if (outcome !== "all") {
@@ -52,12 +76,31 @@ export function Commitments() {
       // may hold any of the three, so the filter cannot narrow further here.
       rows = rows.filter((r) => r.round_count > 0);
     }
-    return rows;
-  }, [data, mode, status, outcome]);
+
+    const sorted = [...rows];
+    sorted.sort((a, b) => {
+      switch (sort) {
+        case "ending_soonest":
+          return a.period_end.localeCompare(b.period_end) || b.id - a.id;
+        case "most_reviewed":
+          return b.round_count - a.round_count || b.id - a.id;
+        case "most_sources":
+          return b.evidence_count - a.evidence_count || b.id - a.id;
+        case "newest":
+        default:
+          return b.id - a.id;
+      }
+    });
+    return sorted;
+  }, [data, query, mode, role, status, outcome, sort]);
 
   const statuses = useMemo(
     () => Array.from(new Set((data ?? []).map((r) => r.status))),
-    [],
+    [data],
+  );
+  const roles = useMemo(
+    () => Array.from(new Set((data ?? []).map((r) => r.registrant_role))),
+    [data],
   );
 
   if (isLoading) return <LoadingRegion label="Loading commitments" />;
@@ -80,6 +123,20 @@ export function Commitments() {
       {reads.isSample && reads.sampleReason && <SampleBanner reason={reads.sampleReason} />}
 
       <div className="filters">
+        <div className="field">
+          <label className="field__label" htmlFor="f-search">
+            Search
+          </label>
+          <input
+            id="f-search"
+            className="input"
+            type="search"
+            value={query}
+            placeholder="Subject or number"
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </div>
+
         <div className="field">
           <label className="field__label" htmlFor="f-mode">
             Data
@@ -133,8 +190,53 @@ export function Commitments() {
           </select>
         </div>
 
+        <div className="field">
+          <label className="field__label" htmlFor="f-role">
+            Registrant
+          </label>
+          <select
+            id="f-role"
+            className="select"
+            value={role}
+            onChange={(e) => setRole(e.target.value as "all" | RegistrantRole)}
+          >
+            <option value="all">Any role</option>
+            {roles.map((r) => (
+              <option key={r} value={r}>
+                {ROLE_SHORT_LABEL[r] ?? r}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="field">
+          <label className="field__label" htmlFor="f-sort">
+            Sort
+          </label>
+          <select
+            id="f-sort"
+            className="select"
+            value={sort}
+            onChange={(e) => setSort(e.target.value as SortKey)}
+          >
+            {SORT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {isFetching && <span className="hint">Refreshing…</span>}
       </div>
+
+      {(data?.length ?? 0) > 0 && (
+        <p className="hint">
+          Search, filters, and sorting apply to the {data?.length} most recently registered
+          record{data?.length === 1 ? "" : "s"} — the largest page the contract serves in one
+          read.
+        </p>
+      )}
 
       {filtered.length === 0 ? (
         <EmptyState title="Nothing matches those filters">
@@ -163,6 +265,10 @@ export function Commitments() {
                   <tr key={row.id}>
                     <td>
                       <Link to={`/commitments/${row.id}`}>{row.subject}</Link>
+                      {row.version > 1 && <span className="tag">v{row.version}</span>}
+                      {row.superseded_by > 0 && (
+                        <span className="tag">Superseded by #{row.superseded_by}</span>
+                      )}
                       {row.round_count === 0 ? (
                         <ResultChip status="pending" />
                       ) : null}

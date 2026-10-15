@@ -29,9 +29,16 @@ GVMDT = "2024-12-31T12:00:00Z"
 
 # Sample fixture documents (labeled sample data, not real findings).
 STATEMENT_BODY = "The original announcement of the 2024 commitment."
+# The figure sentence states a RANGE. A numeric verdict is only kept if the
+# cited passage contains its figure, so a single fixed number would fail every
+# validator that extracted a slightly different one. Stating 100.0 through 104.0
+# lets five validators report small variance and still each quote a passage
+# that really does contain their figure. Kept under the contract's 300-char
+# quote bound so the whole body can be quoted verbatim.
 REPORT_BODY = (
-    "Riverdale City sustainability report 2024. Scope 1 emissions were "
-    "reduced to 95 co2e tonnes, below the committed ceiling."
+    "Riverdale City sustainability report 2024. Scope 1 emissions were reduced "
+    "to 100.0, 101.0, 102.0, 103.0 or 104.0 co2e tonnes depending on the "
+    "accounting boundary used, below the committed ceiling of 100."
 )
 CONTRARY_BODY = (
     "Independent audit dataset: Riverdale Scope 1 emissions for 2024 were "
@@ -78,7 +85,22 @@ def numeric_criteria_json(threshold_milli=100000, unit="co2e_tonnes", operator="
 
 
 def verdict(criterion_id, status, reason_code, evidence_used=None, has_figure=False,
-            figure_milli=0, unit="", summary="Evidence was reviewed."):
+            figure_milli=0, unit="", summary="Evidence was reviewed.",
+            source_quote=None, period_matches=None, reconsidered=None):
+    """One mock model verdict.
+
+    Defaults mirror what the review prompt asks a model to produce. A NUMERIC
+    definite verdict must quote a passage that CONTAINS its figure, or the
+    contract demotes that criterion to inconclusive (figure_unverified) — so
+    the default quote is the fixture document itself, which really does contain
+    every figure the tolerance test extracts. `reconsidered` is mandatory on a
+    criterion a challenge targeted.
+    """
+    definite = status in ("supported", "contradicted")
+    if source_quote is None:
+        source_quote = REPORT_BODY if definite else ""
+    if period_matches is None:
+        period_matches = has_figure
     return {
         "criterion_id": criterion_id,
         "status": status,
@@ -87,6 +109,9 @@ def verdict(criterion_id, status, reason_code, evidence_used=None, has_figure=Fa
         "has_figure": has_figure,
         "figure_milli": figure_milli,
         "unit": unit,
+        "period_matches": period_matches is True,
+        "source_quote": source_quote,
+        "reconsidered": reconsidered is True,
         "summary": summary,
     }
 
@@ -404,19 +429,27 @@ def test_challenge_round_changes_outcome():
 
     # Anyone may submit new evidence and challenge the accepted outcome.
     submit_evidence(contract, 1, CONTRARY_URL, "2024-11-01")
+    # The challenge MUST attach the new evidence. A challenge on its own is a
+    # claim, not evidence: the contract holds a previous finding unless the new
+    # round cites something added since the last review (see CHALLENGE_SEMANTICS
+    # and _apply_challenge_rules).
     tx = contract.open_challenge(
-        args=[1, "", "The audited dataset contradicts the accepted outcome.", []]
+        args=[1, "", "The audited dataset contradicts the accepted outcome.", [2]]
     ).transact(wait_interval=WI, wait_retries=WR)
     assert consensus_ok(tx)
 
     challenges = contract.get_challenges(args=[1]).call()
     assert len(challenges) == 1
     assert challenges[0]["round_challenged"] == 1
+    assert list(challenges[0]["new_evidence_ids"]) == [2]
 
-    # Round 2 review weighs the new evidence and flips the outcome.
+    # Round 2 re-reviews, cites the NEW evidence, and flips the outcome. The
+    # verdict must mark the whole-outcome challenge as reconsidered.
     contradicted = ctx_identical(
         verdict_json(
             verdict(1, "contradicted", "contradicting_evidence_found", [2],
+                    source_quote=CONTRARY_BODY,
+                    reconsidered=True,
                     summary="The audit dataset contradicts the criterion.")
         )
     )

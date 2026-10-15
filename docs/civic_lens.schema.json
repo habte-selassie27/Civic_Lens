@@ -256,22 +256,6 @@
       "ret": "int",
       "payable": false
     },
-    "update_criteria": {
-      "params": [
-        [
-          "commitment_id",
-          "int"
-        ],
-        [
-          "criteria_json",
-          "string"
-        ]
-      ],
-      "kwparams": {},
-      "readonly": false,
-      "ret": "null",
-      "payable": false
-    },
     "withdraw_commitment": {
       "params": [
         [

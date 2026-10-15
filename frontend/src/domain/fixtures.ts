@@ -1,11 +1,25 @@
 /**
- * Demo scenarios — the eight sample cases from AGENTS section 21.
+ * Demo data for the bundled (no contract address) mode.
  *
- * HONESTY RULES (docs/fairness.md):
- * - Everything here is SAMPLE DATA about FABRICATED organizations.
- * - Scenarios are REPLAYS of recorded results, not live consensus runs;
- *   the UI labels them "Sample data — replay of a recorded result".
- * - Never present these as findings about a real entity.
+ * HONESTY RULES (docs/fairness.md) — the demo has two kinds of record and says
+ * which is which:
+ *
+ * - `recorded_on_chain` — a faithful replay of a round GenLayer consensus
+ *   actually produced on studionet, copied verbatim out of the deployed
+ *   contract (`node scripts/dump-chain.mjs <address> <dir>`). The subject is a
+ *   real public institution, the evidence URL is a real public document, and
+ *   every per-criterion result, quote, figure and retrieval status is what the
+ *   contract recorded. `recordedTx` links to the creating transaction.
+ *
+ * - `authored_illustration` — an edge case no real run happened to produce (a
+ *   source conflict, an ambiguous criterion, an injection attempt, an exact
+ *   numeric boundary). The organizations are FICTIONAL and their documents do
+ *   not exist, so their references use a `sample://` scheme that the contract
+ *   would reject and the UI renders as plain text rather than a link. A
+ *   resolvable-looking URL here would imply a source nobody ever read.
+ *
+ * A replay is still a replay: it shows what a review decided, not that running
+ * it again will decide the same way. Protocol appeals and finality still apply.
  */
 
 import type {
@@ -13,23 +27,837 @@ import type {
   Commitment,
   CommitmentSummary,
   CriterionResult,
+  DataMode,
   EvidenceItem,
   Outcome,
+  RetrievalRecord,
+  RetrievalStatus,
   RoundRecord,
 } from "./types";
 
-const SAMPLE_A = "0x5a0b5e000000000000000000000000000000000a"; // sample observer
-const SAMPLE_O = "0x5a0b5e000000000000000000000000000000000b"; // sample org
-const SAMPLE_C = "0x5a0b5e000000000000000000000000000000000c"; // sample challenger
+/** Where a bundled demo record came from. The UI labels these differently. */
+export type Provenance = "recorded_on_chain" | "authored_illustration";
 
-const EVALUATED = "2024-12-31T12:00:00Z";
+export interface Scenario {
+  slug: string;
+  name: string;
+  /** One line: what this record demonstrates. */
+  whatThisTests: string;
+  provenance: Provenance;
+  /** Explorer link source for a replayed record. Absent when not captured. */
+  recordedTx?: string;
+  /** Honest provenance sentence, shown verbatim in the UI. */
+  note: string;
+  commitment: Commitment;
+  evidence: EvidenceItem[];
+  rounds: RoundRecord[];
+  challenges: ChallengeRecord[];
+  outcome: Outcome;
+}
 
-function commitment(over: Partial<Commitment> & Pick<Commitment, "id" | "subject" | "commitment_text" | "criteria">): Commitment {
+type RawCriterionResult = Omit<
+  CriterionResult,
+  "source_quote" | "source_evidence_id" | "figure_verified" | "held_from_prior"
+> &
+  Partial<
+    Pick<CriterionResult, "source_quote" | "source_evidence_id" | "figure_verified" | "held_from_prior">
+  >;
+
+type RawRound = Omit<RoundRecord, "retrieval" | "data_mode" | "criteria"> & {
+  criteria: RawCriterionResult[];
+  retrieval?: RetrievalRecord[];
+  data_mode?: DataMode;
+};
+
+type RawScenario = Omit<Scenario, "rounds"> & {
+  commitment: Commitment;
+  evidence: EvidenceItem[];
+  rounds: RawRound[];
+};
+
+/** Fill the audit-trail and retrieval fields a literal may omit. */
+function normalizeScenario(raw: RawScenario): Scenario {
   return {
-    registrant: SAMPLE_A,
+    ...raw,
+    rounds: raw.rounds.map((round) => ({
+      ...round,
+      // A round that says nothing about retrieval still has to show the reader
+      // which sources a validator could read.
+      retrieval:
+        round.retrieval ??
+        raw.evidence.map((ev) => ({
+          evidence_id: ev.id,
+          source: "evidence" as const,
+          status: (ev.id === 0 ? "unknown" : "fetched") as RetrievalStatus,
+          url: ev.url,
+        })),
+      data_mode: round.data_mode ?? raw.commitment.data_mode,
+      criteria: round.criteria.map((c) => ({
+        ...c,
+        source_quote: c.source_quote ?? "",
+        source_evidence_id: c.source_evidence_id ?? 0,
+        figure_verified: c.figure_verified ?? false,
+        held_from_prior: c.held_from_prior ?? false,
+      })),
+    })),
+  };
+}
+
+/** A non-fetchable reference used by the fictional, authored scenarios. */
+export function isSampleReference(url: string): boolean {
+  return url.startsWith("sample://");
+}
+
+const verified_figure: RawScenario = {
+  slug: "verified-figure",
+  name: "A figure tied to a verbatim passage",
+  whatThisTests: "A numeric criterion resolves against a real fact sheet, and the extracted figure is matched to the sentence it was taken from.",
+  provenance: "recorded_on_chain",
+  recordedTx: "0xcbcd44ca77b8f574ebe052ea0411963f2f0c26ce9708074d69ff80561231e9a0",
+  note: "Replayed from a recorded round. The review read a real public document, extracted the figure, and confirmed the number appears in the passage it quotes.",
+  commitment: {
+    challenge_count: 0,
+    commitment_text: "The World Health Organization publishes a fact sheet on ambient outdoor air pollution that states the global health impact of that exposure.",
+    criteria: [
+      {
+        deadline: "",
+        has_threshold: false,
+        id: 1,
+        measure: "A publicly reachable fact sheet page on ambient outdoor air pollution is issued by the organization",
+        operator: "",
+        required: true,
+        text: "Publishes a fact sheet on ambient outdoor air pollution",
+        threshold_milli: 0,
+        unit: "",
+      },
+      {
+        deadline: "2024-12-31",
+        has_threshold: true,
+        id: 2,
+        measure: "The document gives a figure in millions of premature deaths per year attributable to ambient outdoor air pollution",
+        operator: "gte",
+        required: true,
+        text: "States the global premature deaths attributable to ambient outdoor air pollution",
+        threshold_milli: 4000,
+        unit: "million_deaths",
+      },
+      {
+        deadline: "",
+        has_threshold: false,
+        id: 3,
+        measure: "A third-party audit document accompanies the figure",
+        operator: "",
+        required: false,
+        text: "The stated figure is confirmed by a separate independent audit statement",
+        threshold_milli: 0,
+        unit: "",
+      },
+    ],
+    current_round: 1,
+    data_mode: "live",
+    evidence_count: 1,
+    id: 1,
+    period_end: "2024-12-31",
+    period_start: "2024-01-01",
+    registrant: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
     registrant_role: "observer",
+    round_count: 1,
+    source_guidance: "Prefer the organization's own published fact sheets. Secondary reporting counts only where it quotes the primary document.",
+    source_statement_ref: "https://www.who.int/news-room/fact-sheets/detail/ambient-(outdoor)-air-quality-and-health",
+    status: "outcome_accepted",
+    subject: "World Health Organization",
+    subject_kind: "institution",
+    superseded_by: 0,
+    supersedes: 0,
+    timezone: "UTC",
+    version: 1,
+  },
+  evidence: [
+    {
+      declared_source_class: "primary",
+      evidence_type: "official_report",
+      id: 1,
+      note: "Primary source: the organization's own fact sheet for the evaluation year.",
+      published_date: "2024-10-24",
+      published_date_verified: false,
+      source_class_verified: false,
+      submitted_at: "2026-10-15T09:51:16.177104Z",
+      submitter: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+      url: "https://www.who.int/news-room/fact-sheets/detail/ambient-(outdoor)-air-quality-and-health",
+    },
+  ],
+  rounds: [
+    {
+      challenge_id: 0,
+      criteria: [
+        {
+          criterion_id: 1,
+          evidence_considered_not_used: [],
+          evidence_used: [1],
+          figure_milli: 0,
+          figure_verified: false,
+          has_figure: false,
+          held_from_prior: false,
+          reason_code: "supporting_evidence_found",
+          source_evidence_id: 1,
+          source_quote: "Ambient (outdoor) air pollution 24 October 2024 Reading time: document.addEventListener('DOMContentLoaded', (event) => { new ReadingTime(270, 'min', 'words', 'Less than a minute'); })",
+          status: "supported",
+          summary: "The World Health Organization published a fact sheet titled \"Ambient (outdoor) air pollution\" on October 24, 2024.",
+          unit: "",
+        },
+        {
+          criterion_id: 2,
+          evidence_considered_not_used: [],
+          evidence_used: [1],
+          figure_milli: 4200,
+          figure_verified: true,
+          has_figure: true,
+          held_from_prior: false,
+          reason_code: "threshold_met",
+          source_evidence_id: 1,
+          source_quote: "Ambient (outdoor) air pollution is estimated to have caused 4.2 million premature deaths worldwide in 2019.",
+          status: "supported",
+          summary: "The WHO fact sheet states that ambient outdoor air pollution caused an estimated 4.2 million premature deaths worldwide, meeting the threshold of 4 million.",
+          unit: "million_deaths",
+        },
+        {
+          criterion_id: 3,
+          evidence_considered_not_used: [],
+          evidence_used: [1],
+          figure_milli: 0,
+          figure_verified: false,
+          has_figure: false,
+          held_from_prior: false,
+          reason_code: "no_relevant_evidence",
+          source_evidence_id: 0,
+          source_quote: "",
+          status: "inconclusive",
+          summary: "The provided evidence does not contain a separate independent audit statement for the mortality figure.",
+          unit: "",
+        },
+      ],
+      criteria_version: 1,
+      data_mode: "live",
+      evaluated_at: "2026-10-15T09:52:40.887477Z",
+      evidence_considered: [1],
+      overall_outcome: "supported",
+      overall_reason: "all_required_supported",
+      retrieval: [
+        {
+          evidence_id: 1,
+          source: "evidence",
+          status: "fetched",
+          url: "https://www.who.int/news-room/fact-sheets/detail/ambient-(outdoor)-air-quality-and-health",
+        },
+      ],
+      round: 1,
+      trigger: "initial",
+    },
+  ],
+  challenges: [],
+  outcome: {
+    commitment_id: 1,
+    counts: {
+      contradicted: 0,
+      inconclusive: 1,
+      supported: 2,
+    },
+    criteria_version: 1,
+    evaluated_at: "2026-10-15T09:52:40.887477Z",
+    has_outcome: true,
+    held_from_prior_count: 0,
+    outcome_meaning: "A finding that the eligible submitted evidence supports, contradicts, or does not settle the stated criteria. It is not proof that the commitment was or was not fulfilled in the real world, and it says nothing about intent.",
+    overall_outcome: "supported",
+    overall_reason: "all_required_supported",
+    required_total: 2,
+    retrieval_counts: {
+      fetched: 1,
+    },
+    round: 1,
+    status: "outcome_accepted",
+    superseded_by: 0,
+    trigger: "initial",
+  },
+};
+const unreadable_sources: RawScenario = {
+  slug: "unreadable-sources",
+  name: "Two sources that could not be read",
+  whatThisTests: "A PDF and a dead link are recorded as unreadable and used as evidence for nothing, while the one readable source carries the verdict.",
+  provenance: "recorded_on_chain",
+  recordedTx: "0x2cf5dc230a4831926f6682384da00e1cef76c470d9754e4acab60cd0a1a4ac6b",
+  note: "Replayed from a recorded round. The unreadable sources stay in the record with their retrieval status, so a reader can see they were never read.",
+  commitment: {
+    challenge_count: 0,
+    commitment_text: "The World Health Organization publishes a fact sheet on climate change and health describing how climate change affects health.",
+    criteria: [
+      {
+        deadline: "",
+        has_threshold: false,
+        id: 1,
+        measure: "A publicly reachable fact sheet page covering climate change and its health effects is issued by the organization",
+        operator: "",
+        required: true,
+        text: "Publishes a fact sheet on climate change and health",
+        threshold_milli: 0,
+        unit: "",
+      },
+      {
+        deadline: "",
+        has_threshold: false,
+        id: 2,
+        measure: "The page shows a day, month and year for the fact sheet",
+        operator: "",
+        required: false,
+        text: "The fact sheet states a dated publication date on the page itself",
+        threshold_milli: 0,
+        unit: "",
+      },
+    ],
+    current_round: 1,
+    data_mode: "live",
+    evidence_count: 3,
+    id: 2,
+    period_end: "2023-12-31",
+    period_start: "2023-01-01",
+    registrant: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+    registrant_role: "observer",
+    round_count: 1,
+    source_guidance: "The organization's own fact sheets are the authoritative record for this commitment.",
+    source_statement_ref: "https://www.who.int/news-room/fact-sheets/detail/climate-change-and-health",
+    status: "outcome_accepted",
+    subject: "World Health Organization",
+    subject_kind: "institution",
+    superseded_by: 0,
+    supersedes: 0,
+    timezone: "UTC",
+    version: 1,
+  },
+  evidence: [
+    {
+      declared_source_class: "primary",
+      evidence_type: "official_report",
+      id: 2,
+      note: "Readable primary source.",
+      published_date: "2023-10-12",
+      published_date_verified: false,
+      source_class_verified: false,
+      submitted_at: "2026-10-15T09:51:36.525705Z",
+      submitter: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+      url: "https://www.who.int/news-room/fact-sheets/detail/climate-change-and-health",
+    },
+    {
+      declared_source_class: "primary",
+      evidence_type: "official_report",
+      id: 3,
+      note: "Cited as corroboration. Submitted as a PDF.",
+      published_date: "2024-03-11",
+      published_date_verified: false,
+      source_class_verified: false,
+      submitted_at: "2026-10-15T09:51:54.138231Z",
+      submitter: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+      url: "https://www.ipcc.ch/report/ar6/syr/downloads/report/IPCC_AR6_SYR_SPM.pdf",
+    },
+    {
+      declared_source_class: "secondary",
+      evidence_type: "news_article",
+      id: 4,
+      note: "Secondary report link; archived page, may not resolve.",
+      published_date: "2023-11-02",
+      published_date_verified: false,
+      source_class_verified: false,
+      submitted_at: "2026-10-15T09:52:04.708813Z",
+      submitter: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+      url: "https://www.who.int/news-room/fact-sheets/detail/this-page-was-removed-in-2023",
+    },
+  ],
+  rounds: [
+    {
+      challenge_id: 0,
+      criteria: [
+        {
+          criterion_id: 1,
+          evidence_considered_not_used: [4],
+          evidence_used: [2],
+          figure_milli: 0,
+          figure_verified: false,
+          has_figure: false,
+          held_from_prior: false,
+          reason_code: "supporting_evidence_found",
+          source_evidence_id: 0,
+          source_quote: "",
+          status: "supported",
+          summary: "The World Health Organization published a fact sheet on October 12, 2023, describing how climate change contributes to health risks and humanitarian emergencies.",
+          unit: "",
+        },
+        {
+          criterion_id: 2,
+          evidence_considered_not_used: [4],
+          evidence_used: [2],
+          figure_milli: 0,
+          figure_verified: false,
+          has_figure: false,
+          held_from_prior: false,
+          reason_code: "supporting_evidence_found",
+          source_evidence_id: 2,
+          source_quote: "Climate change 12 October 2023 Reading time:",
+          status: "supported",
+          summary: "The fact sheet explicitly displays the publication date of 12 October 2023 on the page.",
+          unit: "",
+        },
+      ],
+      criteria_version: 1,
+      data_mode: "live",
+      evaluated_at: "2026-10-15T09:58:51.298880Z",
+      evidence_considered: [2, 4],
+      overall_outcome: "supported",
+      overall_reason: "all_required_supported",
+      retrieval: [
+        {
+          evidence_id: 2,
+          source: "evidence",
+          status: "fetched",
+          url: "https://www.who.int/news-room/fact-sheets/detail/climate-change-and-health",
+        },
+        {
+          evidence_id: 3,
+          source: "evidence",
+          status: "unsupported_format",
+          url: "https://www.ipcc.ch/report/ar6/syr/downloads/report/IPCC_AR6_SYR_SPM.pdf",
+        },
+        {
+          evidence_id: 4,
+          source: "evidence",
+          status: "http_error",
+          url: "https://www.who.int/news-room/fact-sheets/detail/this-page-was-removed-in-2023",
+        },
+      ],
+      round: 1,
+      trigger: "initial",
+    },
+  ],
+  challenges: [],
+  outcome: {
+    commitment_id: 2,
+    counts: {
+      contradicted: 0,
+      inconclusive: 0,
+      supported: 2,
+    },
+    criteria_version: 1,
+    evaluated_at: "2026-10-15T09:58:51.298880Z",
+    has_outcome: true,
+    held_from_prior_count: 0,
+    outcome_meaning: "A finding that the eligible submitted evidence supports, contradicts, or does not settle the stated criteria. It is not proof that the commitment was or was not fulfilled in the real world, and it says nothing about intent.",
+    overall_outcome: "supported",
+    overall_reason: "all_required_supported",
+    required_total: 1,
+    retrieval_counts: {
+      fetched: 1,
+      http_error: 1,
+      unsupported_format: 1,
+    },
+    round: 1,
+    status: "outcome_accepted",
+    superseded_by: 0,
+    trigger: "initial",
+  },
+};
+const narrative_support: RawScenario = {
+  slug: "narrative-support",
+  name: "A finding resting on a quoted sentence",
+  whatThisTests: "A non-numeric criterion resolves on a passage copied verbatim from the document the review actually read.",
+  provenance: "recorded_on_chain",
+  recordedTx: "0xfd9ad70d0248590141cf0e98d0ec73b7cf3ed9217f09b3232e393acf5faca280",
+  note: "Replayed from a recorded round against a real public document.",
+  commitment: {
+    challenge_count: 0,
+    commitment_text: "The World Health Organization publishes a fact sheet on household air pollution and health describing its health effects.",
+    criteria: [
+      {
+        deadline: "",
+        has_threshold: false,
+        id: 1,
+        measure: "A publicly reachable fact sheet page on household air pollution is issued by the organization",
+        operator: "",
+        required: true,
+        text: "Publishes a fact sheet on household air pollution and health",
+        threshold_milli: 0,
+        unit: "",
+      },
+      {
+        deadline: "",
+        has_threshold: false,
+        id: 2,
+        measure: "The document describes illnesses and deaths attributed to household air pollution",
+        operator: "",
+        required: true,
+        text: "The fact sheet describes health effects of household air pollution",
+        threshold_milli: 0,
+        unit: "",
+      },
+    ],
+    current_round: 1,
+    data_mode: "live",
+    evidence_count: 1,
+    id: 3,
+    period_end: "2025-12-31",
+    period_start: "2025-01-01",
+    registrant: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+    registrant_role: "observer",
+    round_count: 1,
+    source_guidance: "The organization's own fact sheets are the authoritative record for this commitment.",
+    source_statement_ref: "https://www.who.int/news-room/fact-sheets/detail/household-air-pollution-and-health",
+    status: "outcome_accepted",
+    subject: "World Health Organization",
+    subject_kind: "institution",
+    superseded_by: 0,
+    supersedes: 0,
+    timezone: "UTC",
+    version: 1,
+  },
+  evidence: [
+    {
+      declared_source_class: "primary",
+      evidence_type: "official_report",
+      id: 5,
+      note: "Primary source: the organization's own fact sheet.",
+      published_date: "2025-12-16",
+      published_date_verified: false,
+      source_class_verified: false,
+      submitted_at: "2026-10-15T09:52:27.475792Z",
+      submitter: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+      url: "https://www.who.int/news-room/fact-sheets/detail/household-air-pollution-and-health",
+    },
+  ],
+  rounds: [
+    {
+      challenge_id: 0,
+      criteria: [
+        {
+          criterion_id: 1,
+          evidence_considered_not_used: [],
+          evidence_used: [5],
+          figure_milli: 0,
+          figure_verified: false,
+          has_figure: false,
+          held_from_prior: false,
+          reason_code: "supporting_evidence_found",
+          source_evidence_id: 5,
+          source_quote: "\"headline\":\"Household air pollution\"",
+          status: "supported",
+          summary: "WHO has a publicly reachable fact sheet page titled \"Household air pollution.\" The page is presented as a WHO fact sheet and shows a 16 December 2025 publication date.",
+          unit: "",
+        },
+        {
+          criterion_id: 2,
+          evidence_considered_not_used: [],
+          evidence_used: [5],
+          figure_milli: 0,
+          figure_verified: false,
+          has_figure: false,
+          held_from_prior: false,
+          reason_code: "supporting_evidence_found",
+          source_evidence_id: 5,
+          source_quote: "Each year, 2.9 million people die prematurely (2) from illnesses attributable to the household air pollution caused by the incomplete combustion of solid fuels and kerosene used for cooking",
+          status: "supported",
+          summary: "The fact sheet describes health effects of household air pollution, including premature deaths and specific diseases. It attributes illnesses such as stroke, ischaemic heart disease, lower respiratory infection, COPD, and lung cancer to household air pollution.",
+          unit: "",
+        },
+      ],
+      criteria_version: 1,
+      data_mode: "live",
+      evaluated_at: "2026-10-15T09:59:15.838560Z",
+      evidence_considered: [5],
+      overall_outcome: "supported",
+      overall_reason: "all_required_supported",
+      retrieval: [
+        {
+          evidence_id: 5,
+          source: "evidence",
+          status: "fetched",
+          url: "https://www.who.int/news-room/fact-sheets/detail/household-air-pollution-and-health",
+        },
+      ],
+      round: 1,
+      trigger: "initial",
+    },
+  ],
+  challenges: [],
+  outcome: {
+    commitment_id: 3,
+    counts: {
+      contradicted: 0,
+      inconclusive: 0,
+      supported: 2,
+    },
+    criteria_version: 1,
+    evaluated_at: "2026-10-15T09:59:15.838560Z",
+    has_outcome: true,
+    held_from_prior_count: 0,
+    outcome_meaning: "A finding that the eligible submitted evidence supports, contradicts, or does not settle the stated criteria. It is not proof that the commitment was or was not fulfilled in the real world, and it says nothing about intent.",
+    overall_outcome: "supported",
+    overall_reason: "all_required_supported",
+    required_total: 2,
+    retrieval_counts: {
+      fetched: 1,
+    },
+    round: 1,
+    status: "outcome_accepted",
+    superseded_by: 0,
+    trigger: "initial",
+  },
+};
+const challenge_round: RawScenario = {
+  slug: "challenge-round",
+  name: "A challenge that adds evidence",
+  whatThisTests: "A second round after a challenge, where the new document is recorded as considered but not cited and the earlier finding stands.",
+  provenance: "recorded_on_chain",
+  note: "Replayed from two recorded rounds. A challenge attached new evidence; the review considered it and did not rest the finding on it.",
+  commitment: {
+    challenge_count: 1,
+    commitment_text: "The World Health Organization publishes a fact sheet on household air pollution and health describing its health effects.",
+    criteria: [
+      {
+        deadline: "",
+        has_threshold: false,
+        id: 1,
+        measure: "A publicly reachable fact sheet page on household air pollution is issued by the organization",
+        operator: "",
+        required: true,
+        text: "Publishes a fact sheet on household air pollution and health",
+        threshold_milli: 0,
+        unit: "",
+      },
+      {
+        deadline: "",
+        has_threshold: false,
+        id: 2,
+        measure: "The document describes illnesses and deaths attributed to household air pollution",
+        operator: "",
+        required: true,
+        text: "The fact sheet describes health effects of household air pollution",
+        threshold_milli: 0,
+        unit: "",
+      },
+    ],
+    current_round: 2,
+    data_mode: "live",
+    evidence_count: 2,
+    id: 4,
+    period_end: "2025-12-31",
+    period_start: "2024-01-01",
+    registrant: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+    registrant_role: "observer",
+    round_count: 2,
+    source_guidance: "The organization's own fact sheets are the authoritative record for this commitment.",
+    source_statement_ref: "https://www.who.int/news-room/fact-sheets/detail/household-air-pollution-and-health",
+    status: "outcome_accepted",
+    subject: "World Health Organization",
+    subject_kind: "institution",
+    superseded_by: 0,
+    supersedes: 0,
+    timezone: "UTC",
+    version: 1,
+  },
+  evidence: [
+    {
+      declared_source_class: "primary",
+      evidence_type: "official_report",
+      id: 6,
+      note: "Primary source: the organization's own fact sheet.",
+      published_date: "2025-12-16",
+      published_date_verified: false,
+      source_class_verified: false,
+      submitted_at: "2026-10-15T10:00:04.009575Z",
+      submitter: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+      url: "https://www.who.int/news-room/fact-sheets/detail/household-air-pollution-and-health",
+    },
+    {
+      declared_source_class: "primary",
+      evidence_type: "official_report",
+      id: 7,
+      note: "A second fact sheet from the same publisher, covering ambient outdoor air pollution.",
+      published_date: "2024-10-24",
+      published_date_verified: false,
+      source_class_verified: false,
+      submitted_at: "2026-10-15T10:00:45.578899Z",
+      submitter: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+      url: "https://www.who.int/news-room/fact-sheets/detail/ambient-(outdoor)-air-quality-and-health",
+    },
+  ],
+  rounds: [
+    {
+      challenge_id: 0,
+      criteria: [
+        {
+          criterion_id: 1,
+          evidence_considered_not_used: [],
+          evidence_used: [6],
+          figure_milli: 0,
+          figure_verified: false,
+          has_figure: false,
+          held_from_prior: false,
+          reason_code: "supporting_evidence_found",
+          source_evidence_id: 6,
+          source_quote: "Household air pollution 16 December 2025",
+          status: "supported",
+          summary: "WHO publishes a fact sheet on household air pollution and health, dated 16 December 2025, which is publicly reachable on the WHO website.",
+          unit: "",
+        },
+        {
+          criterion_id: 2,
+          evidence_considered_not_used: [],
+          evidence_used: [6],
+          figure_milli: 0,
+          figure_verified: false,
+          has_figure: false,
+          held_from_prior: false,
+          reason_code: "supporting_evidence_found",
+          source_evidence_id: 0,
+          source_quote: "",
+          status: "supported",
+          summary: "The WHO fact sheet describes numerous health effects and deaths from household air pollution, including 2.9 million premature deaths annually from stroke, ischaemic heart disease, lower respiratory infections, lung cancer, and other conditions.",
+          unit: "",
+        },
+      ],
+      criteria_version: 1,
+      data_mode: "live",
+      evaluated_at: "2026-10-15T10:00:17.096454Z",
+      evidence_considered: [6],
+      overall_outcome: "supported",
+      overall_reason: "all_required_supported",
+      retrieval: [
+        {
+          evidence_id: 6,
+          source: "evidence",
+          status: "fetched",
+          url: "https://www.who.int/news-room/fact-sheets/detail/household-air-pollution-and-health",
+        },
+      ],
+      round: 1,
+      trigger: "initial",
+    },
+    {
+      challenge_id: 1,
+      criteria: [
+        {
+          criterion_id: 1,
+          evidence_considered_not_used: [7],
+          evidence_used: [6],
+          figure_milli: 0,
+          figure_verified: false,
+          has_figure: false,
+          held_from_prior: false,
+          reason_code: "supporting_evidence_found",
+          source_evidence_id: 6,
+          source_quote: "Household air pollution 16 December 2025",
+          status: "supported",
+          summary: "Evidence id 6 is a publicly reachable WHO fact sheet page specifically titled 'Household air pollution' dated 16 December 2025, which falls within the evaluation period. The challenger's claim that the ambient air pollution sheet should have been reviewed instead is not supported by the eligible evidence, which clearly shows a household air pollution fact sheet exists.",
+          unit: "",
+        },
+        {
+          criterion_id: 2,
+          evidence_considered_not_used: [7],
+          evidence_used: [6],
+          figure_milli: 0,
+          figure_verified: false,
+          has_figure: false,
+          held_from_prior: false,
+          reason_code: "supporting_evidence_found",
+          source_evidence_id: 6,
+          source_quote: "Each year, 2.9 million people die prematurely (2) from illnesses attributable to the household air pollution caused by the incomplete combustion of solid fuels and kerosene used for cooking",
+          status: "supported",
+          summary: "The fact sheet in evidence id 6 describes in detail the illnesses and deaths attributed to household air pollution, including 2.9 million premature deaths annually and specific disease categories such as ischaemic heart disease, stroke, lower respiratory infection, and lung cancer.",
+          unit: "",
+        },
+      ],
+      criteria_version: 1,
+      data_mode: "live",
+      evaluated_at: "2026-10-15T10:01:01.458873Z",
+      evidence_considered: [6, 7],
+      overall_outcome: "supported",
+      overall_reason: "all_required_supported",
+      retrieval: [
+        {
+          evidence_id: 6,
+          source: "evidence",
+          status: "fetched",
+          url: "https://www.who.int/news-room/fact-sheets/detail/household-air-pollution-and-health",
+        },
+        {
+          evidence_id: 7,
+          source: "evidence",
+          status: "fetched",
+          url: "https://www.who.int/news-room/fact-sheets/detail/ambient-(outdoor)-air-quality-and-health",
+        },
+      ],
+      round: 2,
+      trigger: "challenge",
+    },
+  ],
+  challenges: [
+    {
+      challenger: "0x5B3661C576c7001e6d6279C67F3779705d334c89",
+      grounds: "The household air pollution fact sheet was first published after this commitment was registered; the ambient air pollution sheet is the earlier document and should have been reviewed first.",
+      id: 1,
+      new_evidence_ids: [7],
+      opened_at: "2026-10-15T10:00:53.429429Z",
+      round_challenged: 1,
+      target: "1",
+    },
+  ],
+  outcome: {
+    commitment_id: 4,
+    counts: {
+      contradicted: 0,
+      inconclusive: 0,
+      supported: 2,
+    },
+    criteria_version: 1,
+    evaluated_at: "2026-10-15T10:01:01.458873Z",
+    has_outcome: true,
+    held_from_prior_count: 0,
+    outcome_meaning: "A finding that the eligible submitted evidence supports, contradicts, or does not settle the stated criteria. It is not proof that the commitment was or was not fulfilled in the real world, and it says nothing about intent.",
+    overall_outcome: "supported",
+    overall_reason: "all_required_supported",
+    required_total: 2,
+    retrieval_counts: {
+      fetched: 2,
+    },
+    round: 2,
+    status: "outcome_accepted",
+    superseded_by: 0,
+    trigger: "challenge",
+  },
+};
+
+const source_conflict: RawScenario = {
+  slug: "source-conflict",
+  name: "Two sources that disagree",
+  whatThisTests: "Two authoritative documents give different figures and neither wins, so the criterion is inconclusive rather than picking a side.",
+  provenance: "authored_illustration",
+  note: "Authored illustration. The documents are fictional, so the references are deliberately not links.",
+  commitment: {
+    id: 11,
+    registrant: "0x5a0b5e000000000000000000000000000000000a",
+    registrant_role: "observer",
+    subject: "Halbrook Water District (sample)",
     subject_kind: "organization",
-    source_statement_ref: `https://example.org/announcement-${over.id}`,
+    source_statement_ref: "sample://halbrook/announcement-2024",
+    commitment_text: "Halbrook Water District commits to keep annual water loss below 12 percent.",
+    criteria: [
+      {
+        id: 1,
+        text: "Keeps annual water loss below 12 percent",
+        measure: "A published figure for water loss, in percent, for the evaluation year",
+        required: true,
+        has_threshold: true,
+        threshold_milli: 12000,
+        operator: "lte",
+        unit: "percent",
+        deadline: "",
+      },
+    ],
     period_start: "2024-01-01",
     period_end: "2024-12-31",
     timezone: "UTC",
@@ -38,721 +866,492 @@ function commitment(over: Partial<Commitment> & Pick<Commitment, "id" | "subject
     status: "outcome_accepted",
     version: 1,
     supersedes: 0,
+    superseded_by: 0,
     round_count: 1,
     challenge_count: 0,
     evidence_count: 0,
     current_round: 1,
-    ...over,
-  };
-}
-
-function evidence(id: number, url: string, type: EvidenceItem["evidence_type"], day: string, submitter: string, note = ""): EvidenceItem {
-  return { id, url, evidence_type: type, published_date: day, note, submitter, submitted_at: `${day}T09:00:00Z` };
-}
-
-function summary(c: Commitment): CommitmentSummary {
-  return {
-    id: c.id,
-    subject: c.subject,
-    status: c.status,
-    data_mode: c.data_mode,
-    registrant_role: c.registrant_role,
-    version: c.version,
-    round_count: c.round_count,
-    evidence_count: c.evidence_count,
-    period_start: c.period_start,
-    period_end: c.period_end,
-  };
-}
-
-export interface Scenario {
-  slug: string;
-  name: string;
-  /** One line: what this sample demonstrates. */
-  whatThisTests: string;
-  commitment: Commitment;
-  evidence: EvidenceItem[];
-  rounds: RoundRecord[];
-  challenges: ChallengeRecord[];
-  outcome: Outcome;
-}
-
-// ---------------------------------------------------------------------------
-// 1. Clear support
-// ---------------------------------------------------------------------------
-const s1Criteria = commitment({
-  id: 1,
-  subject: "Riverdale City (sample)",
-  commitment_text:
-    "Riverdale City commits to publish an annual Scope 1 emissions report for 2024.",
-  source_statement_ref: "https://example.org/announcement-1",
-  registrant: SAMPLE_O,
-  registrant_role: "organization",
-  evidence_count: 1,
-  criteria: [
+  },
+  evidence: [
     {
       id: 1,
-      text: "Publishes an annual Scope 1 emissions report for 2024",
-      measure: "An official report covering the year is published and publicly reachable",
-      required: true,
-      has_threshold: false,
-      threshold_milli: 0,
-      operator: "",
-      unit: "",
-      deadline: "",
+      url: "sample://halbrook/annual-report-2024",
+      evidence_type: "official_report",
+      declared_source_class: "primary",
+      source_class_verified: false,
+      published_date: "2024-05-20",
+      published_date_verified: false,
+      note: "",
+      submitter: "0x5a0b5e000000000000000000000000000000000b",
+      submitted_at: "2024-05-20T09:00:00Z",
     },
     {
       id: 2,
-      text: "Reports are verified by a third-party auditor",
-      measure: "An independent audit statement accompanies the report",
-      required: false,
-      has_threshold: false,
-      threshold_milli: 0,
-      operator: "",
-      unit: "",
-      deadline: "",
+      url: "sample://halbrook/regulator-filing-2024",
+      evidence_type: "government_dataset",
+      declared_source_class: "primary",
+      source_class_verified: false,
+      published_date: "2024-07-02",
+      published_date_verified: false,
+      note: "",
+      submitter: "0x5a0b5e000000000000000000000000000000000a",
+      submitted_at: "2024-07-02T09:00:00Z",
     },
   ],
-});
-
-const s1Round1: CriterionResult[] = [
-  {
-    criterion_id: 1,
-    status: "supported",
-    reason_code: "supporting_evidence_found",
-    evidence_used: [1],
-    evidence_considered_not_used: [],
-    has_figure: false,
-    figure_milli: 0,
-    unit: "",
-    summary: "The official report covers Scope 1 emissions for the full year 2024.",
-  },
-  {
-    criterion_id: 2,
-    status: "inconclusive",
-    reason_code: "no_relevant_evidence",
-    evidence_used: [],
-    evidence_considered_not_used: [1],
-    has_figure: false,
-    figure_milli: 0,
-    unit: "",
-    summary: "The report does not include an independent audit statement.",
-  },
-];
-
-// ---------------------------------------------------------------------------
-// 2. Clear contradiction
-// ---------------------------------------------------------------------------
-const s2 = commitment({
-  id: 2,
-  subject: "Northwind Utilities (sample)",
-  commitment_text:
-    "Northwind Utilities commits to reduce grid energy intensity by 10% against the 2023 baseline.",
-  source_statement_ref: "https://example.org/announcement-2",
-  evidence_count: 1,
-  criteria: [
+  rounds: [
     {
-      id: 1,
-      text: "Reduces grid energy intensity by at least 10% vs 2023",
-      measure: "Audited intensity figures for 2024 compared with the 2023 baseline",
-      required: true,
-      has_threshold: true,
-      threshold_milli: 10000, // 10.000 (%)
-      operator: "gte",
-      unit: "percent_reduction",
-      deadline: "",
-    },
-  ],
-});
-
-// ---------------------------------------------------------------------------
-// 3. Missing evidence
-// ---------------------------------------------------------------------------
-const s3 = commitment({
-  id: 3,
-  subject: "Harborview University (sample)",
-  commitment_text:
-    "Harborview University commits to publish its 2024 sustainable-procurement report.",
-  source_statement_ref: "https://example.org/announcement-3",
-  status: "outcome_accepted",
-  evidence_count: 0,
-  criteria: [
-    {
-      id: 1,
-      text: "Publishes the 2024 sustainable-procurement report",
-      measure: "The named report exists and is publicly reachable",
-      required: true,
-      has_threshold: false,
-      threshold_milli: 0,
-      operator: "",
-      unit: "",
-      deadline: "",
-    },
-  ],
-});
-
-// ---------------------------------------------------------------------------
-// 4. Conflicting sources
-// ---------------------------------------------------------------------------
-const s4 = commitment({
-  id: 4,
-  subject: "Pinegrove County (sample)",
-  commitment_text:
-    "Pinegrove County commits to keeping the diversion rate above 45% in 2024.",
-  source_statement_ref: "https://example.org/announcement-4",
-  evidence_count: 2,
-  criteria: [
-    {
-      id: 1,
-      text: "Waste diversion rate stays above 45% for 2024",
-      measure: "An authoritative measurement of the county diversion rate for 2024",
-      required: true,
-      has_threshold: true,
-      threshold_milli: 45000, // 45.000 (%)
-      operator: "gte",
-      unit: "percent",
-      deadline: "",
-    },
-  ],
-});
-
-// ---------------------------------------------------------------------------
-// 5. Ambiguous criterion
-// ---------------------------------------------------------------------------
-const s5 = commitment({
-  id: 5,
-  subject: "Lakeside Transit (sample)",
-  commitment_text:
-    "Lakeside Transit commits to meaningfully improve passenger experience in 2024.",
-  source_statement_ref: "https://example.org/announcement-5",
-  evidence_count: 1,
-  criteria: [
-    {
-      id: 1,
-      text: "Meaningfully improves passenger experience",
-      measure: "Whatever shows improvement",
-      required: true,
-      has_threshold: false,
-      threshold_milli: 0,
-      operator: "",
-      unit: "",
-      deadline: "",
-    },
-  ],
-});
-
-// ---------------------------------------------------------------------------
-// 6. Numeric boundary (figure exactly at the threshold)
-// ---------------------------------------------------------------------------
-const s6 = commitment({
-  id: 6,
-  subject: "Crestview Water District (sample)",
-  commitment_text:
-    "Crestview Water District commits to treating at least 500 megalitres in 2024.",
-  source_statement_ref: "https://example.org/announcement-6",
-  registrant: SAMPLE_O,
-  registrant_role: "organization",
-  evidence_count: 1,
-  criteria: [
-    {
-      id: 1,
-      text: "Treats at least 500 megalitres of water in 2024",
-      measure: "Total treated volume for 2024 in megalitres, per the annual water quality report",
-      required: true,
-      has_threshold: true,
-      threshold_milli: 500000, // 500.000 ML exactly
-      operator: "gte",
-      unit: "megalitres",
-      deadline: "",
-    },
-  ],
-});
-
-// ---------------------------------------------------------------------------
-// 7. Injection attempt inside evidence (ignored)
-// ---------------------------------------------------------------------------
-const s7 = commitment({
-  id: 7,
-  subject: "Meadowbrook Schools (sample)",
-  commitment_text:
-    "Meadowbrook Schools commits to Scope 2 electricity emissions below 80 tCO2e in 2024.",
-  source_statement_ref: "https://example.org/announcement-7",
-  evidence_count: 1,
-  criteria: [
-    {
-      id: 1,
-      text: "Keeps Scope 2 electricity emissions below 80 tCO2e",
-      measure: "Reported Scope 2 emissions for 2024 in tCO2e",
-      required: true,
-      has_threshold: true,
-      threshold_milli: 80000, // 80.000 tCO2e
-      operator: "lte",
-      unit: "tco2e",
-      deadline: "",
-    },
-  ],
-});
-
-// ---------------------------------------------------------------------------
-// 8. Challenge with new evidence changes the outcome (round 2)
-// ---------------------------------------------------------------------------
-const s8 = commitment({
-  id: 8,
-  subject: "Fairwater Port Authority (sample)",
-  commitment_text:
-    "Fairwater Port Authority commits to publishing quarterly emissions updates in 2024.",
-  source_statement_ref: "https://example.org/announcement-8",
-  evidence_count: 2,
-  round_count: 2,
-  challenge_count: 1,
-  current_round: 2,
-  criteria: [
-    {
-      id: 1,
-      text: "Publishes quarterly emissions updates for 2024",
-      measure: "Four dated quarterly updates or one annual report covering all quarters",
-      required: true,
-      has_threshold: false,
-      threshold_milli: 0,
-      operator: "",
-      unit: "",
-      deadline: "",
-    },
-  ],
-});
-
-// ---------------------------------------------------------------------------
-// Assembled scenarios
-// ---------------------------------------------------------------------------
-export const SCENARIOS: Scenario[] = [
-  {
-    slug: "clear-support",
-    name: "Clear support",
-    whatThisTests: "An authoritative report meets a required criterion; an optional criterion stays inconclusive without hiding the mix.",
-    commitment: s1Criteria,
-    evidence: [
-      evidence(1, "https://evidence.example.org/riverdale/scope1-2024.pdf", "official_report", "2024-06-01", SAMPLE_O),
-    ],
-    rounds: [
-      {
-        round: 1,
-        trigger: "initial",
-        challenge_id: 0,
-        criteria_version: 1,
-        criteria: s1Round1,
-        overall_outcome: "supported",
-        overall_reason: "all_required_supported",
-        evidence_considered: [1],
-        evaluated_at: EVALUATED,
-      },
-    ],
-    challenges: [],
-    outcome: {
-      commitment_id: 1,
-      has_outcome: true,
       round: 1,
-      status: "outcome_accepted",
       trigger: "initial",
-      overall_outcome: "supported",
-      overall_reason: "all_required_supported",
+      challenge_id: 0,
       criteria_version: 1,
-      evaluated_at: EVALUATED,
-      required_total: 1,
-      counts: { supported: 1, contradicted: 0, inconclusive: 1 },
-    },
-  },
-  {
-    slug: "clear-contradiction",
-    name: "Clear contradiction",
-    whatThisTests: "An audited figure conflicts with the criterion — contradiction needs contradicting evidence, not silence.",
-    commitment: s2,
-    evidence: [
-      evidence(1, "https://evidence.example.org/northwind/audit-2024.pdf", "audited_statement", "2024-11-12", SAMPLE_A, "Independent audit, as submitted"),
-    ],
-    rounds: [
-      {
-        round: 1,
-        trigger: "initial",
-        challenge_id: 0,
-        criteria_version: 1,
-        criteria: [
-          {
-            criterion_id: 1,
-            status: "contradicted",
-            reason_code: "threshold_not_met",
-            evidence_used: [1],
-            evidence_considered_not_used: [],
-            has_figure: true,
-            figure_milli: 6200, // 6.200% reduction — below the 10% threshold
-            unit: "percent_reduction",
-            summary: "The audited figures show a 6.2% reduction, below the committed 10%.",
-          },
-        ],
-        overall_outcome: "contradicted",
-        overall_reason: "required_criterion_contradicted",
-        evidence_considered: [1],
-        evaluated_at: EVALUATED,
-      },
-    ],
-    challenges: [],
-    outcome: {
-      commitment_id: 2,
-      has_outcome: true,
-      round: 1,
-      status: "outcome_accepted",
-      trigger: "initial",
-      overall_outcome: "contradicted",
-      overall_reason: "required_criterion_contradicted",
-      criteria_version: 1,
-      evaluated_at: EVALUATED,
-      required_total: 1,
-      counts: { supported: 0, contradicted: 1, inconclusive: 0 },
-    },
-  },
-  {
-    slug: "missing-evidence",
-    name: "Missing evidence",
-    whatThisTests: "Nothing relevant was submitted — inconclusive, never treated as a broken promise.",
-    commitment: s3,
-    evidence: [],
-    rounds: [
-      {
-        round: 1,
-        trigger: "initial",
-        challenge_id: 0,
-        criteria_version: 1,
-        criteria: [
-          {
-            criterion_id: 1,
-            status: "inconclusive",
-            reason_code: "no_relevant_evidence",
-            evidence_used: [],
-            evidence_considered_not_used: [],
-            has_figure: false,
-            figure_milli: 0,
-            unit: "",
-            summary: "No evidence was submitted for this commitment during the window.",
-          },
-        ],
-        overall_outcome: "inconclusive",
-        overall_reason: "no_relevant_evidence",
-        evidence_considered: [],
-        evaluated_at: EVALUATED,
-      },
-    ],
-    challenges: [],
-    outcome: {
-      commitment_id: 3,
-      has_outcome: true,
-      round: 1,
-      status: "outcome_accepted",
-      trigger: "initial",
+      criteria: [
+        {
+          criterion_id: 1,
+          status: "inconclusive",
+          reason_code: "source_conflict",
+          evidence_used: [1, 2],
+          evidence_considered_not_used: [],
+          has_figure: false,
+          figure_milli: 0,
+          unit: "",
+          summary: "The district's own report gives 9.8 percent while the regulator filing for the same year gives 14.1 percent. Neither document is subordinate to the other, so the sources conflict.",
+          source_quote: "",
+          source_evidence_id: 0,
+          figure_verified: false,
+          held_from_prior: false,
+        },
+      ],
       overall_outcome: "inconclusive",
-      overall_reason: "no_relevant_evidence",
-      criteria_version: 1,
-      evaluated_at: EVALUATED,
-      required_total: 1,
-      counts: { supported: 0, contradicted: 0, inconclusive: 1 },
+      overall_reason: "authored_illustration",
+      evidence_considered: [1, 2],
+      retrieval: [
+        {
+          evidence_id: 1,
+          source: "evidence",
+          status: "fetched",
+          url: "sample://halbrook/annual-report-2024",
+        },
+        {
+          evidence_id: 2,
+          source: "evidence",
+          status: "fetched",
+          url: "sample://halbrook/regulator-filing-2024",
+        },
+      ],
+      data_mode: "sample",
+      evaluated_at: "2024-12-31T12:00:00Z",
     },
-  },
-  {
-    slug: "conflicting-sources",
-    name: "Conflicting sources",
-    whatThisTests: "Two authoritative sources disagree — the platform reports the conflict instead of picking a winner.",
-    commitment: s4,
-    evidence: [
-      evidence(1, "https://evidence.example.org/pinegrove/county-report-2024.pdf", "government_dataset", "2024-10-01", SAMPLE_A),
-      evidence(2, "https://evidence.example.org/pinegrove/contractor-audit-2024.pdf", "audited_statement", "2024-10-20", SAMPLE_A),
-    ],
-    rounds: [
-      {
-        round: 1,
-        trigger: "initial",
-        challenge_id: 0,
-        criteria_version: 1,
-        criteria: [
-          {
-            criterion_id: 1,
-            status: "inconclusive",
-            reason_code: "source_conflict",
-            evidence_used: [1, 2],
-            evidence_considered_not_used: [],
-            has_figure: false,
-            figure_milli: 0,
-            unit: "",
-            summary:
-              "The county report states 47.8% while the contractor audit states 41.3%; the criterion names no tie-break.",
-          },
-        ],
-        overall_outcome: "inconclusive",
-        overall_reason: "source_conflict",
-        evidence_considered: [1, 2],
-        evaluated_at: EVALUATED,
-      },
-    ],
-    challenges: [],
-    outcome: {
-      commitment_id: 4,
-      has_outcome: true,
-      round: 1,
-      status: "outcome_accepted",
-      trigger: "initial",
-      overall_outcome: "inconclusive",
-      overall_reason: "source_conflict",
-      criteria_version: 1,
-      evaluated_at: EVALUATED,
-      required_total: 1,
-      counts: { supported: 0, contradicted: 0, inconclusive: 1 },
+  ],
+  challenges: [],
+  outcome: {
+    commitment_id: 11,
+    has_outcome: true,
+    round: 1,
+    trigger: "initial",
+    overall_outcome: "inconclusive",
+    overall_reason: "source_conflict",
+    criteria_version: 1,
+    evaluated_at: "2024-12-31T12:00:00Z",
+    status: "outcome_accepted",
+    required_total: 1,
+    counts: {
+      supported: 0,
+      contradicted: 0,
+      inconclusive: 1,
     },
-  },
-  {
-    slug: "ambiguous-criterion",
-    name: "Ambiguous criterion",
-    whatThisTests: "Vague wording gets a clearer commitment version — the platform does not guess.",
-    commitment: s5,
-    evidence: [
-      evidence(1, "https://evidence.example.org/lakeside/survey-2024.pdf", "official_report", "2024-09-01", SAMPLE_O),
-    ],
-    rounds: [
-      {
-        round: 1,
-        trigger: "initial",
-        challenge_id: 0,
-        criteria_version: 1,
-        criteria: [
-          {
-            criterion_id: 1,
-            status: "inconclusive",
-            reason_code: "criterion_ambiguous",
-            evidence_used: [],
-            evidence_considered_not_used: [1],
-            has_figure: false,
-            figure_milli: 0,
-            unit: "",
-            summary:
-              "The criterion does not define what improvement means, so the survey cannot be matched to it.",
-          },
-        ],
-        overall_outcome: "inconclusive",
-        overall_reason: "criterion_ambiguous",
-        evidence_considered: [1],
-        evaluated_at: EVALUATED,
-      },
-    ],
-    challenges: [],
-    outcome: {
-      commitment_id: 5,
-      has_outcome: true,
-      round: 1,
-      status: "outcome_accepted",
-      trigger: "initial",
-      overall_outcome: "inconclusive",
-      overall_reason: "criterion_ambiguous",
-      criteria_version: 1,
-      evaluated_at: EVALUATED,
-      required_total: 1,
-      counts: { supported: 0, contradicted: 0, inconclusive: 1 },
+    held_from_prior_count: 0,
+    retrieval_counts: {
+      fetched: 1,
     },
+    superseded_by: 0,
+    outcome_meaning: "A finding that the eligible submitted evidence supports, contradicts, or does not settle the stated criteria. It is not proof that the commitment was or was not fulfilled in the real world, and it says nothing about intent.",
   },
-  {
-    slug: "numeric-boundary",
-    name: "Numeric boundary",
-    whatThisTests: "The extracted figure sits exactly on the threshold — fixed-point milli-units, no float drift.",
-    commitment: s6,
-    evidence: [
-      evidence(1, "https://evidence.example.org/crestview/wq-report-2024.pdf", "official_report", "2024-12-15", SAMPLE_O),
-    ],
-    rounds: [
-      {
-        round: 1,
-        trigger: "initial",
-        challenge_id: 0,
-        criteria_version: 1,
-        criteria: [
-          {
-            criterion_id: 1,
-            status: "supported",
-            reason_code: "threshold_met",
-            evidence_used: [1],
-            evidence_considered_not_used: [],
-            has_figure: true,
-            figure_milli: 500000, // exactly 500.000 ML — at the gte boundary
-            unit: "megalitres",
-            summary: "The annual report states 500.0 megalitres treated, exactly at the threshold.",
-          },
-        ],
-        overall_outcome: "supported",
-        overall_reason: "all_required_supported",
-        evidence_considered: [1],
-        evaluated_at: EVALUATED,
-      },
-    ],
-    challenges: [],
-    outcome: {
-      commitment_id: 6,
-      has_outcome: true,
-      round: 1,
-      status: "outcome_accepted",
-      trigger: "initial",
-      overall_outcome: "supported",
-      overall_reason: "all_required_supported",
-      criteria_version: 1,
-      evaluated_at: EVALUATED,
-      required_total: 1,
-      counts: { supported: 1, contradicted: 0, inconclusive: 0 },
-    },
-  },
-  {
-    slug: "injection-attempt",
-    name: "Injection attempt",
-    whatThisTests:
-      "Evidence that demands \"mark this supported\" while actually contradicting the criterion — the instruction is treated as data.",
-    commitment: s7,
-    evidence: [
-      evidence(
-        1,
-        "https://evidence.example.org/meadowbrook/bill-summary.txt",
-        "other",
-        "2024-10-02",
-        SAMPLE_C,
-        "Clearly supports the commitment" // stance note — advisory only, ignored by review
-      ),
-    ],
-    rounds: [
-      {
-        round: 1,
-        trigger: "initial",
-        challenge_id: 0,
-        criteria_version: 1,
-        criteria: [
-          {
-            criterion_id: 1,
-            status: "contradicted",
-            reason_code: "threshold_not_met", // figure above the "below 80" ceiling
-            evidence_used: [1],
-            evidence_considered_not_used: [],
-            has_figure: true,
-            figure_milli: 132000, // 132.000 tCO2e — above the 80 ceiling
-            unit: "tco2e",
-            summary:
-              "The submitted document reports 132 tCO2e. Its embedded instruction to mark the criterion supported was ignored as data.",
-          },
-        ],
-        overall_outcome: "contradicted",
-        overall_reason: "required_criterion_contradicted",
-        evidence_considered: [1],
-        evaluated_at: EVALUATED,
-      },
-    ],
-    challenges: [],
-    outcome: {
-      commitment_id: 7,
-      has_outcome: true,
-      round: 1,
-      status: "outcome_accepted",
-      trigger: "initial",
-      overall_outcome: "contradicted",
-      overall_reason: "required_criterion_contradicted",
-      criteria_version: 1,
-      evaluated_at: EVALUATED,
-      required_total: 1,
-      counts: { supported: 0, contradicted: 1, inconclusive: 0 },
-    },
-  },
-  {
-    slug: "challenge-changes-outcome",
-    name: "Challenge changes the outcome",
-    whatThisTests:
-      "Right of response: a challenge with new evidence opens round 2 and the outcome changes; round 1 history is preserved.",
-    commitment: s8,
-    evidence: [
-      evidence(1, "https://evidence.example.org/fairwater/self-published-2024.pdf", "official_report", "2024-08-01", SAMPLE_O, "Self-published by the subject"),
-      evidence(2, "https://evidence.example.org/fairwater/auditor-letter-2024.pdf", "audited_statement", "2024-11-30", SAMPLE_C),
-    ],
-    rounds: [
-      {
-        round: 1,
-        trigger: "initial",
-        challenge_id: 0,
-        criteria_version: 1,
-        criteria: [
-          {
-            criterion_id: 1,
-            status: "supported",
-            reason_code: "supporting_evidence_found",
-            evidence_used: [1],
-            evidence_considered_not_used: [],
-            has_figure: false,
-            figure_milli: 0,
-            unit: "",
-            summary: "The self-published update covers the four quarters of 2024.",
-          },
-        ],
-        overall_outcome: "supported",
-        overall_reason: "all_required_supported",
-        evidence_considered: [1],
-        evaluated_at: "2024-10-15T12:00:00Z",
-      },
-      {
-        round: 2,
-        trigger: "challenge",
-        challenge_id: 1,
-        criteria_version: 1,
-        criteria: [
-          {
-            criterion_id: 1,
-            status: "contradicted",
-            reason_code: "contradicting_evidence_found",
-            evidence_used: [2],
-            evidence_considered_not_used: [1],
-            has_figure: false,
-            figure_milli: 0,
-            unit: "",
-            summary:
-              "The auditor's letter states only two of the four quarterly updates were actually issued.",
-          },
-        ],
-        overall_outcome: "contradicted",
-        overall_reason: "required_criterion_contradicted",
-        evidence_considered: [1, 2],
-        evaluated_at: EVALUATED,
-      },
-    ],
-    challenges: [
+};
+const criterion_ambiguous: RawScenario = {
+  slug: "criterion-ambiguous",
+  name: "A criterion too vague to match",
+  whatThisTests: "Evidence exists and was read, but the criterion's wording cannot be matched to it. The remedy is a clearer commitment version, not a guess.",
+  provenance: "authored_illustration",
+  note: "Authored illustration. The documents are fictional, so the references are deliberately not links.",
+  commitment: {
+    id: 12,
+    registrant: "0x5a0b5e000000000000000000000000000000000a",
+    registrant_role: "observer",
+    subject: "Larkspur Transit Authority (sample)",
+    subject_kind: "organization",
+    source_statement_ref: "sample://larkspur/announcement-2024",
+    commitment_text: "Larkspur Transit Authority commits to improve service quality.",
+    criteria: [
       {
         id: 1,
-        round_challenged: 1,
-        challenger: SAMPLE_C,
-        target: "",
-        grounds:
-          "The self-published update overstates coverage; the auditor's letter contradicts it.",
-        new_evidence_ids: [2],
-        opened_at: "2024-11-30T15:00:00Z",
+        text: "Improves service quality",
+        measure: "A published measure showing service quality improved",
+        required: true,
+        has_threshold: false,
+        threshold_milli: 0,
+        operator: "",
+        unit: "",
+        deadline: "",
       },
     ],
-    outcome: {
-      commitment_id: 8,
-      has_outcome: true,
-      round: 2,
-      status: "outcome_accepted",
-      trigger: "challenge",
-      overall_outcome: "contradicted",
-      overall_reason: "required_criterion_contradicted",
-      criteria_version: 1,
-      evaluated_at: EVALUATED,
-      required_total: 1,
-      counts: { supported: 0, contradicted: 1, inconclusive: 0 },
-    },
+    period_start: "2024-01-01",
+    period_end: "2024-12-31",
+    timezone: "UTC",
+    source_guidance: "Prefer audited statements and official reports.",
+    data_mode: "sample",
+    status: "outcome_accepted",
+    version: 1,
+    supersedes: 0,
+    superseded_by: 0,
+    round_count: 1,
+    challenge_count: 0,
+    evidence_count: 0,
+    current_round: 1,
   },
+  evidence: [
+    {
+      id: 1,
+      url: "sample://larkspur/annual-report-2024",
+      evidence_type: "official_report",
+      declared_source_class: "primary",
+      source_class_verified: false,
+      published_date: "2024-04-18",
+      published_date_verified: false,
+      note: "",
+      submitter: "0x5a0b5e000000000000000000000000000000000b",
+      submitted_at: "2024-04-18T09:00:00Z",
+    },
+  ],
+  rounds: [
+    {
+      round: 1,
+      trigger: "initial",
+      challenge_id: 0,
+      criteria_version: 1,
+      criteria: [
+        {
+          criterion_id: 1,
+          status: "inconclusive",
+          reason_code: "criterion_ambiguous",
+          evidence_used: [],
+          evidence_considered_not_used: [1],
+          has_figure: false,
+          figure_milli: 0,
+          unit: "",
+          summary: "The report describes service quality in general terms but does not measure the criterion as written, so the wording is what cannot be matched.",
+          source_quote: "",
+          source_evidence_id: 0,
+          figure_verified: false,
+          held_from_prior: false,
+        },
+      ],
+      overall_outcome: "inconclusive",
+      overall_reason: "authored_illustration",
+      evidence_considered: [1],
+      retrieval: [
+        {
+          evidence_id: 1,
+          source: "evidence",
+          status: "fetched",
+          url: "sample://larkspur/annual-report-2024",
+        },
+      ],
+      data_mode: "sample",
+      evaluated_at: "2024-12-31T12:00:00Z",
+    },
+  ],
+  challenges: [],
+  outcome: {
+    commitment_id: 12,
+    has_outcome: true,
+    round: 1,
+    trigger: "initial",
+    overall_outcome: "inconclusive",
+    overall_reason: "criterion_ambiguous",
+    criteria_version: 1,
+    evaluated_at: "2024-12-31T12:00:00Z",
+    status: "outcome_accepted",
+    required_total: 1,
+    counts: {
+      supported: 0,
+      contradicted: 0,
+      inconclusive: 1,
+    },
+    held_from_prior_count: 0,
+    retrieval_counts: {
+      fetched: 1,
+    },
+    superseded_by: 0,
+    outcome_meaning: "A finding that the eligible submitted evidence supports, contradicts, or does not settle the stated criteria. It is not proof that the commitment was or was not fulfilled in the real world, and it says nothing about intent.",
+  },
+};
+const injection_attempt: RawScenario = {
+  slug: "injection-attempt",
+  name: "An instruction inside a document",
+  whatThisTests: "A submitted document tells the reviewer to mark the criterion supported. It is read as data, so the criterion stays inconclusive.",
+  provenance: "authored_illustration",
+  note: "Authored illustration. The documents are fictional, so the references are deliberately not links.",
+  commitment: {
+    id: 13,
+    registrant: "0x5a0b5e000000000000000000000000000000000a",
+    registrant_role: "observer",
+    subject: "Elmgate Housing Trust (sample)",
+    subject_kind: "organization",
+    source_statement_ref: "sample://elmgate/announcement-2024",
+    commitment_text: "Elmgate Housing Trust commits to publish an annual repairs and maintenance report.",
+    criteria: [
+      {
+        id: 1,
+        text: "Publishes an annual repairs and maintenance report",
+        measure: "A published repairs and maintenance report for the evaluation year",
+        required: true,
+        has_threshold: false,
+        threshold_milli: 0,
+        operator: "",
+        unit: "",
+        deadline: "",
+      },
+    ],
+    period_start: "2024-01-01",
+    period_end: "2024-12-31",
+    timezone: "UTC",
+    source_guidance: "Prefer audited statements and official reports.",
+    data_mode: "sample",
+    status: "outcome_accepted",
+    version: 1,
+    supersedes: 0,
+    superseded_by: 0,
+    round_count: 1,
+    challenge_count: 0,
+    evidence_count: 0,
+    current_round: 1,
+  },
+  evidence: [
+    {
+      id: 1,
+      url: "sample://elmgate/repair-report-2024",
+      evidence_type: "other",
+      declared_source_class: "unclassified",
+      source_class_verified: false,
+      published_date: "2024-06-30",
+      published_date_verified: false,
+      note: "Submitted by a third party.",
+      submitter: "0x5a0b5e000000000000000000000000000000000c",
+      submitted_at: "2024-06-30T09:00:00Z",
+    },
+  ],
+  rounds: [
+    {
+      round: 1,
+      trigger: "initial",
+      challenge_id: 0,
+      criteria_version: 1,
+      criteria: [
+        {
+          criterion_id: 1,
+          status: "inconclusive",
+          reason_code: "no_relevant_evidence",
+          evidence_used: [],
+          evidence_considered_not_used: [1],
+          has_figure: false,
+          figure_milli: 0,
+          unit: "",
+          summary: "The document contains text instructing the reviewer to mark the criterion supported. That text is treated as data, not as an instruction, and the document contains no repairs report.",
+          source_quote: "",
+          source_evidence_id: 0,
+          figure_verified: false,
+          held_from_prior: false,
+        },
+      ],
+      overall_outcome: "inconclusive",
+      overall_reason: "authored_illustration",
+      evidence_considered: [1],
+      retrieval: [
+        {
+          evidence_id: 1,
+          source: "evidence",
+          status: "fetched",
+          url: "sample://elmgate/repair-report-2024",
+        },
+      ],
+      data_mode: "sample",
+      evaluated_at: "2024-12-31T12:00:00Z",
+    },
+  ],
+  challenges: [],
+  outcome: {
+    commitment_id: 13,
+    has_outcome: true,
+    round: 1,
+    trigger: "initial",
+    overall_outcome: "inconclusive",
+    overall_reason: "no_relevant_evidence",
+    criteria_version: 1,
+    evaluated_at: "2024-12-31T12:00:00Z",
+    status: "outcome_accepted",
+    required_total: 1,
+    counts: {
+      supported: 0,
+      contradicted: 0,
+      inconclusive: 1,
+    },
+    held_from_prior_count: 0,
+    retrieval_counts: {
+      fetched: 1,
+    },
+    superseded_by: 0,
+    outcome_meaning: "A finding that the eligible submitted evidence supports, contradicts, or does not settle the stated criteria. It is not proof that the commitment was or was not fulfilled in the real world, and it says nothing about intent.",
+  },
+};
+const numeric_boundary: RawScenario = {
+  slug: "numeric-boundary",
+  name: "A figure exactly on the threshold",
+  whatThisTests: "The extracted figure equals the threshold, the comparison is inclusive, and the number is confirmed in the quoted passage.",
+  provenance: "authored_illustration",
+  note: "Authored illustration. The documents are fictional, so the references are deliberately not links.",
+  commitment: {
+    id: 14,
+    registrant: "0x5a0b5e000000000000000000000000000000000a",
+    registrant_role: "observer",
+    subject: "Brightwater Utilities (sample)",
+    subject_kind: "organization",
+    source_statement_ref: "sample://brightwater/announcement-2024",
+    commitment_text: "Brightwater Utilities commits to keep annual water loss at or below 9.5 percent.",
+    criteria: [
+      {
+        id: 1,
+        text: "Keeps annual water loss at or below 9.5 percent",
+        measure: "A published figure for water loss, in percent, for the evaluation year",
+        required: true,
+        has_threshold: true,
+        threshold_milli: 9500,
+        operator: "lte",
+        unit: "percent",
+        deadline: "",
+      },
+    ],
+    period_start: "2024-01-01",
+    period_end: "2024-12-31",
+    timezone: "UTC",
+    source_guidance: "Prefer audited statements and official reports.",
+    data_mode: "sample",
+    status: "outcome_accepted",
+    version: 1,
+    supersedes: 0,
+    superseded_by: 0,
+    round_count: 1,
+    challenge_count: 0,
+    evidence_count: 0,
+    current_round: 1,
+  },
+  evidence: [
+    {
+      id: 1,
+      url: "sample://brightwater/annual-report-2024",
+      evidence_type: "audited_statement",
+      declared_source_class: "primary",
+      source_class_verified: false,
+      published_date: "2024-08-09",
+      published_date_verified: false,
+      note: "Independent audit, as submitted.",
+      submitter: "0x5a0b5e000000000000000000000000000000000b",
+      submitted_at: "2024-08-09T09:00:00Z",
+    },
+  ],
+  rounds: [
+    {
+      round: 1,
+      trigger: "initial",
+      challenge_id: 0,
+      criteria_version: 1,
+      criteria: [
+        {
+          criterion_id: 1,
+          status: "supported",
+          reason_code: "threshold_met",
+          evidence_used: [1],
+          evidence_considered_not_used: [],
+          has_figure: true,
+          figure_milli: 9500,
+          unit: "",
+          summary: "",
+          source_quote: "Annual water loss for the year was 9.5 percent of distribution.",
+          source_evidence_id: 1,
+          figure_verified: true,
+          held_from_prior: false,
+        },
+      ],
+      overall_outcome: "supported",
+      overall_reason: "authored_illustration",
+      evidence_considered: [1],
+      retrieval: [
+        {
+          evidence_id: 1,
+          source: "evidence",
+          status: "fetched",
+          url: "sample://brightwater/annual-report-2024",
+        },
+      ],
+      data_mode: "sample",
+      evaluated_at: "2024-12-31T12:00:00Z",
+    },
+  ],
+  challenges: [],
+  outcome: {
+    commitment_id: 14,
+    has_outcome: true,
+    round: 1,
+    trigger: "initial",
+    overall_outcome: "supported",
+    overall_reason: "all_required_supported",
+    criteria_version: 1,
+    evaluated_at: "2024-12-31T12:00:00Z",
+    status: "outcome_accepted",
+    required_total: 1,
+    counts: {
+      supported: 1,
+      contradicted: 0,
+      inconclusive: 0,
+    },
+    held_from_prior_count: 0,
+    retrieval_counts: {
+      fetched: 1,
+    },
+    superseded_by: 0,
+    outcome_meaning: "A finding that the eligible submitted evidence supports, contradicts, or does not settle the stated criteria. It is not proof that the commitment was or was not fulfilled in the real world, and it says nothing about intent.",
+  },
+};
+
+const RAW_SCENARIOS: RawScenario[] = [
+  verified_figure,
+  unreadable_sources,
+  narrative_support,
+  challenge_round,
+  source_conflict,
+  criterion_ambiguous,
+  injection_attempt,
+  numeric_boundary,
 ];
+
+export const SCENARIOS: Scenario[] = RAW_SCENARIOS.map(normalizeScenario);
+
+/** The record the landing page features: a real, verified numeric finding. */
+export const LANDING_SCENARIO = SCENARIOS[0];
+
+export const SCENARIO_SUMMARIES: CommitmentSummary[] = SCENARIOS.map((s) => ({
+  id: s.commitment.id,
+  subject: s.commitment.subject,
+  status: s.commitment.status,
+  data_mode: s.commitment.data_mode,
+  registrant_role: s.commitment.registrant_role,
+  version: s.commitment.version,
+  superseded_by: s.commitment.superseded_by,
+  round_count: s.commitment.round_count,
+  evidence_count: s.commitment.evidence_count,
+  period_start: s.commitment.period_start,
+  period_end: s.commitment.period_end,
+}));
 
 export function getScenario(slug: string): Scenario | undefined {
   return SCENARIOS.find((s) => s.slug === slug);
 }
-
-/** The sample shown on the landing page (mixed per-criterion picture). */
-export const LANDING_SCENARIO = SCENARIOS[0];
-
-export const SCENARIO_SUMMARIES: CommitmentSummary[] = SCENARIOS.map((s) =>
-  summary(s.commitment)
-);

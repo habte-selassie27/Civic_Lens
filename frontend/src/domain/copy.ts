@@ -10,6 +10,7 @@
  *   Request review, Open challenge.
  */
 
+import type { Provenance } from "./fixtures";
 import type {
   CommitmentStatus,
   DataMode,
@@ -17,8 +18,10 @@ import type {
   ReasonCode,
   RegistrantRole,
   ResultStatus,
+  RetrievalStatus,
   ReviewStatus,
   RoundTrigger,
+  SourceClass,
 } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -61,6 +64,12 @@ export const REASON_LABEL: Record<ReasonCode, string> = {
     "The criterion's wording can't be matched to evidence. A clearer version may help.",
   unit_mismatch:
     "The figure was reported in a different unit than the criterion uses.",
+  review_incomplete:
+    "The review could not complete a judgement on this criterion.",
+  figure_unverified:
+    "A figure was reported but could not be tied to a quoted passage in the source.",
+  period_mismatch:
+    "The figure's reporting period or scope does not clearly match the criterion.",
 };
 
 /** What's missing or conflicting, and what could resolve it (for inconclusive). */
@@ -79,6 +88,75 @@ export const INCONCLUSIVE_RESOLUTION: Record<ReasonCode, string> = {
     "What could resolve this: a new commitment version with a sharper criterion. The remedy is a clearer commitment, not a guess.",
   unit_mismatch:
     "What could resolve this: evidence reporting the figure in the criterion's unit.",
+  review_incomplete:
+    "What could resolve this: request the review again. Nothing about the commitment is implied either way.",
+  figure_unverified:
+    "What could resolve this: a source that states the figure in a quoted passage.",
+  period_mismatch:
+    "What could resolve this: evidence whose reporting period and scope match the criterion.",
+};
+
+/**
+ * Retrieval status copy. A source that could not be read is never evidence for
+ * or against anything — the wording must say "not read", never "not found".
+ */
+/**
+ * Provenance of a bundled demo record. The demo mixes two very different things
+ * — replays of real on-chain rounds and authored illustrations — so each one
+ * has to say which it is before a reader looks at any outcome.
+ */
+export const PROVENANCE_LABEL: Record<Provenance, string> = {
+  recorded_on_chain: "Replay of a recorded on-chain result",
+  authored_illustration: "Authored illustration",
+};
+
+/**
+ * The honest caveat shown under every demo record, whichever kind it is.
+ * Wording is deliberately uniform so neither kind can read as more real than
+ * the other by omission.
+ */
+export const PROVENANCE_NOTE: Record<Provenance, string> = {
+  recorded_on_chain:
+    "Replayed from a round that was actually reviewed by consensus on the network. " +
+    "It shows what that review decided; it does not claim the same decision would " +
+    "be reached again. Appeals and finality still apply.",
+  authored_illustration:
+    "Authored for the demo. The organization and its documents are fictional and " +
+    "were never reviewed on the network. This shows how the contract would behave, " +
+    "not something it decided.",
+};
+
+export const RETRIEVAL_LABEL: Record<RetrievalStatus, string> = {
+  fetched: "Read",
+  unreachable: "Could not be reached",
+  http_error: "The source returned an error",
+  blocked: "Blocked: not a public address",
+  unsupported_format: "Format could not be read",
+  empty: "The page had no readable text",
+  unknown: "Retrieval status not recorded",
+};
+
+/** True only for a source a validator actually managed to read. */
+export const RETRIEVAL_IS_READ: Record<RetrievalStatus, boolean> = {
+  fetched: true,
+  unreachable: false,
+  http_error: false,
+  blocked: false,
+  unsupported_format: false,
+  empty: false,
+  unknown: false,
+};
+
+/**
+ * Declared source class. This is derived from the submitter's own type label and
+ * is NEVER verified by the contract or by consensus, so the UI must present it
+ * as a declaration.
+ */
+export const SOURCE_CLASS_LABEL: Record<SourceClass, string> = {
+  primary: "Declared primary source",
+  self_published: "Declared self-published",
+  secondary: "Declared secondary report",
+  unclassified: "Unclassified source",
 };
 
 /** Overall reason fallback: unknown codes still read as neutral sentences. */
@@ -127,6 +205,25 @@ export const DATA_MODE_LABEL: Record<DataMode, string> = {
   sample: "Sample data",
   live: "Live evidence",
 };
+
+/**
+ * The persistent chrome chip describes the BUILD's data source, never the
+ * current page's contents. A configured contract renders "Live contract
+ * configured"; each surface still carries its own Sample data / Live evidence
+ * badge, so the chrome can never claim a page is live when it is replaying a
+ * recorded sample.
+ */
+export const APP_SOURCE_LABEL = {
+  configured: "Live contract configured",
+  sampleOnly: "Sample data",
+} as const;
+
+export const APP_SOURCE_TITLE = {
+  configured:
+    "A deployed CivicLens contract is configured in this build. Each surface labels where its own data came from.",
+  sampleOnly:
+    "No contract address is configured, so every surface in this app reads bundled sample data.",
+} as const;
 
 export const EVIDENCE_TYPE_LABEL: Record<EvidenceType, string> = {
   official_report: "Official report",
@@ -260,8 +357,13 @@ const NEUTRAL_COPY_SOURCES: Array<Record<string, string>> = [
   ROLE_LABEL,
   ROLE_SHORT_LABEL,
   DATA_MODE_LABEL,
+  APP_SOURCE_LABEL,
+  APP_SOURCE_TITLE,
   EVIDENCE_TYPE_LABEL,
   TX_PHASE_LABEL,
+  RETRIEVAL_LABEL,
+  SOURCE_CLASS_LABEL,
+  PROVENANCE_LABEL,
 ];
 
 /** Returns the loaded terms found in the neutral copy map (empty = pass). */

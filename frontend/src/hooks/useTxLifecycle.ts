@@ -17,7 +17,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { writes } from "@/services";
 import type { TxHash } from "@/services/types";
-import { phaseCommitted, receiptPhase } from "@/domain/finality";
+import { phaseCommitted, receiptPhase, validatorAgreement, type ValidatorAgreement } from "@/domain/finality";
 import type { TxPhase } from "@/domain/copy";
 
 const PENDING_KEY = "civiclens.tx.pending";
@@ -25,7 +25,7 @@ const POLL_INTERVAL_MS = 4000;
 
 const TERMINAL: TxPhase[] = ["accepted", "final", "dropped", "rejected", "reverted"];
 
-interface Persisted {
+export interface PendingTx {
   hash: TxHash;
   action: string;
   startedAt: number;
@@ -36,6 +36,8 @@ export interface TxLifecycle {
   hash: TxHash | null;
   action: string | null;
   error: string | null;
+  /** Per-validator votes from the latest receipt; null until votes exist. */
+  votes: ValidatorAgreement | null;
   isBusy: boolean;
   /** Run a write. Resolves once the hash is in hand, not once it is accepted. */
   start(action: string, fn: () => Promise<TxHash>): Promise<TxHash | null>;
@@ -45,12 +47,12 @@ export interface TxLifecycle {
   waitForAcceptance(): Promise<TxPhase>;
 }
 
-function loadPersisted(): Persisted | null {
+function loadPersisted(): PendingTx | null {
   if (typeof localStorage === "undefined") return null;
   try {
     const raw = localStorage.getItem(PENDING_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Persisted;
+    const parsed = JSON.parse(raw) as PendingTx;
     if (!parsed?.hash || !parsed?.action) return null;
     // An hour-old write is not worth resuming; it would confuse the reader.
     if (Date.now() - parsed.startedAt > 60 * 60 * 1000) {
@@ -63,10 +65,19 @@ function loadPersisted(): Persisted | null {
   }
 }
 
-function savePersisted(value: Persisted | null) {
+function savePersisted(value: PendingTx | null) {
   if (typeof localStorage === "undefined") return;
   if (value) localStorage.setItem(PENDING_KEY, JSON.stringify(value));
   else localStorage.removeItem(PENDING_KEY);
+}
+
+/**
+ * Read-only view of the in-flight write this browser persisted, if any.
+ * Used by the activity page; the write itself stays tracked by the hook on
+ * the page that submitted it.
+ */
+export function readPendingTx(): PendingTx | null {
+  return loadPersisted();
 }
 
 export function useTxLifecycle(): TxLifecycle {
@@ -74,6 +85,7 @@ export function useTxLifecycle(): TxLifecycle {
   const [hash, setHash] = useState<TxHash | null>(null);
   const [action, setAction] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [votes, setVotes] = useState<ValidatorAgreement | null>(null);
   const inFlight = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -92,6 +104,7 @@ export function useTxLifecycle(): TxLifecycle {
       const receipt = await writes.getTransaction(target);
       const next = receiptPhase(receipt);
       setPhase(next);
+      setVotes(validatorAgreement(receipt));
       if (TERMINAL.includes(next)) {
         savePersisted(null);
         clearTimer();
@@ -124,6 +137,7 @@ export function useTxLifecycle(): TxLifecycle {
       inFlight.current = true;
       setError(null);
       setAction(name);
+      setVotes(null);
       // Optimistic state stops here — nothing claims a result before consensus.
       setPhase("submitted");
 
@@ -162,6 +176,7 @@ export function useTxLifecycle(): TxLifecycle {
     const receipt = await w.waitForAccept(hash);
     const next = receiptPhase(receipt);
     setPhase(next);
+    setVotes(validatorAgreement(receipt));
     if (phaseCommitted(next)) savePersisted(null);
     return next;
   }, [hash, phase]);
@@ -173,6 +188,7 @@ export function useTxLifecycle(): TxLifecycle {
     setHash(null);
     setAction(null);
     setError(null);
+    setVotes(null);
   }, []);
 
   return {
@@ -180,6 +196,7 @@ export function useTxLifecycle(): TxLifecycle {
     hash,
     action,
     error,
+    votes,
     isBusy: phase === "submitted" || phase === "pending",
     start,
     refresh,

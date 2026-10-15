@@ -6,6 +6,8 @@ date-window filtering, and the standing rule: absence is never contradiction.
 """
 
 from tests.direct.conftest import (
+    DOC_BODY,
+    figure_body,
     DATA_FRAMING_PATTERN,
     criteria_json,
     make_commitment,
@@ -17,7 +19,7 @@ from tests.direct.conftest import (
 EVIDENCE_URL = "https://reports.example.org/2024"
 
 
-def _mock_docs(vm, body="Report text with data."):
+def _mock_docs(vm, body=DOC_BODY):
     vm.mock_web(r".*", {"status": 200, "body": body})
 
 
@@ -87,12 +89,15 @@ def test_missing_criterion_output_becomes_inconclusive(direct_vm, direct_deploy,
     c.submit_evidence(cid, EVIDENCE_URL, "government_dataset", "2024-06-01", "")
     _mock_docs(direct_vm)
     # LLM returns an empty criteria list: the criterion defaults to
-    # inconclusive/criterion_ambiguous rather than failing.
+    # inconclusive/review_incomplete rather than failing. The reason says the
+    # REVIEW was incomplete, not that the commitment's wording was unclear —
+    # blaming the subject for a model glitch is exactly what the fairness rules
+    # forbid.
     _mock_llm(direct_vm, verdict_json())
     c.request_review(cid)
     res = c.get_rounds(cid)[0]["criteria"][0]
     assert res["status"] == "inconclusive"
-    assert res["reason_code"] == "criterion_ambiguous"
+    assert res["reason_code"] == "review_incomplete"
 
 
 def test_unknown_reason_code_coerced(direct_vm, direct_deploy, direct_alice):
@@ -103,7 +108,9 @@ def test_unknown_reason_code_coerced(direct_vm, direct_deploy, direct_alice):
     _mock_docs(direct_vm)
     _mock_llm(direct_vm, verdict_json(verdict(1, "inconclusive", " vibes_detected ")))
     c.request_review(cid)
-    assert c.get_rounds(cid)[0]["criteria"][0]["reason_code"] == "criterion_ambiguous"
+    # An unrecognised reason code is a review failure, not a judgement that the
+    # criterion is ambiguous.
+    assert c.get_rounds(cid)[0]["criteria"][0]["reason_code"] == "review_incomplete"
 
 
 def test_verdict_citing_out_of_set_evidence_rejected(direct_vm, direct_deploy, direct_alice):
@@ -128,19 +135,61 @@ def test_supported_without_citation_rejected(direct_vm, direct_deploy, direct_al
         c.request_review(cid)
 
 
-def test_numeric_verdict_missing_figure_rejected(direct_vm, direct_deploy, direct_alice):
+def test_numeric_verdict_missing_figure_is_demoted(direct_vm, direct_deploy, direct_alice):
+    """A definite numeric verdict with no figure cannot become a finding.
+
+    Behaviour change: this used to raise LLM_ERROR and fail the whole review.
+    Figure verification now runs BEFORE the invariant and demotes this one
+    criterion to inconclusive/figure_unverified, which is the same protection
+    for the reader without letting one unusable verdict destroy the round.
+    """
     c = direct_deploy("contracts/civic_lens.py")
     direct_vm.sender = direct_alice
     cid = make_commitment(c, criteria=numeric_criteria_json())
     c.submit_evidence(cid, EVIDENCE_URL, "government_dataset", "2024-06-01", "")
     _mock_docs(direct_vm)
     _mock_llm(direct_vm, verdict_json(verdict(1, "supported", "threshold_met", [1])))
-    with direct_vm.expect_revert("LLM_ERROR: numeric verdict missing figure"):
-        c.request_review(cid)
+    assert c.request_review(cid) == 1
+    res = c.get_rounds(cid)[0]["criteria"][0]
+    assert res["status"] == "inconclusive"
+    assert res["reason_code"] == "figure_unverified"
+    assert res["has_figure"] is False
 
 
-def test_figure_verdict_mismatch_rejected(direct_vm, direct_deploy, direct_alice):
-    """A supported verdict whose figure is below a gte threshold is garbage."""
+def test_figure_verdict_mismatch_is_corrected_in_code(direct_vm, direct_deploy, direct_alice):
+    """A supported verdict whose figure is below a gte threshold is corrected.
+
+    The numeric verdict is DERIVED in code from the figure the model extracted,
+    so an arithmetic slip is repaired rather than sinking the whole review with
+    LLM_ERROR. Previously one inconsistent verdict failed every criterion.
+    """
+    c = direct_deploy("contracts/civic_lens.py")
+    direct_vm.sender = direct_alice
+    cid = make_commitment(c, criteria=numeric_criteria_json(threshold_milli=100000))
+    c.submit_evidence(cid, EVIDENCE_URL, "government_dataset", "2024-06-01", "")
+    _mock_docs(direct_vm, body=figure_body((99000, "co2e_tonnes")))
+    _mock_llm(
+        direct_vm,
+        verdict_json(
+            verdict(1, "supported", "threshold_met", [1], has_figure=True, figure_milli=99000, unit="co2e_tonnes", period_matches=True)
+        ),
+    )
+    assert c.request_review(cid) == 1
+    res = c.get_rounds(cid)[0]["criteria"][0]
+    # 99000 < 100000, so the derived verdict is contradicted, not supported.
+    assert res["status"] == "contradicted"
+    assert res["reason_code"] == "threshold_not_met"
+    assert res["figure_milli"] == 99000
+
+
+def test_inconclusive_numeric_verdict_is_not_promoted(direct_vm, direct_deploy, direct_alice):
+    """A "can't tell" stays inconclusive even when a figure came with it.
+
+    The numeric verdict is derived from the figure only when the model gave a
+    DEFINITE verdict. Promoting an inconclusive answer on the strength of a
+    figure the model itself called unusable would manufacture a finding, so the
+    conservative direction is kept.
+    """
     c = direct_deploy("contracts/civic_lens.py")
     direct_vm.sender = direct_alice
     cid = make_commitment(c, criteria=numeric_criteria_json(threshold_milli=100000))
@@ -149,11 +198,15 @@ def test_figure_verdict_mismatch_rejected(direct_vm, direct_deploy, direct_alice
     _mock_llm(
         direct_vm,
         verdict_json(
-            verdict(1, "supported", "threshold_met", [1], has_figure=True, figure_milli=99000, unit="co2e_tonnes")
+            verdict(1, "inconclusive", "no_relevant_evidence", [], has_figure=True, figure_milli=150000, unit="co2e_tonnes")
         ),
     )
-    with direct_vm.expect_revert("LLM_ERROR: figure disagrees with verdict"):
-        c.request_review(cid)
+    assert c.request_review(cid) == 1
+    res = c.get_rounds(cid)[0]["criteria"][0]
+    assert res["status"] == "inconclusive"
+    # The unusable figure is discarded rather than stored alongside it.
+    assert res["has_figure"] is False
+    assert res["figure_milli"] == 0
 
 
 def test_unit_mismatch_becomes_inconclusive(direct_vm, direct_deploy, direct_alice):

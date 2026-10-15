@@ -11,6 +11,8 @@ import {
   canOpenChallenge,
   canRequestReview,
   canSubmitEvidence,
+  canSupersede,
+  canWithdraw,
   statusSentence,
 } from "@/domain/actions";
 import { FALLBACK_CONSTANTS } from "@/config/contracts";
@@ -49,6 +51,7 @@ function commitment(over: Partial<Commitment> = {}): Commitment {
     status: "evidence_open",
     version: 1,
     supersedes: 0,
+    superseded_by: 0,
     round_count: 0,
     challenge_count: 0,
     evidence_count: 0,
@@ -183,7 +186,7 @@ describe("sample mode never offers a write", () => {
 
   it("disables every action and says why", () => {
     const c = commitment({ data_mode: "sample", status: "outcome_accepted", current_round: 1 });
-    for (const check of [canSubmitEvidence, canRequestReview, canOpenChallenge]) {
+    for (const check of [canSubmitEvidence, canRequestReview, canOpenChallenge, canWithdraw, canSupersede]) {
       const result = check(sampleCtx(c));
       expect(result.enabled).toBe(false);
       expect(result.reason).toMatch(/nothing is ever faked|no contract address/i);
@@ -195,6 +198,63 @@ describe("sample mode never offers a write", () => {
     const result = canOpenChallenge(sampleCtx(c));
     expect(result.enabled).toBe(false);
     expect(result.reason).toMatch(/no contract address/i);
+  });
+});
+
+describe("withdraw availability", () => {
+  it("is enabled for the registrant while the evidence window is open", () => {
+    expect(canWithdraw(ctx(commitment())).enabled).toBe(true);
+  });
+
+  it("is never offered to anyone but the registrant", () => {
+    const result = canWithdraw(ctx(commitment(), { isRegistrant: false }));
+    expect(result.enabled).toBe(false);
+    expect(result.reason).toMatch(/only the registrant/i);
+  });
+
+  it("reflects the contract: only evidence_open can be withdrawn", () => {
+    for (const status of ["review_pending", "outcome_accepted", "challenged"] as const) {
+      const result = canWithdraw(ctx(commitment({ status })));
+      expect(result.enabled).toBe(false);
+      expect(result.reason).toMatch(/while the evidence window is open/i);
+    }
+  });
+
+  it("says a withdrawn commitment is already withdrawn, not open", () => {
+    const result = canWithdraw(ctx(commitment({ status: "withdrawn" })));
+    expect(result.reason).toMatch(/already withdrawn/i);
+  });
+
+  it("points at the newer version instead of offering a withdrawal", () => {
+    const result = canWithdraw(ctx(commitment({ status: "superseded", superseded_by: 2 })));
+    expect(result.enabled).toBe(false);
+    expect(result.reason).toMatch(/newer version/i);
+  });
+});
+
+describe("supersede availability", () => {
+  it("is enabled for the registrant in every live status", () => {
+    for (const status of ["evidence_open", "review_pending", "outcome_accepted", "challenged"] as const) {
+      expect(canSupersede(ctx(commitment({ status }))).enabled).toBe(true);
+    }
+  });
+
+  it("is never offered to anyone but the registrant", () => {
+    const result = canSupersede(ctx(commitment(), { isRegistrant: false }));
+    expect(result.enabled).toBe(false);
+    expect(result.reason).toMatch(/only the registrant/i);
+  });
+
+  it("rejects an already superseded record — the chain only moves forward", () => {
+    const result = canSupersede(ctx(commitment({ status: "superseded", superseded_by: 3 })));
+    expect(result.enabled).toBe(false);
+    expect(result.reason).toMatch(/newer version .* already exists/i);
+  });
+
+  it("rejects a withdrawn record and points at registration instead", () => {
+    const result = canSupersede(ctx(commitment({ status: "withdrawn" })));
+    expect(result.enabled).toBe(false);
+    expect(result.reason).toMatch(/register a new commitment/i);
   });
 });
 

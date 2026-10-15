@@ -105,13 +105,30 @@ td.num {
 
 /* Visually hidden but available to screen readers. */
 .sr-only {
+  /*
+   * Visually hidden but announced by screen readers.
+
+   * `position: absolute` alone is not enough. Without an explicit inset the
+   * box anchors at its STATIC position — which, inside a horizontally scrolled
+   * data table, is far off to the right. `white-space: nowrap` then lets the
+   * text run further still, and an absolutely positioned box is not clipped by
+   * the scroll container that its DOM parent sits in. The result is a 1px box
+   * that silently widens the whole page: document.scrollWidth became 385px in a
+   * 360px viewport, pushed by a caption no one can see.
+   *
+   * `left/top: 0` pins the box to its containing block, so its position can
+   * never depend on where it would have flowed to. `clip-path` clips the paint
+   * regardless of containing block, unlike the legacy `clip` shorthand.
+   */
   position: absolute;
+  left: 0;
+  top: 0;
   width: 1px;
   height: 1px;
   padding: 0;
-  margin: -1px;
+  margin: 0;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
 }
@@ -698,6 +715,13 @@ td.num {
   gap: var(--space-3);
 }
 
+/* The author `display: flex` above outranks the UA rule for [hidden], so
+   without this rule the "Show detail" toggle would flip its label and ARIA
+   state while the body stayed on screen. Guarded by contrast.test.ts. */
+.ledger__body[hidden] {
+  display: none;
+}
+
 .ledger__sub {
   font-size: var(--t-14);
   font-weight: 700;
@@ -1015,6 +1039,12 @@ details.disclosure > summary:hover {
 
 .table-wrap {
   overflow-x: auto;
+  /* A flex/grid child defaults to min-width:auto, so it refuses to shrink below
+     its content and `overflow-x: auto` never engages — the table then pushes
+     the whole page sideways at 360px instead of scrolling inside its own box.
+     min-width:0 is what lets the wrapper actually constrain the table. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 /* ==========================================================================
@@ -1451,4 +1481,87 @@ details.disclosure > summary:hover {
     font-size: 9pt;
     color: #555;
   }
+}
+/* A source the review could not read. Distinct from a neutral `.tag`, and NOT
+   a warning colour: "not read" is a fact about the network, not a fault of
+   anyone. It is what the contract recorded, shown as recorded. */
+.tag--unread {
+  border-style: dashed;
+  border-color: var(--graphite);
+  color: var(--graphite);
+  background: var(--graphite-tint);
+}
+
+/* Provenance of a bundled demo record. Replays of real on-chain rounds and
+   authored illustrations sit in the same list, so the label that separates them
+   has to be visible before the reader looks at any outcome. Deliberately
+   neutral: neither kind is styled as more authoritative than the other. */
+.tag--provenance {
+  border-color: var(--graphite);
+  color: var(--graphite);
+  background: var(--graphite-tint);
+}
+
+/* A sample reference for a document that does not exist. Shown as monospace
+   text, never as a link, so it cannot be mistaken for a citation someone read. */
+.source-ref {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--t-14);
+  color: var(--graphite);
+  word-break: break-all;
+}
+
+/* ---------------------------------------------------------------------------
+ * Evaluation-period strip (commitment page). Three segments; the current one
+ * carries aria-current="step" and a text label, so the state is never conveyed
+ * by colour alone.
+ * ------------------------------------------------------------------------ */
+.window-strip {
+  margin-top: var(--space-3);
+}
+
+.window-strip__track {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.window-strip__seg {
+  flex: 1;
+  padding: 4px var(--space-2) 6px;
+  border-top: 3px solid var(--rule);
+  color: var(--ink-faint);
+  font-size: var(--t-14);
+}
+
+.window-strip__seg[aria-current="step"] {
+  border-top-color: var(--citation);
+  color: var(--ink-strong);
+  font-weight: 600;
+}
+
+/* Registration hints (criteria lint) — reading aids for the registrant.
+   Stated with a rule and tint, never styled as an error: nothing here blocks
+   submission. */
+.lint {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-left: var(--sheet-left-rule) solid var(--citation);
+  background: var(--citation-tint);
+}
+
+.lint__lead {
+  margin: 0 0 var(--space-1);
+  font-size: var(--t-14);
+  font-weight: 600;
+  color: var(--ink-strong);
+}
+
+.lint__list {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: var(--t-14);
+  color: var(--ink-muted);
 }

@@ -45,6 +45,9 @@ export interface CreateCommitmentInput {
   criteriaJson: string;
 }
 
+/** A new version of an existing commitment (`supersede_commitment`). */
+export type SupersedeCommitmentInput = CreateCommitmentInput & { oldId: number };
+
 export interface SubmitEvidenceInput {
   commitmentId: number;
   url: string;
@@ -170,6 +173,31 @@ export class CivicLens {
     })) as TxHash;
   }
 
+  async supersedeCommitment(input: SupersedeCommitmentInput): Promise<TxHash> {
+    // Same fields as create_commitment with the old id first — the contract
+    // validates the whole payload again, marks the old record superseded and
+    // links the two versions both ways.
+    return (await this.client.writeContract({
+      address: this.address,
+      functionName: "supersede_commitment",
+      args: [
+        input.oldId,
+        input.subject,
+        input.subjectKind,
+        input.registrantRole,
+        input.sourceStatementRef,
+        input.commitmentText,
+        input.periodStart,
+        input.periodEnd,
+        input.timezone,
+        input.sourceGuidance,
+        input.dataMode,
+        input.criteriaJson,
+      ],
+      value: 0n,
+    })) as TxHash;
+  }
+
   async submitEvidence(input: SubmitEvidenceInput): Promise<TxHash> {
     return (await this.client.writeContract({
       address: this.address,
@@ -204,15 +232,6 @@ export class CivicLens {
         input.grounds,
         input.newEvidenceIds,
       ],
-      value: 0n,
-    })) as TxHash;
-  }
-
-  async updateCriteria(commitmentId: number, criteriaJson: string): Promise<TxHash> {
-    return (await this.client.writeContract({
-      address: this.address,
-      functionName: "update_criteria",
-      args: [commitmentId, criteriaJson],
       value: 0n,
     })) as TxHash;
   }

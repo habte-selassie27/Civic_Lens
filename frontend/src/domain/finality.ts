@@ -42,6 +42,16 @@ const RESULT_NAMES: Record<number, string> = {
   7: "MAJORITY_DISAGREE",
 };
 
+// Per-validator vote names (genlayer-js VoteType). The receipt may carry
+// names or the numeric codes; this fallback mirrors voteTypeNumberToName.
+const VOTE_NAMES: Record<number, string> = {
+  0: "NOT_VOTED",
+  1: "AGREE",
+  2: "DISAGREE",
+  3: "TIMEOUT",
+  4: "DETERMINISTIC_VIOLATION",
+};
+
 /** Minimal receipt shape (genlayer-js GenLayerTransaction, subset we read). */
 export interface ReceiptLike {
   status?: number | string;
@@ -50,6 +60,13 @@ export interface ReceiptLike {
   result?: number | string;
   resultName?: string;
   txExecutionResultName?: string;
+  /** Last consensus round — present once validators have voted. */
+  lastRound?: {
+    round?: number | string;
+    roundValidators?: string[];
+    votesRevealed?: number | string;
+    validatorVotesName?: Array<number | string>;
+  };
   consensus_data?: {
     final?: boolean;
     leader_receipt?: Array<{
@@ -150,4 +167,35 @@ export function finalityState(r: ReceiptLike): FinalityState {
 
 export function isFinalized(r: ReceiptLike): boolean {
   return normalize(receiptStatusName(r)) === "FINALIZED" || r.consensus_data?.final === true;
+}
+
+export interface ValidatorAgreement {
+  /** Votes that read AGREE in the receipt's last round. */
+  agreed: number;
+  /** Votes revealed in that round — the list's length, not the committee size. */
+  total: number;
+  round: number | null;
+}
+
+/**
+ * Count the validators who agreed, straight from the IC receipt. Returns null
+ * when the receipt carries no votes yet — consensus is never implied.
+ */
+export function validatorAgreement(r: ReceiptLike): ValidatorAgreement | null {
+  const votes = r.lastRound?.validatorVotesName;
+  if (!votes || votes.length === 0) return null;
+
+  let agreed = 0;
+  for (const vote of votes) {
+    const name =
+      typeof vote === "number" ? VOTE_NAMES[vote] ?? "UNKNOWN" : vote.trim().toUpperCase();
+    if (name === "AGREE") agreed += 1;
+  }
+
+  const roundNum = Number(r.lastRound?.round);
+  return {
+    agreed,
+    total: votes.length,
+    round: Number.isFinite(roundNum) ? roundNum : null,
+  };
 }

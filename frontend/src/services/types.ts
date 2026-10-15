@@ -43,6 +43,13 @@ export interface CreateCommitmentInput {
   criteriaJson: string;
 }
 
+/**
+ * The only legal way to change a criterion: a linked new version. Same fields
+ * as creation plus the record being superseded — the contract marks the old
+ * one `superseded` and links both directions; nothing is rewritten.
+ */
+export type SupersedeCommitmentInput = CreateCommitmentInput & { oldId: number };
+
 export interface SubmitEvidenceInput {
   commitmentId: number;
   url: string;
@@ -70,6 +77,15 @@ export interface CivicLensReads {
   getConstants(): Promise<ContractConstants>;
   listCommitments(pageSize: number): Promise<CommitmentSummary[]>;
   getBundle(commitmentId: number): Promise<CommitmentBundle>;
+  /**
+   * The four granular reads below exist for bounded-window scans (activity,
+   * stats, version chains) where fetching full bundles would multiply reads
+   * for data the page does not display.
+   */
+  getCommitment(commitmentId: number): Promise<Commitment>;
+  getEvidence(commitmentId: number): Promise<EvidenceItem[]>;
+  getOutcome(commitmentId: number): Promise<Outcome>;
+  getChallenges(commitmentId: number): Promise<ChallengeRecord[]>;
 }
 
 /**
@@ -79,6 +95,10 @@ export interface CivicLensReads {
  */
 export interface CivicLensWrites {
   createCommitment(input: CreateCommitmentInput): Promise<TxHash>;
+  /** Registrant-only: linked new version; the old record is marked superseded. */
+  supersedeCommitment(input: SupersedeCommitmentInput): Promise<TxHash>;
+  /** Registrant-only, only while the evidence window is still open. */
+  withdrawCommitment(commitmentId: number): Promise<TxHash>;
   submitEvidence(input: SubmitEvidenceInput): Promise<TxHash>;
   requestReview(commitmentId: number): Promise<TxHash>;
   openChallenge(input: OpenChallengeInput): Promise<TxHash>;

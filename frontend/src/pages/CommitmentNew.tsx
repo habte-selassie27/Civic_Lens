@@ -8,20 +8,26 @@
  * anything is sent, because a misread criterion is the expensive mistake here.
  */
 
-import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useConstants } from "@/hooks/useReads";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { useCommitmentBundle, useConstants } from "@/hooks/useReads";
 import { useTxLifecycle } from "@/hooks/useTxLifecycle";
 import { rememberTxForCommitment } from "@/hooks/useFinality";
 import { requireWrites, writes } from "@/services";
 import { useWallet } from "@/genlayer/WalletProvider";
-import { FALLBACK_CONSTANTS } from "@/config/contracts";
 import { ROLE_LABEL } from "@/domain/copy";
-import { formatDate, parseToMilli } from "@/domain/format";
-import type { ContractConstants, CriterionDraft, Operator, RegistrantRole } from "@/domain/types";
+import { canSupersede } from "@/domain/actions";
+import { lintCriterion } from "@/domain/criteriaLint";
+import { formatDate, formatMilli, parseToMilli } from "@/domain/format";
+import type {
+  ContractConstants,
+  CriterionDraft,
+  Operator,
+  RegistrantRole,
+} from "@/domain/types";
 import { TxStatus } from "@/components/TxStatus";
 import { ActionButton } from "@/components/DisabledReason";
-import { Banner, SampleBanner } from "@/components/Chrome";
+import { Banner, ErrorView, LoadingRegion, SampleBanner } from "@/components/Chrome";
 import { reads } from "@/services";
 
 interface DraftCriterion {
@@ -53,12 +59,46 @@ function emptyCriterion(key: string): DraftCriterion {
 const URL_RE = /^https?:\/\/\S+$/i;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/**
+ * Lint hints for one draft criterion. Reading aids only: they flag wording a
+ * review tends to come back inconclusive on, and never block submission.
+ */
+function CriterionHints({ criterion }: { criterion: DraftCriterion }) {
+  const hints = lintCriterion({
+    text: criterion.text,
+    measure: criterion.measure,
+    hasThreshold: criterion.hasThreshold,
+    threshold: criterion.threshold,
+    unit: criterion.unit,
+  });
+  if (hints.length === 0) return null;
+  return (
+    <div className="lint">
+      <p className="lint__lead">Hints, not verdicts — wording that tends to come back inconclusive:</p>
+      <ul className="lint__list">
+        {hints.map((h) => (
+          <li key={h.id}>{h.text}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function CommitmentNew() {
   const navigate = useNavigate();
+  const params = useParams();
   const wallet = useWallet();
-  const { data: liveConstants } = useConstants();
-  const constants = (liveConstants ?? FALLBACK_CONSTANTS) as ContractConstants;
+  const constantsQuery = useConstants();
+  const liveConstants = constantsQuery.data;
   const tx = useTxLifecycle();
+
+  // Two routes share this form: /commitments/new (register) and
+  // /commitments/:id/supersede (create a linked new version — the only legal
+  // way to change a criterion, contracts/civic_lens.py supersede_commitment).
+  const supersedeId = Number(params.id) > 0 ? Number(params.id) : null;
+  const isSupersede = supersedeId !== null;
+  const oldQuery = useCommitmentBundle(supersedeId);
+  const oldCommitment = isSupersede ? oldQuery.data?.commitment : undefined;
 
   const [subject, setSubject] = useState("");
   const [subjectKind, setSubjectKind] = useState("organization");
@@ -72,6 +112,38 @@ export function CommitmentNew() {
   const [criteria, setCriteria] = useState<DraftCriterion[]>([emptyCriterion("c1")]);
   const [confirmed, setConfirmed] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  /** One-time prefill guard: a refetch must never stomp the registrant's edits. */
+  const [prefilledFor, setPrefilledFor] = useState<number | null>(null);
+
+  // Supersede mode: start from the record being versioned so the registrant
+  // edits instead of retyping. Nothing is copied that the contract would not
+  // itself echo — this is a display convenience, not authority.
+  useEffect(() => {
+    if (!oldCommitment || prefilledFor === oldCommitment.id) return;
+    setSubject(oldCommitment.subject);
+    setSubjectKind(oldCommitment.subject_kind);
+    setRegistrantRole(oldCommitment.registrant_role);
+    setStatementRef(oldCommitment.source_statement_ref);
+    setCommitmentText(oldCommitment.commitment_text);
+    setPeriodStart(oldCommitment.period_start);
+    setPeriodEnd(oldCommitment.period_end);
+    setTimezone(oldCommitment.timezone);
+    setGuidance(oldCommitment.source_guidance);
+    setCriteria(
+      oldCommitment.criteria.map((c) => ({
+        key: `c${c.id}`,
+        text: c.text,
+        measure: c.measure,
+        required: c.required,
+        hasThreshold: c.has_threshold,
+        threshold: c.has_threshold ? formatMilli(c.threshold_milli) : "",
+        operator: (c.operator || "gte") as Operator,
+        unit: c.unit,
+        deadline: c.deadline,
+      })),
+    );
+    setPrefilledFor(oldCommitment.id);
+  }, [oldCommitment, prefilledFor]);
 
   const required = criteria.filter((c) => c.required);
 
@@ -131,15 +203,30 @@ export function CommitmentNew() {
 
   const roleHint = ROLE_LABEL[registrantRole as RegistrantRole] ?? "as an observer";
 
+  // Supersede is registrant-only and rejects superseded/withdrawn records —
+  // the same rules the contract enforces, surfaced early as a sentence.
+  const supersedeAvail =
+    isSupersede && oldCommitment
+      ? canSupersede({
+          commitment: oldCommitment,
+          writesAvailable: Boolean(writes),
+          isRegistrant:
+            Boolean(wallet.address) &&
+            oldCommitment.registrant.toLowerCase() === wallet.address!.toLowerCase(),
+        })
+      : null;
+
   const disabledReason = !writes
     ? "No contract address is configured in this build, so nothing can be registered. Registering runs a real transaction."
     : !wallet.address
       ? "Connect an account to register a commitment. Reading works without one."
       : !wallet.isOnCorrectNetwork
         ? "This wallet is on the wrong network. Switch networks from the header before registering."
-        : !confirmed
-          ? "Confirm the plain-language summary before registering."
-          : null;
+        : supersedeAvail && !supersedeAvail.enabled
+          ? supersedeAvail.reason ?? "This commitment cannot be versioned."
+          : !confirmed
+            ? "Confirm the plain-language summary before registering."
+            : null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -160,48 +247,114 @@ export function CommitmentNew() {
       deadline: c.deadline,
     }));
 
-    await tx.start("Register commitment", () =>
-      w.createCommitment({
-        subject: subject.trim(),
-        subjectKind,
-        registrantRole,
-        sourceStatementRef: statementRef.trim(),
-        commitmentText: commitmentText.trim(),
-        periodStart,
-        periodEnd,
-        timezone: timezone.trim(),
-        sourceGuidance: guidance.trim(),
-        dataMode: "live",
-        criteriaJson: JSON.stringify(payload),
-      }),
+    const fields = {
+      subject: subject.trim(),
+      subjectKind,
+      registrantRole,
+      sourceStatementRef: statementRef.trim(),
+      commitmentText: commitmentText.trim(),
+      periodStart,
+      periodEnd,
+      timezone: timezone.trim(),
+      sourceGuidance: guidance.trim(),
+      dataMode: "live",
+      criteriaJson: JSON.stringify(payload),
+    };
+
+    // supersede_commitment takes the same fields plus the record it versions;
+    // the contract validates everything again and links the two versions.
+    await tx.start(isSupersede ? "Create new version" : "Register commitment", () =>
+      isSupersede && supersedeId !== null
+        ? w.supersedeCommitment({ oldId: supersedeId, ...fields })
+        : w.createCommitment(fields),
     );
 
     const phase = await tx.waitForAcceptance();
     if ((phase === "accepted" || phase === "final") && tx.hash) {
-      rememberTxForCommitment(0, tx.hash);
-      navigate("/commitments");
+      rememberTxForCommitment(isSupersede && supersedeId !== null ? supersedeId : 0, tx.hash);
+      // The new id is not knowable client-side (the write returns a hash), so
+      // return to the record being versioned — its superseded_by link points
+      // at the new version once the chain catches up.
+      navigate(isSupersede && supersedeId !== null ? `/commitments/${supersedeId}` : "/commitments");
     }
+  }
+
+  // The form mirrors the contract's own limits and enums. Without them (bad
+  // address, unreachable RPC, first load) a partial fallback would promise
+  // bounds the contract may not share — and a missing enum key would crash the
+  // page exactly when the reader most needs an explanation. Say what happened
+  // and offer a retry instead (UI-CivicLens 7.3).
+  if (!liveConstants) {
+    return (
+      <div className="stack-lg">
+        <div>
+          <h1>{isSupersede ? `Create a new version of commitment #${supersedeId}` : "Register a commitment"}</h1>
+          <p className="hint">
+            The contract's own limits are read before the form is shown, so what you enter
+            matches what it will accept.
+          </p>
+        </div>
+        {constantsQuery.isLoading ? (
+          <LoadingRegion label="Reading the contract's limits" />
+        ) : (
+          <ErrorView
+            error={constantsQuery.error}
+            title="The contract's limits could not be read."
+            onRetry={() => void constantsQuery.refetch()}
+          />
+        )}
+      </div>
+    );
+  }
+  const constants: ContractConstants = liveConstants;
+
+  // Supersede mode needs the record it versions before the form can be
+  // prefilled; without it the page would open blank and lie about what it
+  // supersedes.
+  if (isSupersede && !oldCommitment) {
+    if (oldQuery.isLoading) {
+      return <LoadingRegion label="Loading the record this version replaces" />;
+    }
+    return (
+      <ErrorView
+        error={oldQuery.error ?? new Error("That commitment could not be read.")}
+        title="The commitment being replaced could not be read."
+        onRetry={() => void oldQuery.refetch()}
+      />
+    );
   }
 
   return (
     <div className="stack-lg">
       <div>
-        <h1>Register a commitment</h1>
+        <h1>
+          {isSupersede ? `Create a new version of commitment #${supersedeId}` : "Register a commitment"}
+        </h1>
         <p className="hint">
-          Record a public commitment with criteria specific enough that a reviewer cannot misread
-          them. Registration writes to the contract; the criteria are locked once a review starts.
+          {isSupersede
+            ? "The form starts from the record you are versioning, so you edit instead of retype. The contract re-checks every field and that you are the registrant."
+            : "Record a public commitment with criteria specific enough that a reviewer cannot misread them. Registration writes to the contract; the criteria are locked once a review starts."}
         </p>
       </div>
 
       {reads.isSample && reads.sampleReason && <SampleBanner reason={reads.sampleReason} />}
 
-      <Banner title="Criteria are locked once review starts">
-        <p>
-          After a review, a criterion cannot be edited. A changed criterion means a{" "}
-          <strong>new version</strong> of the commitment, linked to the old one — so the history of
-          what was asked, and when, stays intact.
-        </p>
-      </Banner>
+      {isSupersede ? (
+        <Banner title="This creates a new version, not an edit">
+          <p>
+            Commitment #{supersedeId} will be marked superseded and will link here. Its record,
+            evidence, and outcomes stay readable — history is never rewritten.
+          </p>
+        </Banner>
+      ) : (
+        <Banner title="Criteria are locked once review starts">
+          <p>
+            After a review, a criterion cannot be edited. A changed criterion means a{" "}
+            <strong>new version</strong> of the commitment, linked to the old one — so the history of
+            what was asked, and when, stays intact.
+          </p>
+        </Banner>
+      )}
 
       <form onSubmit={submit} noValidate>
         <div className="stack">
@@ -476,6 +629,8 @@ export function CommitmentNew() {
                       Evidence published after this date is not counted for this criterion.
                     </p>
                   </div>
+
+                  <CriterionHints criterion={c} />
                 </div>
               ))}
 
@@ -607,12 +762,13 @@ export function CommitmentNew() {
               </label>
 
               <ActionButton type="submit" disabledReason={disabledReason} busy={tx.isBusy}>
-                Register commitment
+                {isSupersede ? "Create new version" : "Register commitment"}
               </ActionButton>
 
               <p className="hint">
-                Registering writes a transaction. You can withdraw the commitment later while its
-                evidence window is still open; the record is kept either way.
+                {isSupersede
+                  ? "This writes a transaction that marks the old version superseded and links the two. The old record stays readable either way."
+                  : "Registering writes a transaction. You can withdraw the commitment later while its evidence window is still open; the record is kept either way."}
               </p>
             </div>
           </section>
@@ -623,6 +779,7 @@ export function CommitmentNew() {
         <TxStatus
           phase={tx.phase}
           hash={tx.hash}
+          votes={tx.votes}
           error={tx.error}
           onRefresh={() => void tx.refresh()}
           detail={

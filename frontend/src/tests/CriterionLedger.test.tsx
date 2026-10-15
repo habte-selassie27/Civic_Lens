@@ -35,6 +35,12 @@ const result = (over: Partial<CriterionResult> = {}): CriterionResult => ({
   figure_milli: 0,
   unit: "",
   summary: "",
+  // Contract audit-trail fields (source_quote / source_evidence_id /
+  // figure_verified / held_from_prior) added with figure verification.
+  source_quote: "",
+  source_evidence_id: 0,
+  figure_verified: false,
+  held_from_prior: false,
   ...over,
 });
 
@@ -42,7 +48,10 @@ const evidence = (id: number, over: Partial<EvidenceItem> = {}): EvidenceItem =>
   id,
   url: `https://evidence.example.org/report-${id}.pdf`,
   evidence_type: "official_report",
+  declared_source_class: "primary",
+  source_class_verified: false,
   published_date: "2024-06-01",
+  published_date_verified: false,
   note: "",
   submitter: "0xabc0000000000000000000000000000000000001",
   submitted_at: "2024-06-02T09:00:00Z",

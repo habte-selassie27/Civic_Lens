@@ -17,6 +17,10 @@ node_modules
 /frontend/dist/
 *.compiled.js
 
+# gltest wipes and recreates this at every session start — scratch only,
+# never the committed `artifacts/` evidence pack (see gltest.config.yaml)
+.gltest-artifacts/
+
 # Python bytecode and caches
 __pycache__/
 *.pyc

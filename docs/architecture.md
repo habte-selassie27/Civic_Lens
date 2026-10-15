@@ -75,7 +75,7 @@ return path is already designed around one idempotent, round-keyed record.
 
 | Component | Storage | Public methods |
 |---|---|---|
-| CommitmentRegistry | `commitments: TreeMap[u32, Commitment]`, `commitment_count`, `owner` | `create_commitment`, `supersede_commitment`, `update_criteria` (guard), `submit_evidence`, `request_review`, `withdraw_commitment` |
+| CommitmentRegistry | `commitments: TreeMap[u32, Commitment]`, `commitment_count` | `create_commitment`, `supersede_commitment`, `submit_evidence`, `request_review`, `withdraw_commitment` (no criteria-mutation method exists) |
 | EvidenceReview | (payload snapshot per call) | `request_review` (runs consensus) — helpers `_review_leader`, `_review_validator`, `_sanitize_review`, `_derive_outcome` |
 | ReviewChallenge | `challenge_count` | `open_challenge` |
 | OutcomeRecord | `Commitment.rounds: DynArray[RoundRecord]` (bounded) | `get_commitment`, `get_rounds`, `get_outcome` (views) |

@@ -5,16 +5,19 @@
 
 import { Link, NavLink } from "react-router-dom";
 import { NETWORK_LABEL } from "@/config/network";
+import { APP_SOURCE_LABEL, APP_SOURCE_TITLE } from "@/domain/copy";
 import { useWallet } from "@/genlayer/WalletProvider";
 import { reads } from "@/services";
-import { DataModeBadge } from "./DataModeBadge";
 import { CopyField } from "./CopyField";
 
 const NAV = [
   { to: "/commitments", label: "Commitments" },
+  { to: "/activity", label: "Activity" },
   { to: "/demo", label: "Demo" },
   { to: "/how-it-works", label: "How it works" },
   { to: "/fairness", label: "Fairness" },
+  { to: "/stats", label: "Platform stats" },
+  { to: "/status", label: "System status" },
 ];
 
 export function Masthead() {
@@ -38,7 +41,16 @@ export function Masthead() {
         </nav>
 
         <div className="masthead__state">
-          <DataModeBadge mode="live" override={appIsSample ? "sample" : "live"} />
+          {/* Chrome states the build's data SOURCE; pages state their own
+              mode. Claiming "Live evidence" here would contradict every
+              sample surface on a replay page like /demo. */}
+          <span
+            className={`badge badge--${appIsSample ? "sample" : "live"}`}
+            title={appIsSample ? APP_SOURCE_TITLE.sampleOnly : APP_SOURCE_TITLE.configured}
+          >
+            <span className="badge__swatch" aria-hidden="true" />
+            {appIsSample ? APP_SOURCE_LABEL.sampleOnly : APP_SOURCE_LABEL.configured}
+          </span>
           <span title={NETWORK_LABEL}>{NETWORK_LABEL.split(" · ")[0]}</span>
           {wallet.isConnected && wallet.address ? (
             <>

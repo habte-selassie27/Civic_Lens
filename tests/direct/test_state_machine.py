@@ -12,6 +12,7 @@ for one round, party challenge limit, round limit, bad challenge inputs.
 """
 
 from tests.direct.conftest import (
+    DOC_BODY,
     criteria_json,
     make_commitment,
     two_criteria_json,
@@ -23,7 +24,7 @@ EVIDENCE_URL = "https://reports.example.org/2024"
 
 
 def _review_round(c, vm, response_body):
-    vm.mock_web(r".*", {"status": 200, "body": "Report text: emissions data."})
+    vm.mock_web(r".*", {"status": 200, "body": DOC_BODY})
     vm.mock_llm(r"(?s).*Criteria:.*", response_body)
     return c
 
@@ -57,7 +58,7 @@ def test_full_happy_path_transitions(direct_vm, direct_deploy, direct_alice, dir
     )
     direct_vm.sender = direct_alice
     direct_vm.clear_mocks()
-    _review_round(c, direct_vm, verdict_json(verdict(1, "contradicted", "contradicting_evidence_found", [2])))
+    _review_round(c, direct_vm, verdict_json(verdict(1, "contradicted", "contradicting_evidence_found", [2], reconsidered=True)))
     round2 = c.request_review(cid)
     assert round2 == 2
     assert c.get_commitment(cid)["status"] == "outcome_accepted"
@@ -93,7 +94,7 @@ def test_review_after_outcome_rejected(direct_vm, direct_deploy, direct_alice):
     c = direct_deploy("contracts/civic_lens.py")
     direct_vm.sender = direct_alice
     cid = make_commitment(c)
-    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence")))
+    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence", reconsidered=True)))
     c.request_review(cid)
     with direct_vm.expect_revert("EXPECTED: round already reviewed; open a challenge instead"):
         c.request_review(cid)
@@ -111,7 +112,7 @@ def test_second_challenge_same_round_rejected(direct_vm, direct_deploy, direct_a
     c = direct_deploy("contracts/civic_lens.py")
     direct_vm.sender = direct_alice
     cid = make_commitment(c)
-    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence")))
+    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence", reconsidered=True)))
     c.request_review(cid)
     direct_vm.sender = direct_bob
     c.open_challenge(cid, "", "The report does not cover the full year.", [])
@@ -123,7 +124,7 @@ def test_party_challenge_limit(direct_vm, direct_deploy, direct_alice, direct_bo
     c = direct_deploy("contracts/civic_lens.py")
     direct_vm.sender = direct_alice
     cid = make_commitment(c)
-    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence")))
+    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence", reconsidered=True)))
     c.request_review(cid)
 
     # challenger A opens the only challenge of round 1
@@ -131,7 +132,7 @@ def test_party_challenge_limit(direct_vm, direct_deploy, direct_alice, direct_bo
     c.open_challenge(cid, "", "The report does not cover the full year.", [])
     direct_vm.sender = direct_alice
     direct_vm.clear_mocks()
-    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence")))
+    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence", reconsidered=True)))
     c.request_review(cid)
 
     # A hits the per-party limit; B may still challenge this round
@@ -146,7 +147,7 @@ def test_round_limit_enforced(direct_vm, direct_deploy, direct_alice, direct_bob
     c = direct_deploy("contracts/civic_lens.py")
     direct_vm.sender = direct_alice
     cid = make_commitment(c)
-    ok = verdict_json(verdict(1, "inconclusive", "no_relevant_evidence"))
+    ok = verdict_json(verdict(1, "inconclusive", "no_relevant_evidence", reconsidered=True))
     challengers = [direct_bob, direct_charlie]
     for expected_round in (1, 2, 3):
         direct_vm.clear_mocks()
@@ -164,7 +165,7 @@ def test_challenge_grounds_bounds(direct_vm, direct_deploy, direct_alice):
     c = direct_deploy("contracts/civic_lens.py")
     direct_vm.sender = direct_alice
     cid = make_commitment(c)
-    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence")))
+    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence", reconsidered=True)))
     c.request_review(cid)
     with direct_vm.expect_revert("EXPECTED: grounds must be 10 to 1000 characters"):
         c.open_challenge(cid, "", "short", [])
@@ -190,13 +191,13 @@ def test_challenge_target_cli_shapes(direct_vm, direct_deploy, direct_alice):
         c.open_challenge(cid1, "", 123, [])
 
     # int target behaves like its string form (the CLI coerces '1' to 1)
-    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence")))
+    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence", reconsidered=True)))
     c.request_review(cid1)
     c.open_challenge(cid1, 1, "Valid grounds string.", [])
     assert c.get_commitment(cid1)["status"] == "challenged"
 
     # null target = whole-outcome challenge
-    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence")))
+    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence", reconsidered=True)))
     c.request_review(cid2)
     c.open_challenge(cid2, None, "Valid grounds string.", [])
     assert c.get_commitment(cid2)["status"] == "challenged"
@@ -220,7 +221,7 @@ def test_supersede_after_review_creates_fresh_version(direct_vm, direct_deploy, 
     c = direct_deploy("contracts/civic_lens.py")
     direct_vm.sender = direct_alice
     cid = make_commitment(c)
-    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence")))
+    _review_round(c, direct_vm, verdict_json(verdict(1, "inconclusive", "no_relevant_evidence", reconsidered=True)))
     c.request_review(cid)
     new_id = c.supersede_commitment(
         cid,

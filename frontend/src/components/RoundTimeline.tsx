@@ -11,9 +11,16 @@
 
 import { Link } from "react-router-dom";
 import type { EvidenceItem, ResultStatus, ReviewStatus, RoundRecord } from "@/domain/types";
-import { TRIGGER_LABEL, overallReasonCopy } from "@/domain/copy";
+import {
+  NOT_USED_LABEL,
+  RETRIEVAL_IS_READ,
+  RETRIEVAL_LABEL,
+  TRIGGER_LABEL,
+  overallReasonCopy,
+} from "@/domain/copy";
 import { formatDate } from "@/domain/format";
 import { ResultChip } from "./ResultChip";
+import { SourceLink } from "./SourceLink";
 
 export interface RoundTimelineProps {
   rounds: RoundRecord[];
@@ -71,6 +78,14 @@ export function RoundTimeline({ rounds, evidence, currentRound, commitmentId }: 
         const previousIds = new Set(previous?.evidence_considered ?? []);
         const addedSinceLast = round.evidence_considered.filter((id) => !previousIds.has(id));
 
+        // Round-level diff: results kept from the prior round, evidence that
+        // was eligible but no verdict cites, and sources this round could not
+        // read. Each list is derived from the round record as recorded.
+        const cited = new Set(round.criteria.flatMap((c) => c.evidence_used));
+        const consideredNotUsed = round.evidence_considered.filter((id) => !cited.has(id));
+        const held = round.criteria.filter((c) => c.held_from_prior);
+        const unread = round.retrieval.filter((record) => !RETRIEVAL_IS_READ[record.status]);
+
         return (
           <li
             key={round.round}
@@ -115,6 +130,14 @@ export function RoundTimeline({ rounds, evidence, currentRound, commitmentId }: 
               </div>
             )}
 
+            {previous && held.length > 0 && (
+              <p className="hint" style={{ margin: "0 0 var(--space-2)" }}>
+                <strong>Kept from round {previous.round}:</strong>{" "}
+                {held.map((c) => `Criterion ${c.criterion_id}`).join(", ")} — unchanged; the
+                prior round&apos;s result was carried over.
+              </p>
+            )}
+
             {addedSinceLast.length > 0 && (
               <div style={{ margin: "var(--space-3) 0" }}>
                 <p className="ledger__sub">Evidence added since the last round</p>
@@ -124,15 +147,55 @@ export function RoundTimeline({ rounds, evidence, currentRound, commitmentId }: 
                     return (
                       <li key={id}>
                         {item ? (
-                          <a href={item.url} target="_blank" rel="noopener noreferrer">
-                            {item.url}
-                          </a>
+                          <SourceLink url={item.url} />
                         ) : (
                           `Evidence #${id}`
                         )}
                       </li>
                     );
                   })}
+                </ul>
+              </div>
+            )}
+
+            {consideredNotUsed.length > 0 && (
+              <div style={{ margin: "var(--space-3) 0" }}>
+                <p className="ledger__sub">{NOT_USED_LABEL} in this round</p>
+                <ul style={{ margin: 0, paddingLeft: "1.1rem", fontSize: "var(--t-14)" }}>
+                  {consideredNotUsed.map((id) => {
+                    const item = evidenceById.get(id);
+                    return (
+                      <li key={id}>
+                        {item ? (
+                          <SourceLink url={item.url} />
+                        ) : (
+                          `Evidence #${id}`
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+
+            {unread.length > 0 && (
+              <div style={{ margin: "var(--space-3) 0" }}>
+                <p className="ledger__sub">Sources that could not be read in this round</p>
+                <ul style={{ margin: 0, paddingLeft: "1.1rem", fontSize: "var(--t-14)" }}>
+                  {unread.map((record, recordIndex) => (
+                    <li key={`${record.source}-${record.evidence_id}-${recordIndex}`}>
+                      {record.source === "statement"
+                        ? "Source statement"
+                        : `Evidence #${record.evidence_id}`}{" "}
+                      — {RETRIEVAL_LABEL[record.status] ?? record.status}
+                      {record.url ? (
+                        <>
+                          {" · "}
+                          <SourceLink url={record.url} />
+                        </>
+                      ) : null}
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}

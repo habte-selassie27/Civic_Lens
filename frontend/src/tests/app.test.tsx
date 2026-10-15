@@ -48,10 +48,10 @@ describe("app shell", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("shows a real criterion ledger on the landing page, tagged as sample", () => {
+  it("shows a real criterion ledger on the landing page, from a recorded result", () => {
     renderAt("/");
     expect(
-      screen.getByText("Publishes an annual Scope 1 emissions report for 2024"),
+      screen.getByText("Publishes a fact sheet on ambient outdoor air pollution"),
     ).toBeInTheDocument();
   });
 
@@ -78,15 +78,15 @@ describe("app shell", () => {
     expect(screen.getAllByText(/Replay of a recorded result/i).length).toBeGreaterThan(0);
   });
 
-  it("lists all eight sample scenarios on the demo page", async () => {
+  it("lists all eight bundled records on the demo page", async () => {
     renderAt("/demo");
     const heading = await screen.findByRole("heading", { name: /demo/i, level: 1 });
     expect(heading).toBeInTheDocument();
     for (const name of [
-      "Clear support",
-      "Missing evidence",
-      "Conflicting sources",
-      "Ambiguous criterion",
+      "A figure tied to a verbatim passage",
+      "Two sources that could not be read",
+      "Two sources that disagree",
+      "A criterion too vague to match",
     ]) {
       expect(screen.getAllByText(new RegExp(name)).length).toBeGreaterThan(0);
     }
@@ -95,7 +95,7 @@ describe("app shell", () => {
   it("renders a commitment page with outcome, ledger, attribution, and audit together", async () => {
     renderAt("/commitments/1");
 
-    await screen.findByRole("heading", { name: /Riverdale City/i });
+    await screen.findByRole("heading", { name: /World Health Organization/i });
 
     // Outcome
     expect(screen.getByRole("heading", { name: "Outcome" })).toBeInTheDocument();
@@ -111,7 +111,7 @@ describe("app shell", () => {
 
   it("disables every write on sample data and says why", async () => {
     renderAt("/commitments/1");
-    await screen.findByRole("heading", { name: /Riverdale City/i });
+    await screen.findByRole("heading", { name: /World Health Organization/i });
 
     const requestReview = screen.getByRole("button", { name: "Request review" });
     expect(requestReview).toBeDisabled();
@@ -122,7 +122,7 @@ describe("app shell", () => {
   });
 
   it("renders the round history page", async () => {
-    renderAt("/commitments/8/rounds");
+    renderAt("/commitments/4/rounds");
     await screen.findByRole("heading", { name: /round history/i, level: 1 });
     expect(screen.getByRole("heading", { name: "Rounds" })).toBeInTheDocument();
   });
@@ -162,7 +162,18 @@ describe("app shell", () => {
       [/\brating\b/i, "a rating"],
     ];
 
-    const routes = ["/", "/demo", "/commitments", "/commitments/1", "/how-it-works", "/fairness"];
+    const routes = [
+      "/",
+      "/demo",
+      "/commitments",
+      "/commitments/1",
+      "/commitments/4/versions",
+      "/activity",
+      "/stats",
+      "/status",
+      "/how-it-works",
+      "/fairness",
+    ];
     for (const route of routes) {
       const { unmount, container } = renderAt(route);
       await screen.findByRole("heading", { level: 1 });
@@ -176,7 +187,16 @@ describe("app shell", () => {
   });
 
   it("shows the sample-data badge on every commitment surface", async () => {
-    for (const route of ["/", "/demo", "/commitments", "/commitments/1"]) {
+    for (const route of [
+      "/",
+      "/demo",
+      "/commitments",
+      "/commitments/1",
+      "/commitments/4/versions",
+      "/activity",
+      "/stats",
+      "/status",
+    ]) {
       const { unmount } = renderAt(route);
       await screen.findByRole("heading", { level: 1 });
       expect(
@@ -186,12 +206,21 @@ describe("app shell", () => {
       unmount();
     }
   });
+
+  it("never claims live evidence anywhere on the sample-only demo page", async () => {
+    const { unmount } = renderAt("/demo");
+    await screen.findByRole("heading", { level: 1 });
+    // The chrome chip and every surface agree: this build reads sample data.
+    expect(screen.getAllByText("Sample data").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Live evidence")).toBeNull();
+    unmount();
+  });
 });
 
 describe("reads never show the write lifecycle", () => {
   it("shows no transaction state on a read-only page", async () => {
     renderAt("/commitments/1");
-    await screen.findByRole("heading", { name: /Riverdale City/i });
+    await screen.findByRole("heading", { name: /World Health Organization/i });
     // No spinner-driven write status on a page nobody wrote to.
     expect(screen.queryByText("Submitted to the network")).not.toBeInTheDocument();
     expect(screen.queryByText("Validators are reviewing")).not.toBeInTheDocument();

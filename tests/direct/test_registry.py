@@ -172,15 +172,48 @@ def test_threshold_requires_unit(direct_vm, direct_deploy, direct_alice):
         make_commitment(c, criteria=bad)
 
 
-def test_criteria_are_immutable_guard(direct_vm, direct_deploy, direct_alice):
-    """Criteria cannot be edited in place, even before review."""
+def test_criteria_are_immutable_guard(direct_deploy, direct_alice):
+    """Criteria cannot be edited in place, even before review.
+
+Immutability is enforced BY ABSENCE: there is no criteria-mutation method on
+the contract at all. A method that could only ever revert was dead surface area
+that invited the reader to believe criteria were editable, so it was removed.
+The legal path is `supersede_commitment`, which creates a linked new version.
+"""
+
+
+def test_no_criteria_mutation_method_exists(direct_deploy):
+    c = direct_deploy("contracts/civic_lens.py")
+    assert not hasattr(c, "update_criteria")
+    # The legal alternative exists.
+    assert hasattr(c, "supersede_commitment")
+
+
+def test_supersede_is_the_only_path_to_new_criteria(direct_vm, direct_deploy, direct_alice):
     c = direct_deploy("contracts/civic_lens.py")
     direct_vm.sender = direct_alice
     cid = make_commitment(c)
-    with direct_vm.expect_revert(
-        "EXPECTED: criteria are immutable; create a new version with supersede_commitment"
-    ):
-        c.update_criteria(cid, numeric_criteria_json())
+    before = c.get_commitment(cid)["criteria"]
+
+    new_id = c.supersede_commitment(
+        cid,
+        "Riverdale City",
+        "organization",
+        "observer",
+        "https://example.org/announcement-v2",
+        "We will publish a corrected report.",
+        "2024-01-01",
+        "2024-12-31",
+        "UTC",
+        "",
+        "live",
+        numeric_criteria_json(),
+    )
+    # The original record is untouched and still readable.
+    after = c.get_commitment(cid)
+    assert after["criteria"] == before
+    assert after["status"] == "superseded"
+    assert c.get_commitment(new_id)["supersedes"] == cid
 
 
 def test_supersede_creates_linked_version(direct_vm, direct_deploy, direct_alice):

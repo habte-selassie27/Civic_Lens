@@ -171,3 +171,21 @@ describe("WCAG contrast (UI-CivicLens 2.1)", () => {
     }
   });
 });
+/* -------------------------------------------------------------------------- */
+/* The hidden attribute must survive the stylesheet                           */
+/* -------------------------------------------------------------------------- */
+
+describe("stylesheet respects the hidden attribute", () => {
+  const appCss = readFileSync(path.resolve(process.cwd(), "src/styles/app.css"), "utf8");
+
+  it("keeps .ledger__body hidden when the attribute is set", () => {
+    // The ledger body sets `display: flex` for its layout, which outranks the
+    // UA stylesheet's [hidden] rule. Without an explicit .ledger__body[hidden]
+    // rescue, the "Show detail" toggle flips its label and aria-expanded while
+    // the body never disappears — the exact bug reported from /demo.
+    expect(
+      /\.ledger__body\[hidden\]\s*\{[^}]*display:\s*none[^}]*\}/.test(appCss),
+      "app.css must contain .ledger__body[hidden] { display: none }",
+    ).toBe(true);
+  });
+});

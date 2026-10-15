@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { writes } from "@/services";
 import type { TxHash } from "@/services/types";
-import { finalityState } from "@/domain/finality";
+import { finalityState, validatorAgreement, type ValidatorAgreement } from "@/domain/finality";
 import type { FinalityState } from "@/domain/types";
 
 const MAP_KEY = "civiclens.tx.byCommitment";
@@ -58,9 +58,20 @@ export function clearRememberedTx(commitmentId: number) {
   }
 }
 
+/**
+ * Read-only view of the txs THIS BROWSER submitted, keyed by commitment id.
+ * Used by the activity page; it is browser-local convenience, never a
+ * network record, and the page labels it as such.
+ */
+export function listRememberedTxs(): Record<string, TxHash> {
+  return loadMap();
+}
+
 export interface FinalityResult {
   state: FinalityState;
   hash: TxHash | null;
+  /** Per-validator votes from the resolved receipt; null when unknown. */
+  votes: ValidatorAgreement | null;
   /** True while a receipt is being read the first time. */
   loading: boolean;
 }
@@ -70,6 +81,7 @@ export function useFinality(commitmentId: number): FinalityResult {
   const fromUrl = params.get("tx");
   const [state, setState] = useState<FinalityState>("none");
   const [hash, setHash] = useState<TxHash | null>(null);
+  const [votes, setVotes] = useState<ValidatorAgreement | null>(null);
   const [loading, setLoading] = useState(false);
 
   const urlHash = fromUrl && TX_RE.test(fromUrl) ? (fromUrl as TxHash) : null;
@@ -81,6 +93,7 @@ export function useFinality(commitmentId: number): FinalityResult {
     if (!target || !w) {
       setState("none");
       setHash(null);
+      setVotes(null);
       return;
     }
 
@@ -94,6 +107,7 @@ export function useFinality(commitmentId: number): FinalityResult {
         if (cancelled) return;
         const next = finalityState(receipt);
         setState(next);
+        setVotes(validatorAgreement(receipt));
         // Stop once settled; accepted can still become final later, so only
         // "final" is terminal here.
         if (next === "final") return;
@@ -113,5 +127,5 @@ export function useFinality(commitmentId: number): FinalityResult {
     };
   }, [target]);
 
-  return { state, hash, loading };
+  return { state, hash, votes, loading };
 }

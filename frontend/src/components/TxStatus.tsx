@@ -13,6 +13,7 @@
  */
 
 import { phaseLabel } from "@/domain/finality";
+import type { ValidatorAgreement } from "@/domain/finality";
 import type { TxPhase } from "@/domain/copy";
 import { CopyField } from "./CopyField";
 import { AcceptedMark, ExternalMark, FinalMark } from "./Marks";
@@ -23,6 +24,8 @@ const IS_FAILURE: TxPhase[] = ["dropped", "rejected", "reverted"];
 export interface TxStatusProps {
   phase: TxPhase;
   hash?: string | null;
+  /** Per-validator votes from the receipt, shown once they exist. */
+  votes?: ValidatorAgreement | null;
   /** One sentence on what is happening now. */
   detail?: string;
   /** True while the browser tab is hidden but the tx is still tracked. */
@@ -30,7 +33,7 @@ export interface TxStatusProps {
   error?: string | null;
 }
 
-export function TxStatus({ phase, hash, detail, onRefresh, error }: TxStatusProps) {
+export function TxStatus({ phase, hash, votes, detail, onRefresh, error }: TxStatusProps) {
   const busy = IS_BUSY.includes(phase);
   const failed = IS_FAILURE.includes(phase);
 
@@ -52,6 +55,13 @@ export function TxStatus({ phase, hash, detail, onRefresh, error }: TxStatusProp
       </div>
 
       {detail && <p className="tx__detail">{detail}</p>}
+
+      {(phase === "accepted" || phase === "final") && votes && (
+        <p className="tx__detail">
+          {votes.agreed} of {votes.total} validators agreed
+          {typeof votes.round === "number" ? ` in round ${votes.round}` : ""}.
+        </p>
+      )}
 
       {busy && (
         <p className="tx__detail">

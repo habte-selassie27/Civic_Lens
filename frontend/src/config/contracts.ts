@@ -50,6 +50,10 @@ export const WRITE_METHODS = {
   submitEvidence: "submit_evidence",
   requestReview: "request_review",
   openChallenge: "open_challenge",
+  // NOTE: there is deliberately no `update_criteria`. Criteria are immutable by
+  // absence — the contract exposes no mutation path at all, and the only legal
+  // way to change a criterion is `supersede_commitment`, which creates a linked
+  // new version instead of rewriting history.
 } as const;
 
 /**

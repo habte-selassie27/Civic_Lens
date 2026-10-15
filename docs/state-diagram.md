@@ -49,9 +49,10 @@ withdrawn / superseded ──anything──> EXPECTED: terminal state (rejected)
 
 1. Evidence can only be submitted in `evidence_open`, `outcome_accepted`,
    `challenged` — never in `review_pending`, `withdrawn`, `superseded`.
-2. Criteria are immutable after creation; `update_criteria` always rejects
-   with a pointer to `supersede_commitment`; superseding creates a new
-   commitment linked to the old one.
+2. Criteria are immutable by absence: the contract exposes **no**
+   criteria-mutation method at all. The only legal path to different criteria
+   is `supersede_commitment`, which creates a new commitment linked to the old
+   one and marks the old record `superseded` without rewriting it.
 3. A review request is only accepted in `evidence_open` (first round) or
    `challenged` (later rounds), and only from the registrant (or, for round 1,
    the deployment admin). Repeated requests for a pending round are **rejected
@@ -63,6 +64,10 @@ withdrawn / superseded ──anything──> EXPECTED: terminal state (rejected)
    count opened rounds, not only completed ones).
 5. Round numbers are 1-based and strictly increase; `RoundRecord` history is
    append-only; a new round is only recorded when its review consensus
-   succeeds (failed reviews record nothing — retryable).
+   succeeds (failed reviews record nothing — retryable). A challenge round's
+   review receives the open challenge's target, grounds and attached evidence
+   ids, so the challenge actually influences the round it opened. Every round
+   also records the per-source retrieval status of each evidence item and the
+   commitment's `data_mode` (provenance label; not behavior).
 6. Deadlines not reached / evidence window open ⇒ never `inconclusive`
    (status stays `evidence_open` / `pending` semantics).
