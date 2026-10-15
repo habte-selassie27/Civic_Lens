@@ -1,0 +1,288 @@
+{
+  "ctor": {
+    "params": [],
+    "kwparams": {}
+  },
+  "methods": {
+    "create_commitment": {
+      "params": [
+        [
+          "subject",
+          "string"
+        ],
+        [
+          "subject_kind",
+          "string"
+        ],
+        [
+          "registrant_role",
+          "string"
+        ],
+        [
+          "source_statement_ref",
+          "string"
+        ],
+        [
+          "commitment_text",
+          "string"
+        ],
+        [
+          "period_start",
+          "string"
+        ],
+        [
+          "period_end",
+          "string"
+        ],
+        [
+          "timezone",
+          "string"
+        ],
+        [
+          "source_guidance",
+          "string"
+        ],
+        [
+          "data_mode",
+          "string"
+        ],
+        [
+          "criteria_json",
+          "string"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": false,
+      "ret": "int",
+      "payable": false
+    },
+    "get_challenges": {
+      "params": [
+        [
+          "commitment_id",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": true,
+      "ret": "array"
+    },
+    "get_commitment": {
+      "params": [
+        [
+          "commitment_id",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": true,
+      "ret": "dict"
+    },
+    "get_commitments": {
+      "params": [
+        [
+          "page_size",
+          "int"
+        ],
+        [
+          "before_id",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": true,
+      "ret": "array"
+    },
+    "get_constants": {
+      "params": [],
+      "kwparams": {},
+      "readonly": true,
+      "ret": "dict"
+    },
+    "get_evidence": {
+      "params": [
+        [
+          "commitment_id",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": true,
+      "ret": "array"
+    },
+    "get_outcome": {
+      "params": [
+        [
+          "commitment_id",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": true,
+      "ret": "dict"
+    },
+    "get_rounds": {
+      "params": [
+        [
+          "commitment_id",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": true,
+      "ret": "array"
+    },
+    "open_challenge": {
+      "params": [
+        [
+          "commitment_id",
+          "int"
+        ],
+        [
+          "target",
+          "string"
+        ],
+        [
+          "grounds",
+          "string"
+        ],
+        [
+          "new_evidence_ids",
+          [
+            {
+              "$rep": "int"
+            }
+          ]
+        ]
+      ],
+      "kwparams": {},
+      "readonly": false,
+      "ret": "int",
+      "payable": false
+    },
+    "request_review": {
+      "params": [
+        [
+          "commitment_id",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": false,
+      "ret": "int",
+      "payable": false
+    },
+    "submit_evidence": {
+      "params": [
+        [
+          "commitment_id",
+          "int"
+        ],
+        [
+          "url",
+          "string"
+        ],
+        [
+          "evidence_type",
+          "string"
+        ],
+        [
+          "published_date",
+          "string"
+        ],
+        [
+          "note",
+          "string"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": false,
+      "ret": "int",
+      "payable": false
+    },
+    "supersede_commitment": {
+      "params": [
+        [
+          "old_id",
+          "int"
+        ],
+        [
+          "subject",
+          "string"
+        ],
+        [
+          "subject_kind",
+          "string"
+        ],
+        [
+          "registrant_role",
+          "string"
+        ],
+        [
+          "source_statement_ref",
+          "string"
+        ],
+        [
+          "commitment_text",
+          "string"
+        ],
+        [
+          "period_start",
+          "string"
+        ],
+        [
+          "period_end",
+          "string"
+        ],
+        [
+          "timezone",
+          "string"
+        ],
+        [
+          "source_guidance",
+          "string"
+        ],
+        [
+          "data_mode",
+          "string"
+        ],
+        [
+          "criteria_json",
+          "string"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": false,
+      "ret": "int",
+      "payable": false
+    },
+    "update_criteria": {
+      "params": [
+        [
+          "commitment_id",
+          "int"
+        ],
+        [
+          "criteria_json",
+          "string"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": false,
+      "ret": "null",
+      "payable": false
+    },
+    "withdraw_commitment": {
+      "params": [
+        [
+          "commitment_id",
+          "int"
+        ]
+      ],
+      "kwparams": {},
+      "readonly": false,
+      "ret": "null",
+      "payable": false
+    }
+  }
+}
