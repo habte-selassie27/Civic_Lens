@@ -8,7 +8,7 @@
  *
  * What was traded away, deliberately: a `<select>` states its own value and
  * offers every option at once. A cycling button does neither, so this one
- * keeps the VALUE VISIBLE as text next to the icon (`◐ System`) and puts the
+ * keeps the VALUE VISIBLE as text next to the icon ( `monitor System` ) and puts the
  * same words in the accessible name. The state is therefore never guessed
  * from an icon alone — which was the reason the select existed in the first
  * place. Icon-only is not used, because an icon cannot say "System".
@@ -73,9 +73,8 @@ function ThemeGlyph({ preference }: { preference: ThemePreference }) {
   }
   return (
     <svg className="icon" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.4" aria-hidden="true" focusable="false">
-      <circle cx="8" cy="8" r="3.1" />
-      <path d="M8 1v1.6M8 13.4V15M15 8h-1.6M2.6 8H1" />
-      <path d="M8 4.9A3.1 3.1 0 0 1 8 11.1Z" fill="currentColor" stroke="none" />
+      <rect x="1.5" y="2.75" width="13" height="8.5" rx="1" />
+      <path d="M8 11.25v3M5.5 14.25h5" />
     </svg>
   );
 }

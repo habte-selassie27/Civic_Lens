@@ -374,6 +374,86 @@ export const fr: Partial<Record<MessageKey, string>> = {
   "stats.sources_count": "sources",
   "stats.count_again": "Compter à nouveau",
 
+  /* -- mon activité (/activity) -------------------------------------------- */
+  "activity.title": "Mon activité",
+  "activity.lede":
+    "Ce qu'a fait ce compte dans la fenêtre analysée — les {count} engagements les plus récents. Le contrat n'a pas encore d'index par compte : les enregistrements antérieurs à la fenêtre ne sont pas recherchés.",
+  "activity.connect_title": "Connectez un compte pour voir votre activité",
+  "activity.connect_body":
+    "Cette page compare l'adresse connectée aux enregistrements, aux preuves envoyées et aux contestations ouvertes dans la fenêtre analysée. La lecture fonctionne sans portefeuille ; connecter un compte n'ajoute rien à la page avant la connexion.",
+  "activity.no_wallet": "Aucun portefeuille détecté",
+  "activity.scanned": "Analysé : {done} sur {total} enregistrements.",
+  "activity.scanning": "Analyse des engagements récents",
+  "activity.error_title": "L'analyse n'a pas pu aboutir.",
+  "activity.unread":
+    "Enregistrements illisibles, donc ignorés : {count}. Le reste de la fenêtre a été analysé.",
+  "activity.window_empty_title": "La fenêtre est vide",
+  "activity.window_empty_body":
+    "Rien n'a encore été enregistré, il n'y a donc rien à analyser. Enregistrez un engagement et il apparaîtra ici.",
+  "activity.register_link": "Enregistrer un engagement",
+  "activity.registered_heading": "Enregistré par ce compte",
+  "activity.registered_empty_title": "Aucun enregistrement de ce compte dans la fenêtre",
+  "activity.registered_empty_body": "Enregistrez-en un et il apparaîtra ici.",
+  "activity.row_meta": "Tours : {rounds} · Preuves : {items}",
+  "activity.row_version": "Version : {version}",
+  "activity.evidence_heading": "Preuves soumises par ce compte",
+  "activity.evidence_empty_title": "Aucune preuve soumise par ce compte dans la fenêtre",
+  "activity.evidence_empty_body": "Ouvrez un engagement pour y ajouter une source.",
+  "activity.evidence_caption":
+    "Preuves soumises par ce compte, avec leur engagement et le type déclaré.",
+  "activity.col_commitment": "Engagement",
+  "activity.col_source": "Source",
+  "activity.col_declared_type": "Type déclaré",
+  "activity.col_published": "Publié",
+  "activity.challenges_heading": "Contestations ouvertes par ce compte",
+  "activity.challenges_empty_title":
+    "Aucune contestation ouverte par ce compte dans la fenêtre",
+  "activity.challenges_empty_body":
+    "Une contestation que vous ouvrez apparaîtra ici avec ses motifs au dossier.",
+  "activity.challenges_caption":
+    "Contestations ouvertes par ce compte, avec la cible et les preuves jointes.",
+  "activity.col_target": "Cible",
+  "activity.col_grounds": "Motifs",
+  "activity.col_new_evidence": "Preuves nouvelles",
+  "activity.target_overall": "Le résultat global",
+  "activity.target_criterion": "Critère {criterion}",
+  "activity.tx_heading": "Transactions de ce navigateur",
+  "activity.tx_body":
+    "Mémorisées dans le stockage de ce navigateur après l'envoi d'une écriture. C'est une commodité pour retrouver vos transactions, pas un registre du réseau. La finalité est affichée sur la page de chaque engagement.",
+  "activity.tx_pending_lead": "Envoyée depuis ce navigateur, encore suivie :",
+  "activity.tx_empty":
+    "Rien d'enregistré pour l'instant. Les écritures envoyées depuis ce navigateur seront listées ici.",
+  "activity.tx_caption": "Transactions envoyées par ce navigateur, par engagement.",
+  "activity.col_transaction": "Transaction",
+
+  /* -- démo (/demo) --------------------------------------------------------- */
+  "demo.title": "Démo",
+  "demo.lede":
+    "Tous les résultats qu'une révision CivicLens peut produire, sans attendre de preuves en direct.",
+  "demo.how_to_read_title": "Comment lire cette page",
+  "demo.replay_lead": "Rejeu d'un résultat enregistré.",
+  "demo.replay_body":
+    "Chaque scénario est un enregistrement conservé d'une révision, montré pour permettre d'évaluer l'interface. Les sujets sont des organisations d'exemple fictives. Rien ici n'est une conclusion sur une entité réelle.",
+  "demo.on_network_lead":
+    "Un contrat déployé est configuré dans cette version, vous pouvez donc aussi",
+  "demo.on_network_link": "enregistrer un engagement et lancer une vraie révision sur le réseau",
+  "demo.on_network_tail": "avec de vraies transactions et de vrais reçus.",
+  "demo.no_network":
+    "Aucune adresse de contrat n'est configurée, donc l'option « exécuter sur le réseau » n'existe pas ici — et c'est délibéré. CivicLens ne simule pas une transaction qu'il n'a pas envoyée.",
+  "demo.pick_heading": "Choisir un scénario",
+  "demo.creating_tx": "Transaction de création",
+  "demo.tx_link_suffix": " sur l'explorateur GenLayer Studio (s'ouvre dans un nouvel onglet)",
+  "demo.open_full_page": "Ouvrir en pleine page",
+  "demo.what_tests_title": "Ce que ce scénario teste",
+  "demo.commitment_sample": "Engagement tel qu'il a été annoncé (exemple)",
+  "demo.period": "Période d'évaluation : {period}",
+  "demo.outcome_heading": "Résultat (résultat enregistré)",
+  "demo.ledger_heading": "Registre des critères",
+  "demo.no_criteria": "Ce scénario n'a pas de critères",
+  "demo.why_result": "Pourquoi ce résultat",
+  "demo.reason_note": "Code de motif enregistré {reason}, évalué le {date}.",
+  "demo.rounds_heading": "Historique des tours",
+
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":
     "CivicLens rapporte ce que les preuves publiées étayent. Il n'évalue pas les intentions.",

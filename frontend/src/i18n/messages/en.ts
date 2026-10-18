@@ -373,6 +373,83 @@ export const en = {
   "stats.sources_count": "sources",
   "stats.count_again": "Count again",
 
+  /* -- my activity (/activity) --------------------------------------------- */
+  "activity.title": "My activity",
+  "activity.lede":
+    "What this account did inside the scanned window — the {count} most recent commitments. The contract has no by-account index yet, so records older than the window are not searched.",
+  "activity.connect_title": "Connect an account to see your activity",
+  "activity.connect_body":
+    "This page matches the connected address against registrations, evidence submitters, and challengers in the scanned window. Reading works without a wallet; connecting adds nothing to the page until it is connected.",
+  "activity.no_wallet": "No wallet detected",
+  "activity.scanned": "Scanned {done} of {total} records.",
+  "activity.scanning": "Scanning the recent commitments",
+  "activity.error_title": "The scan could not be completed.",
+  "activity.unread":
+    "Records that could not be read and were skipped: {count}. The rest of the window was scanned.",
+  "activity.window_empty_title": "The window is empty",
+  "activity.window_empty_body":
+    "Nothing has been registered yet, so there is nothing to scan. Register a commitment and it will appear here.",
+  "activity.register_link": "Register a commitment",
+  "activity.registered_heading": "Registered by this account",
+  "activity.registered_empty_title": "No registrations from this account in the window",
+  "activity.registered_empty_body": "Register one and it will show here.",
+  "activity.row_meta": "Rounds: {rounds} · Evidence items: {items}",
+  "activity.row_version": "Version: {version}",
+  "activity.evidence_heading": "Evidence submitted by this account",
+  "activity.evidence_empty_title": "No evidence submitted by this account in the window",
+  "activity.evidence_empty_body": "Open a commitment to add a source to it.",
+  "activity.evidence_caption":
+    "Evidence this account submitted, with its commitment and declared type.",
+  "activity.col_commitment": "Commitment",
+  "activity.col_source": "Source",
+  "activity.col_declared_type": "Declared type",
+  "activity.col_published": "Published",
+  "activity.challenges_heading": "Challenges opened by this account",
+  "activity.challenges_empty_title": "No challenges opened by this account in the window",
+  "activity.challenges_empty_body":
+    "A challenge you open appears here with its grounds on file.",
+  "activity.challenges_caption":
+    "Challenges this account opened, with target and attached evidence.",
+  "activity.col_target": "Target",
+  "activity.col_grounds": "Grounds",
+  "activity.col_new_evidence": "New evidence",
+  "activity.target_overall": "The overall outcome",
+  "activity.target_criterion": "Criterion {criterion}",
+  "activity.tx_heading": "Transactions from this browser",
+  "activity.tx_body":
+    "Remembered in this browser's own storage after you submit a write. It is a convenience for finding your transactions again — not a network record. Finality is shown on each commitment page.",
+  "activity.tx_pending_lead": "Submitted from this browser and still being tracked:",
+  "activity.tx_empty":
+    "Nothing recorded yet. Writes you submit from this browser will be listed here.",
+  "activity.tx_caption": "Transactions this browser submitted, by commitment.",
+  "activity.col_transaction": "Transaction",
+
+  /* -- demo (/demo) --------------------------------------------------------- */
+  "demo.title": "Demo",
+  "demo.lede": "Every outcome a CivicLens review can produce, without waiting on live evidence.",
+  "demo.how_to_read_title": "How to read this page",
+  "demo.replay_lead": "Replay of a recorded result.",
+  "demo.replay_body":
+    "Each scenario below is a stored record of a review, shown so the interface can be evaluated. The subjects are fabricated sample organizations. Nothing here is a finding about a real entity.",
+  "demo.on_network_lead": "A deployed contract is configured in this build, so you can also",
+  "demo.on_network_link": "register a commitment and run a real review on network",
+  "demo.on_network_tail": "with real transactions and receipts.",
+  "demo.no_network":
+    "No contract address is configured, so there is no “run on network” option here — and that is deliberate. CivicLens does not simulate a transaction it did not send.",
+  "demo.pick_heading": "Pick a scenario",
+  "demo.creating_tx": "Creating transaction",
+  "demo.tx_link_suffix": " on the GenLayer Studio explorer (opens in a new tab)",
+  "demo.open_full_page": "Open as a full page",
+  "demo.what_tests_title": "What this tests",
+  "demo.commitment_sample": "Commitment as stated (sample)",
+  "demo.period": "Evaluation period {period}",
+  "demo.outcome_heading": "Outcome (recorded result)",
+  "demo.ledger_heading": "Criterion ledger",
+  "demo.no_criteria": "This scenario has no criteria",
+  "demo.why_result": "Why this result",
+  "demo.reason_note": "Recorded reason code {reason}, evaluated {date}.",
+  "demo.rounds_heading": "Round history",
+
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline": "CivicLens reports what published evidence supports. It doesn't judge intent.",
   "colophon.safeguards": "Safeguards and limitations",

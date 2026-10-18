@@ -191,7 +191,10 @@ td.num {
  * groups never trade places when the bar wraps at narrow widths.
  */
 .masthead__inner {
-  max-width: 1120px;
+  /* The header carries more than the reading column now — navigation,
+     language, account and network chrome all sit on one line — so it gets a
+     wider measure than the 1120px content column below. */
+  max-width: 1280px;
   margin: 0 auto;
   padding: var(--space-2) var(--space-4);
   display: flex;
@@ -203,7 +206,8 @@ td.num {
 .masthead__lead {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  gap: var(--space-2);
   flex: 1 1 auto;
   min-width: 0;
 }
@@ -222,6 +226,15 @@ td.num {
 
 .masthead__notice {
   padding: 0 var(--space-4) var(--space-3);
+}
+
+/* Account + network chip: one unit, so a narrower window drops them onto a
+   second line together instead of orphaning the network chip alone. */
+.masthead__chrome {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: none;
 }
 
 .wordmark {
@@ -259,7 +272,9 @@ td.num {
   display: inline-flex;
   align-items: center;
   min-height: var(--tap);
-  padding: 0 var(--space-2);
+  /* No horizontal padding: the nav gap already separates the links, and the
+     full row (nav + account + network chip) has to fit on one line. */
+  padding: 0;
   font-size: var(--t-14);
   color: var(--ink-muted);
   text-decoration: none;
@@ -279,103 +294,44 @@ td.num {
   font-weight: 600;
 }
 
-/* Secondary navigation: a disclosure, styled to match the header's controls. */
-.navmenu {
-  position: relative;
+/*
+ * Links get their tap padding back only when there is room for the whole row
+ * on one line. Below 1280px the padding is what makes the network chip wrap
+ * onto a second line, so the links tighten to the gap instead of pushing the
+ * account chrome off the row. The gap between links is the same value, so the
+ * rhythm stays even either way.
+ */
+@media (min-width: 1280px) {
+  .masthead__nav a {
+    padding: 0 var(--space-1);
+  }
 }
 
-/* The trigger is a plain button; `aria-expanded` carries the open state, so
-   styling hangs off that attribute rather than a <details> parent. */
-.navmenu__button {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-height: var(--tap);
-  padding: 0 var(--space-2);
-  font: inherit;
-  font-size: var(--t-14);
-  color: var(--ink-muted);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--radius-control);
-  cursor: pointer;
-}
-
-.navmenu__button:hover,
-.navmenu__button[aria-expanded="true"] {
-  color: var(--record-ink);
-  background: var(--sheet);
-}
-
-.navmenu__caret {
-  font-size: 0.7em;
-  transition: transform var(--fast) var(--ease);
-}
-
-.navmenu[open] .navmenu__caret {
-  transform: rotate(180deg);
-}
-
-.navmenu__list {
-  position: absolute;
-  right: 0;
-  top: calc(100% + var(--space-1));
-  z-index: 30;
-  min-width: 220px;
-  margin: 0;
-  padding: var(--space-1);
-  list-style: none;
-  background: var(--sheet);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-panel);
-  box-shadow: 0 12px 24px -18px rgb(0 0 0 / 0.45);
-}
-
-.navmenu__item a {
-  display: block;
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--t-14);
-  color: var(--ink-muted);
-  text-decoration: none;
-  border-radius: var(--radius-control);
-}
-
-.navmenu__item a:hover {
-  color: var(--record-ink);
-  background: var(--microfiche);
-}
-
-.navmenu__item a[aria-current="page"] {
-  color: var(--record-ink);
-  font-weight: 600;
-}
-
-/* A group break between reference pages and the monitoring pages. */
-.navmenu__item--grouped {
-  border-top: 1px solid var(--rule);
-  margin-top: var(--space-1);
-  padding-top: var(--space-1);
-}
-
-/* Appearance control: icon plus the value in words. */
+/* Appearance control: icon plus the value in words. Bordered to match the
+   other header controls, so the row reads as one family of controls rather
+   than a loose label beside two buttons. */
 .theme-toggle {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  min-height: var(--tap);
+  /* Same box height as the header's other controls (.btn--small, 32px). */
+  min-height: 32px;
   padding: 0 var(--space-2);
   font: inherit;
   font-size: var(--t-14);
-  color: var(--ink-muted);
+  /* Same quiet-button treatment as the language and account controls, so the
+     three boxed controls in the row read as one family of interactive things. */
+  color: var(--citation);
   background: transparent;
-  border: 1px solid transparent;
+  border: 1px solid var(--rule);
   border-radius: var(--radius-control);
   cursor: pointer;
 }
 
 .theme-toggle:hover {
-  color: var(--record-ink);
-  background: var(--sheet);
+  color: var(--citation);
+  background: var(--citation-tint);
+  border-color: var(--citation);
 }
 
 .theme-toggle__value {
@@ -639,15 +595,10 @@ td.num {
     min-width: 12rem;
   }
 
-  .navmenu__list {
-    right: auto;
-    left: 0;
-  }
 }
 
 @media print {
   /* Chrome a reader does not need on paper: preferences, navigation, account. */
-  .navmenu,
   .language,
   .theme-toggle,
   .account {
@@ -1685,8 +1636,7 @@ details.disclosure > summary:hover {
     flex-wrap: wrap;
   }
 
-  .masthead__nav a,
-  .navmenu__button {
+  .masthead__nav a {
     padding: 0 var(--space-2);
   }
 

@@ -218,7 +218,7 @@ describe("my activity", () => {
     renderActivity();
 
     expect(
-      await screen.findByText(/1 record could not be read and was skipped/),
+      await screen.findByText(/Records that could not be read and were skipped: 1/),
     ).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /#1 Alpha Trust/ }).length).toBeGreaterThan(0);
   });

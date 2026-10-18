@@ -36,6 +36,7 @@ import {
 import { SourceLink } from "@/components/SourceLink";
 import { listRememberedTxs } from "@/hooks/useFinality";
 import { readPendingTx } from "@/hooks/useTxLifecycle";
+import { useT } from "@/i18n";
 
 const WINDOW_SIZE = 20;
 const SCAN_CONCURRENCY = 5;
@@ -69,6 +70,7 @@ function TxLine({ hash }: { hash: TxHash | string }) {
 }
 
 export function Activity() {
+  const t = useT();
   const wallet = useWallet();
   const [attempt, setAttempt] = useState(0);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
@@ -174,21 +176,13 @@ export function Activity() {
       {reads.isSample && reads.sampleReason && <SampleBanner reason={reads.sampleReason} />}
 
       <div>
-        <h1>My activity</h1>
-        <p className="hint">
-          What this account did inside the scanned window — the {windowSize} most recent
-          commitments. The contract has no by-account index yet, so records older than the
-          window are not searched.
-        </p>
+        <h1>{t("activity.title")}</h1>
+        <p className="hint">{t("activity.lede", { count: windowSize })}</p>
       </div>
 
       {!account && (
-        <Banner title="Connect an account to see your activity">
-          <p>
-            This page matches the connected address against registrations, evidence
-            submitters, and challengers in the scanned window. Reading works without a
-            wallet; connecting adds nothing to the page until it is connected.
-          </p>
+        <Banner title={t("activity.connect_title")}>
+          <p>{t("activity.connect_body")}</p>
           <div className="actions">
             <button
               type="button"
@@ -196,7 +190,7 @@ export function Activity() {
               onClick={() => void wallet.connect()}
               disabled={!wallet.hasProvider}
             >
-              {wallet.hasProvider ? "Connect account" : "No wallet detected"}
+              {wallet.hasProvider ? t("wallet.connect") : t("activity.no_wallet")}
             </button>
           </div>
         </Banner>
@@ -206,10 +200,10 @@ export function Activity() {
         <>
           {progress && (
             <p className="hint" role="status" aria-live="polite">
-              Scanned {progress.done} of {progress.total} records.
+              {t("activity.scanned", { done: progress.done, total: progress.total })}
             </p>
           )}
-          <LoadingRegion label="Scanning the recent commitments" />
+          <LoadingRegion label={t("activity.scanning")} />
         </>
       )}
 
@@ -217,29 +211,22 @@ export function Activity() {
         <ErrorView
           error={state.error}
           onRetry={() => setAttempt((a) => a + 1)}
-          title="The scan could not be completed."
+          title={t("activity.error_title")}
         />
       ) : null}
 
       {account && !state.loading && !state.error && (
         <>
           {unreadCount > 0 && (
-            <p className="hint">
-              {unreadCount} record{unreadCount === 1 ? "" : "s"} could not be read and{" "}
-              {unreadCount === 1 ? "was" : "were"} skipped. The rest of the window was
-              scanned.
-            </p>
+            <p className="hint">{t("activity.unread", { count: unreadCount })}</p>
           )}
 
           {rows.length === 0 ? (
-            <EmptyState title="The window is empty">
-              <p>
-                Nothing has been registered yet, so there is nothing to scan. Register a
-                commitment and it will appear here.
-              </p>
+            <EmptyState title={t("activity.window_empty_title")}>
+              <p>{t("activity.window_empty_body")}</p>
               <div className="actions" style={{ marginTop: "var(--space-2)" }}>
                 <Link className="btn btn--small" to="/commitments/new">
-                  Register a commitment
+                  {t("activity.register_link")}
                 </Link>
               </div>
             </EmptyState>
@@ -247,15 +234,15 @@ export function Activity() {
             <>
               <section className="panel" aria-labelledby="activity-registered">
                 <div className="panel__head">
-                  <h2 id="activity-registered">Registered by this account</h2>
+                  <h2 id="activity-registered">{t("activity.registered_heading")}</h2>
                 </div>
                 <div className="panel__body">
                   {mine.length === 0 ? (
-                    <EmptyState title="No registrations from this account in the window">
-                      <p>Register one and it will show here.</p>
+                    <EmptyState title={t("activity.registered_empty_title")}>
+                      <p>{t("activity.registered_empty_body")}</p>
                       <div className="actions" style={{ marginTop: "var(--space-2)" }}>
                         <Link className="btn btn--small" to="/commitments/new">
-                          Register a commitment
+                          {t("activity.register_link")}
                         </Link>
                       </div>
                     </EmptyState>
@@ -278,11 +265,12 @@ export function Activity() {
                           </Link>
                           <span className="tag">{STATUS_LABEL[summary.status] ?? summary.status}</span>
                           <span className="hint" style={{ margin: 0 }}>
-                            {summary.round_count} round{summary.round_count === 1 ? "" : "s"} ·{" "}
-                            {summary.evidence_count} evidence item
-                            {summary.evidence_count === 1 ? "" : "s"}
+                            {t("activity.row_meta", {
+                              rounds: summary.round_count,
+                              items: summary.evidence_count,
+                            })}
                             {commitment && commitment.version > 1
-                              ? ` · version ${commitment.version}`
+                              ? ` · ${t("activity.row_version", { version: commitment.version })}`
                               : ""}
                           </span>
                         </li>
@@ -294,26 +282,23 @@ export function Activity() {
 
               <section className="panel" aria-labelledby="activity-evidence">
                 <div className="panel__head">
-                  <h2 id="activity-evidence">Evidence submitted by this account</h2>
+                  <h2 id="activity-evidence">{t("activity.evidence_heading")}</h2>
                 </div>
                 <div className="panel__body">
                   {myEvidence.length === 0 ? (
-                    <EmptyState title="No evidence submitted by this account in the window">
-                      <p>Open a commitment to add a source to it.</p>
+                    <EmptyState title={t("activity.evidence_empty_title")}>
+                      <p>{t("activity.evidence_empty_body")}</p>
                     </EmptyState>
                   ) : (
                     <div className="table-wrap">
                       <table className="table">
-                        <caption className="sr-only">
-                          Evidence this account submitted, with its commitment and declared
-                          type.
-                        </caption>
+                        <caption className="sr-only">{t("activity.evidence_caption")}</caption>
                         <thead>
                           <tr>
-                            <th scope="col">Commitment</th>
-                            <th scope="col">Source</th>
-                            <th scope="col">Declared type</th>
-                            <th scope="col">Published</th>
+                            <th scope="col">{t("activity.col_commitment")}</th>
+                            <th scope="col">{t("activity.col_source")}</th>
+                            <th scope="col">{t("activity.col_declared_type")}</th>
+                            <th scope="col">{t("activity.col_published")}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -344,25 +329,23 @@ export function Activity() {
 
               <section className="panel" aria-labelledby="activity-challenges">
                 <div className="panel__head">
-                  <h2 id="activity-challenges">Challenges opened by this account</h2>
+                  <h2 id="activity-challenges">{t("activity.challenges_heading")}</h2>
                 </div>
                 <div className="panel__body">
                   {myChallenges.length === 0 ? (
-                    <EmptyState title="No challenges opened by this account in the window">
-                      <p>A challenge you open appears here with its grounds on file.</p>
+                    <EmptyState title={t("activity.challenges_empty_title")}>
+                      <p>{t("activity.challenges_empty_body")}</p>
                     </EmptyState>
                   ) : (
                     <div className="table-wrap">
                       <table className="table">
-                        <caption className="sr-only">
-                          Challenges this account opened, with target and attached evidence.
-                        </caption>
+                        <caption className="sr-only">{t("activity.challenges_caption")}</caption>
                         <thead>
                           <tr>
-                            <th scope="col">Commitment</th>
-                            <th scope="col">Target</th>
-                            <th scope="col">Grounds</th>
-                            <th scope="col">New evidence</th>
+                            <th scope="col">{t("activity.col_commitment")}</th>
+                            <th scope="col">{t("activity.col_target")}</th>
+                            <th scope="col">{t("activity.col_grounds")}</th>
+                            <th scope="col">{t("activity.col_new_evidence")}</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -375,8 +358,8 @@ export function Activity() {
                               </td>
                               <td>
                                 {item.target === ""
-                                  ? "The overall outcome"
-                                  : `Criterion ${item.target}`}
+                                  ? t("activity.target_overall")
+                                  : t("activity.target_criterion", { criterion: item.target })}
                               </td>
                               <td>{item.grounds}</td>
                               <td className="num">{item.new_evidence_ids.length}</td>
@@ -395,36 +378,30 @@ export function Activity() {
 
       <section className="panel" aria-labelledby="activity-tx">
         <div className="panel__head">
-          <h2 id="activity-tx">Transactions from this browser</h2>
+          <h2 id="activity-tx">{t("activity.tx_heading")}</h2>
         </div>
         <div className="panel__body">
           <p className="hint" style={{ marginTop: 0 }}>
-            Remembered in this browser&apos;s own storage after you submit a write. It is a
-            convenience for finding your transactions again — not a network record. Finality
-            is shown on each commitment page.
+            {t("activity.tx_body")}
           </p>
 
           {pending && (
             <p>
-              Submitted from this browser and still being tracked:{" "}
-              <strong>{pending.action}</strong> — <TxLine hash={pending.hash} />
+              {t("activity.tx_pending_lead")} <strong>{t(pending.action)}</strong> —{" "}
+              <TxLine hash={pending.hash} />
             </p>
           )}
 
           {rememberedRows.length === 0 ? (
-            <p className="hint">
-              Nothing recorded yet. Writes you submit from this browser will be listed here.
-            </p>
+            <p className="hint">{t("activity.tx_empty")}</p>
           ) : (
             <div className="table-wrap">
               <table className="table">
-                <caption className="sr-only">
-                  Transactions this browser submitted, by commitment.
-                </caption>
+                <caption className="sr-only">{t("activity.tx_caption")}</caption>
                 <thead>
                   <tr>
-                    <th scope="col">Commitment</th>
-                    <th scope="col">Transaction</th>
+                    <th scope="col">{t("activity.col_commitment")}</th>
+                    <th scope="col">{t("activity.col_transaction")}</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -171,7 +171,7 @@ export function CommitmentDetail() {
     note: string;
   }) {
     const w = requireWrites();
-    await tx.start("Add evidence", () =>
+    await tx.start("action.add_evidence", () =>
       w.submitEvidence({
         commitmentId,
         url: input.url,
@@ -186,7 +186,7 @@ export function CommitmentDetail() {
 
   async function requestReview() {
     const w = requireWrites();
-    await tx.start("Request review", () => w.requestReview(commitmentId));
+    await tx.start("action.request_review", () => w.requestReview(commitmentId));
     const phase = await tx.waitForAcceptance();
     if (phase === "accepted" || phase === "final") {
       if (tx.hash) rememberTxForCommitment(commitmentId, tx.hash);
@@ -196,14 +196,14 @@ export function CommitmentDetail() {
 
   async function openChallenge(input: { target: string; grounds: string; newEvidenceIds: number[] }) {
     const w = requireWrites();
-    await tx.start("Open challenge", () => w.openChallenge({ commitmentId, ...input }));
+    await tx.start("action.open_challenge", () => w.openChallenge({ commitmentId, ...input }));
     const phase = await tx.waitForAcceptance();
     if (phase === "accepted" || phase === "final") await refetch();
   }
 
   async function withdraw() {
     const w = requireWrites();
-    await tx.start("Withdraw commitment", () => w.withdrawCommitment(commitmentId));
+    await tx.start("action.withdraw", () => w.withdrawCommitment(commitmentId));
     const phase = await tx.waitForAcceptance();
     if (phase === "accepted" || phase === "final") await refetch();
   }

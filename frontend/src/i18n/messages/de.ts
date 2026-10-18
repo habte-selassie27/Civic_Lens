@@ -374,6 +374,85 @@ export const de: Partial<Record<MessageKey, string>> = {
   "stats.sources_count": "Quellen",
   "stats.count_again": "Erneut zählen",
 
+  /* -- meine Aktivität (/activity) ----------------------------------------- */
+  "activity.title": "Meine Aktivität",
+  "activity.lede":
+    "Was dieses Konto im untersuchten Fenster getan hat — die {count} jüngsten Zusagen. Der Vertrag hat noch keinen Index je Konto, daher werden ältere Einträge nicht durchsucht.",
+  "activity.connect_title": "Verbinde ein Konto, um deine Aktivität zu sehen",
+  "activity.connect_body":
+    "Diese Seite gleicht die verbundene Adresse mit Registrierungen, eingereichten Belegen und eröffneten Anfechtungen im untersuchten Fenster ab. Lesen funktioniert ohne Wallet; ein Konto zu verbinden ändert nichts an der Seite, bis es verbunden ist.",
+  "activity.no_wallet": "Kein Wallet gefunden",
+  "activity.scanned": "Geprüft: {done} von {total} Einträgen.",
+  "activity.scanning": "Die jüngsten Zusagen werden geprüft",
+  "activity.error_title": "Die Prüfung konnte nicht abgeschlossen werden.",
+  "activity.unread":
+    "Nicht lesbare Einträge, übersprungen: {count}. Der Rest des Fensters wurde geprüft.",
+  "activity.window_empty_title": "Das Fenster ist leer",
+  "activity.window_empty_body":
+    "Es wurde noch nichts registriert, es gibt also nichts zu prüfen. Registriere eine Zusage, dann erscheint sie hier.",
+  "activity.register_link": "Zusage registrieren",
+  "activity.registered_heading": "Von diesem Konto registriert",
+  "activity.registered_empty_title": "Keine Registrierungen dieses Kontos im Fenster",
+  "activity.registered_empty_body": "Registriere eine, dann erscheint sie hier.",
+  "activity.row_meta": "Runden: {rounds} · Belege: {items}",
+  "activity.row_version": "Version: {version}",
+  "activity.evidence_heading": "Von diesem Konto eingereichte Belege",
+  "activity.evidence_empty_title": "Keine Belege dieses Kontos im Fenster",
+  "activity.evidence_empty_body": "Öffne eine Zusage, um eine Quelle hinzuzufügen.",
+  "activity.evidence_caption":
+    "Von diesem Konto eingereichte Belege, mit Zusage und angegebenem Typ.",
+  "activity.col_commitment": "Zusage",
+  "activity.col_source": "Quelle",
+  "activity.col_declared_type": "Angegebener Typ",
+  "activity.col_published": "Veröffentlicht",
+  "activity.challenges_heading": "Von diesem Konto eröffnete Anfechtungen",
+  "activity.challenges_empty_title": "Keine Anfechtungen dieses Kontos im Fenster",
+  "activity.challenges_empty_body":
+    "Eine von dir eröffnete Anfechtung erscheint hier mit ihren Gründen.",
+  "activity.challenges_caption":
+    "Von diesem Konto eröffnete Anfechtungen, mit Ziel und beigefügten Belegen.",
+  "activity.col_target": "Ziel",
+  "activity.col_grounds": "Gründe",
+  "activity.col_new_evidence": "Neue Belege",
+  "activity.target_overall": "Das Gesamtergebnis",
+  "activity.target_criterion": "Kriterium {criterion}",
+  "activity.tx_heading": "Transaktionen aus diesem Browser",
+  "activity.tx_body":
+    "Nach dem Absenden einer Schreiboperation im Speicher dieses Browsers gemerkt. Das ist eine Hilfe, um Transaktionen wiederzufinden — kein Netzwerkregister. Die Endgültigkeit steht auf jeder Zusagen-Seite.",
+  "activity.tx_pending_lead": "Aus diesem Browser gesendet und noch in Beobachtung:",
+  "activity.tx_empty":
+    "Noch nichts festgehalten. Schreiboperationen aus diesem Browser erscheinen hier.",
+  "activity.tx_caption": "Von diesem Browser gesendete Transaktionen, je Zusage.",
+  "activity.col_transaction": "Transaktion",
+
+  /* -- Demo (/demo) --------------------------------------------------------- */
+  "demo.title": "Demo",
+  "demo.lede":
+    "Jedes Ergebnis, das eine CivicLens-Prüfung liefern kann — ohne auf Live-Belege zu warten.",
+  "demo.how_to_read_title": "So ist diese Seite zu lesen",
+  "demo.replay_lead": "Nachspiel eines verzeichneten Ergebnisses.",
+  "demo.replay_body":
+    "Jedes Szenario ist ein gespeicherter Eintrag einer Prüfung, gezeigt, damit die Oberfläche bewertet werden kann. Die Subjekte sind erfundene Beispielorganisationen. Nichts hier ist eine Feststellung über eine reale Organisation.",
+  "demo.on_network_lead":
+    "In diesem Build ist ein bereitgestellter Vertrag konfiguriert, du kannst also auch",
+  "demo.on_network_link": "eine Zusage registrieren und eine echte Prüfung im Netzwerk ausführen",
+  "demo.on_network_tail": "mit echten Transaktionen und Quittungen.",
+  "demo.no_network":
+    "Es ist keine Vertragsadresse konfiguriert, daher gibt es hier keine Option „im Netzwerk ausführen“ — und das ist Absicht. CivicLens simuliert keine Transaktion, die es nicht gesendet hat.",
+  "demo.pick_heading": "Szenario wählen",
+  "demo.creating_tx": "Erstellungstransaktion",
+  "demo.tx_link_suffix": " im GenLayer-Studio-Explorer (öffnet in einem neuen Tab)",
+  "demo.open_full_page": "Als ganze Seite öffnen",
+  "demo.what_tests_title": "Was das prüft",
+  "demo.commitment_sample": "Zusage in der angegebenen Form (Beispiel)",
+  "demo.period": "Bewertungszeitraum: {period}",
+  "demo.outcome_heading": "Ergebnis (verzeichnetes Ergebnis)",
+  "demo.ledger_heading": "Kriterienregister",
+  "demo.no_criteria": "Dieses Szenario hat keine Kriterien",
+  "demo.why_result": "Warum dieses Ergebnis",
+  "demo.reason_note": "Verzeichneter Begründungscode {reason}, bewertet am {date}.",
+  "demo.rounds_heading": "Rundenverlauf",
+
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":
     "CivicLens berichtet, was veröffentlichte Belege stützen. Absichten bewertet es nicht.",

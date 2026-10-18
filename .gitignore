@@ -36,3 +36,6 @@ __pycache__/
 /context
 /frontend/.next
 /frontend/bun.lock
+
+# Sample-mode preview build output (regenerable)
+/frontend/dist-sample/

@@ -375,6 +375,85 @@ export const es: Partial<Record<MessageKey, string>> = {
   "stats.sources_count": "fuentes",
   "stats.count_again": "Contar de nuevo",
 
+  /* -- mi actividad (/activity) -------------------------------------------- */
+  "activity.title": "Mi actividad",
+  "activity.lede":
+    "Lo que ha hecho esta cuenta dentro de la ventana analizada: los {count} compromisos más recientes. El contrato aún no tiene un índice por cuenta, así que no se buscan registros anteriores a la ventana.",
+  "activity.connect_title": "Conecta una cuenta para ver tu actividad",
+  "activity.connect_body":
+    "Esta página compara la dirección conectada con los registros, las pruebas enviadas y las impugnaciones abiertas en la ventana analizada. La lectura funciona sin cartera; conectar una cuenta no añade nada a la página hasta que se conecta.",
+  "activity.no_wallet": "No se detecta cartera",
+  "activity.scanned": "Analizados {done} de {total} registros.",
+  "activity.scanning": "Analizando los compromisos recientes",
+  "activity.error_title": "No se pudo completar el análisis.",
+  "activity.unread":
+    "Registros que no se pudieron leer y se omitieron: {count}. El resto de la ventana sí se analizó.",
+  "activity.window_empty_title": "La ventana está vacía",
+  "activity.window_empty_body":
+    "Todavía no se ha registrado nada, así que no hay nada que analizar. Registra un compromiso y aparecerá aquí.",
+  "activity.register_link": "Registrar un compromiso",
+  "activity.registered_heading": "Registrado por esta cuenta",
+  "activity.registered_empty_title": "No hay registros de esta cuenta en la ventana",
+  "activity.registered_empty_body": "Registra uno y aparecerá aquí.",
+  "activity.row_meta": "Rondas: {rounds} · Pruebas: {items}",
+  "activity.row_version": "Versión: {version}",
+  "activity.evidence_heading": "Pruebas enviadas por esta cuenta",
+  "activity.evidence_empty_title": "Esta cuenta no ha enviado pruebas en la ventana",
+  "activity.evidence_empty_body": "Abre un compromiso para añadirle una fuente.",
+  "activity.evidence_caption":
+    "Pruebas enviadas por esta cuenta, con su compromiso y el tipo declarado.",
+  "activity.col_commitment": "Compromiso",
+  "activity.col_source": "Fuente",
+  "activity.col_declared_type": "Tipo declarado",
+  "activity.col_published": "Publicado",
+  "activity.challenges_heading": "Impugnaciones abiertas por esta cuenta",
+  "activity.challenges_empty_title": "Esta cuenta no ha abierto impugnaciones en la ventana",
+  "activity.challenges_empty_body":
+    "Una impugnación que abras aparecerá aquí con sus motivos registrados.",
+  "activity.challenges_caption":
+    "Impugnaciones abiertas por esta cuenta, con el objetivo y las pruebas adjuntas.",
+  "activity.col_target": "Objetivo",
+  "activity.col_grounds": "Motivos",
+  "activity.col_new_evidence": "Pruebas nuevas",
+  "activity.target_overall": "El resultado global",
+  "activity.target_criterion": "Criterio {criterion}",
+  "activity.tx_heading": "Transacciones de este navegador",
+  "activity.tx_body":
+    "Se recuerdan en el almacenamiento de este navegador tras enviar una escritura. Es una comodidad para volver a encontrar tus transacciones, no un registro de la red. La definitividad se muestra en la página de cada compromiso.",
+  "activity.tx_pending_lead": "Enviada desde este navegador y aún en seguimiento:",
+  "activity.tx_empty":
+    "Todavía no hay nada registrado. Las escrituras que envíes desde este navegador se listarán aquí.",
+  "activity.tx_caption": "Transacciones enviadas por este navegador, por compromiso.",
+  "activity.col_transaction": "Transacción",
+
+  /* -- demo (/demo) --------------------------------------------------------- */
+  "demo.title": "Demo",
+  "demo.lede":
+    "Todos los resultados que puede producir una revisión de CivicLens, sin esperar a pruebas en directo.",
+  "demo.how_to_read_title": "Cómo leer esta página",
+  "demo.replay_lead": "Reproducción de un resultado registrado.",
+  "demo.replay_body":
+    "Cada escenario es un registro guardado de una revisión, mostrado para poder evaluar la interfaz. Los sujetos son organizaciones ficticias de muestra. Nada de esto es una conclusión sobre una entidad real.",
+  "demo.on_network_lead":
+    "En esta compilación hay un contrato desplegado configurado, así que también puedes",
+  "demo.on_network_link": "registrar un compromiso y ejecutar una revisión real en la red",
+  "demo.on_network_tail": "con transacciones y recibos reales.",
+  "demo.no_network":
+    "No hay ninguna dirección de contrato configurada, así que aquí no existe la opción de “ejecutar en la red”, y es deliberado. CivicLens no simula una transacción que no ha enviado.",
+  "demo.pick_heading": "Elige un escenario",
+  "demo.creating_tx": "Transacción de creación",
+  "demo.tx_link_suffix": " en el explorador GenLayer Studio (se abre en una pestaña nueva)",
+  "demo.open_full_page": "Abrir como página completa",
+  "demo.what_tests_title": "Qué comprueba esto",
+  "demo.commitment_sample": "Compromiso tal como se declaró (muestra)",
+  "demo.period": "Periodo de evaluación: {period}",
+  "demo.outcome_heading": "Resultado (resultado registrado)",
+  "demo.ledger_heading": "Libro de criterios",
+  "demo.no_criteria": "Este escenario no tiene criterios",
+  "demo.why_result": "Por qué este resultado",
+  "demo.reason_note": "Código de motivo registrado {reason}, evaluado el {date}.",
+  "demo.rounds_heading": "Historial de rondas",
+
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":
     "CivicLens informa lo que respaldan las pruebas publicadas. No juzga las intenciones.",

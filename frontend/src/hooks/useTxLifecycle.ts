@@ -27,6 +27,7 @@ const TERMINAL: TxPhase[] = ["accepted", "final", "dropped", "rejected", "revert
 
 export interface PendingTx {
   hash: TxHash;
+  /** Catalog key ("action.add_evidence"), translated where it is displayed. */
   action: string;
   startedAt: number;
 }
@@ -40,7 +41,7 @@ export interface TxLifecycle {
   votes: ValidatorAgreement | null;
   isBusy: boolean;
   /** Run a write. Resolves once the hash is in hand, not once it is accepted. */
-  start(action: string, fn: () => Promise<TxHash>): Promise<TxHash | null>;
+  start(actionKey: string, fn: () => Promise<TxHash>): Promise<TxHash | null>;
   refresh(): Promise<void>;
   reset(): void;
   /** Wait for consensus to reach a decided state (used after a write). */

@@ -25,38 +25,33 @@ import { DataModeBadge } from "@/components/DataModeBadge";
 import { AttributionBanner } from "@/components/AttributionBanner";
 import { RoundTimeline } from "@/components/RoundTimeline";
 import { Banner, EmptyState, SampleBanner } from "@/components/Chrome";
+import { useT } from "@/i18n";
 
 export function Demo() {
+  const t = useT();
   const [active, setActive] = useState<Scenario>(SCENARIOS[0]);
 
   return (
     <div className="stack-lg">
       <div>
-        <h1>Demo</h1>
-        <p className="hint">
-          Every outcome a CivicLens review can produce, without waiting on live evidence.
-        </p>
+        <h1>{t("demo.title")}</h1>
+        <p className="hint">{t("demo.lede")}</p>
       </div>
 
       {/* Mandatory honest labeling of replay vs on-network. */}
-      <Banner title="How to read this page" tone="blocking">
+      <Banner title={t("demo.how_to_read_title")} tone="blocking">
         <p>
-          <strong>Replay of a recorded result.</strong> Each scenario below is a stored record of a
-          review, shown so the interface can be evaluated. The subjects are fabricated sample
-          organizations. Nothing here is a finding about a real entity.
+          <strong>{t("demo.replay_lead")}</strong> {t("demo.replay_body")}
         </p>
         <p>
           {CONTRACT_ADDRESS ? (
             <>
-              A deployed contract is configured in this build, so you can also{" "}
-              <Link to="/commitments/new">register a commitment and run a real review on network</Link>{" "}
-              with real transactions and receipts.
+              {t("demo.on_network_lead")}{" "}
+              <Link to="/commitments/new">{t("demo.on_network_link")}</Link>{" "}
+              {t("demo.on_network_tail")}
             </>
           ) : (
-            <>
-              No contract address is configured, so there is no "run on network" option here — and
-              that is deliberate. CivicLens does not simulate a transaction it did not send.
-            </>
+            <>{t("demo.no_network")}</>
           )}
         </p>
       </Banner>
@@ -65,7 +60,7 @@ export function Demo() {
 
       <section aria-labelledby="pick-heading">
         <h2 id="pick-heading" className="section-title">
-          Pick a scenario
+          {t("demo.pick_heading")}
         </h2>
         <div className="scenario-grid">
           {SCENARIOS.map((scenario, index) => (
@@ -92,11 +87,13 @@ export function Demo() {
                 {scenario.outcome.has_outcome && scenario.outcome.overall_outcome && (
                   <span className={`chip chip--${scenario.outcome.overall_outcome}`}>
                     <span className="chip__mark" />
-                    {scenario.outcome.overall_outcome === "supported"
-                      ? "Evidence supports"
-                      : scenario.outcome.overall_outcome === "contradicted"
-                        ? "Evidence contradicts"
-                        : "Inconclusive"}
+                    {t(
+                      scenario.outcome.overall_outcome === "supported"
+                        ? "outcome.supported"
+                        : scenario.outcome.overall_outcome === "contradicted"
+                          ? "outcome.contradicted"
+                          : "outcome.inconclusive",
+                    )}
                   </span>
                 )}
               </div>
@@ -111,6 +108,7 @@ export function Demo() {
 }
 
 function ScenarioDetail({ scenario }: { scenario: Scenario }) {
+  const t = useT();
   const { commitment, evidence, rounds, outcome, challenges } = scenario;
   const latest = rounds[rounds.length - 1];
 
@@ -127,16 +125,16 @@ function ScenarioDetail({ scenario }: { scenario: Scenario }) {
             target="_blank"
             rel="noreferrer"
           >
-            Creating transaction
-            <span className="sr-only"> on the GenLayer Studio explorer (opens in a new tab)</span>
+            {t("demo.creating_tx")}
+            <span className="sr-only">{t("demo.tx_link_suffix")}</span>
           </a>
         )}
         <Link className="btn btn--quiet btn--small" to={`/commitments/${commitment.id}`}>
-          Open as a full page
+          {t("demo.open_full_page")}
         </Link>
       </div>
 
-      <Banner title="What this tests">
+      <Banner title={t("demo.what_tests_title")}>
         <p>{scenario.whatThisTests}</p>
         <p className="hint">{scenario.note}</p>
         <p className="hint">{PROVENANCE_NOTE[scenario.provenance]}</p>
@@ -145,13 +143,18 @@ function ScenarioDetail({ scenario }: { scenario: Scenario }) {
       <div className="split">
         <div className="stack">
           <div className="sheet sheet--commitment">
-            <span className="sheet__label">Commitment as stated (sample)</span>
+            <span className="sheet__label">{t("demo.commitment_sample")}</span>
             {commitment.commitment_text}
           </div>
           <AttributionBanner commitment={commitment} evidence={evidence} challenges={challenges} />
           <p className="hint">
-            Evaluation period{" "}
-            {formatPeriod(commitment.period_start, commitment.period_end, commitment.timezone)}
+            {t("demo.period", {
+              period: formatPeriod(
+                commitment.period_start,
+                commitment.period_end,
+                commitment.timezone,
+              ),
+            })}
           </p>
         </div>
 
@@ -160,7 +163,7 @@ function ScenarioDetail({ scenario }: { scenario: Scenario }) {
         <OutcomePanel
           outcome={outcome}
           finality="none"
-          heading="Outcome (recorded result)"
+          heading={t("demo.outcome_heading")}
           criteria={commitment.criteria}
           results={latest?.criteria ?? []}
         />
@@ -168,11 +171,11 @@ function ScenarioDetail({ scenario }: { scenario: Scenario }) {
 
       <div className="panel panel--flush">
         <div className="panel__head">
-          <h3>Criterion ledger</h3>
+          <h3>{t("demo.ledger_heading")}</h3>
         </div>
         {commitment.criteria.length === 0 ? (
           <div className="panel__body">
-            <EmptyState title="This scenario has no criteria" />
+            <EmptyState title={t("demo.no_criteria")} />
           </div>
         ) : (
           <CriterionLedger
@@ -186,13 +189,15 @@ function ScenarioDetail({ scenario }: { scenario: Scenario }) {
       {latest && (
         <div className="panel">
           <div className="panel__head">
-            <h3>Why this result</h3>
+            <h3>{t("demo.why_result")}</h3>
           </div>
           <div className="panel__body">
             <p className="ledger__measure">{overallReasonCopy(latest.overall_reason)}</p>
             <p className="hint">
-              Recorded reason code <code>{latest.overall_reason}</code>, evaluated{" "}
-              {formatDate(latest.evaluated_at.slice(0, 10))}.
+              {t("demo.reason_note", {
+                reason: latest.overall_reason,
+                date: formatDate(latest.evaluated_at.slice(0, 10)),
+              })}
             </p>
           </div>
         </div>
@@ -200,7 +205,7 @@ function ScenarioDetail({ scenario }: { scenario: Scenario }) {
 
       <section className="panel" aria-labelledby="scenario-rounds">
         <div className="panel__head">
-          <h3 id="scenario-rounds">Round history</h3>
+          <h3 id="scenario-rounds">{t("demo.rounds_heading")}</h3>
         </div>
         <div className="panel__body">
           <RoundTimeline

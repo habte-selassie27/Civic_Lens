@@ -263,7 +263,7 @@ export function CommitmentNew() {
 
     // supersede_commitment takes the same fields plus the record it versions;
     // the contract validates everything again and links the two versions.
-    await tx.start(isSupersede ? "Create new version" : "Register commitment", () =>
+    await tx.start(isSupersede ? "action.supersede" : "action.register_commitment", () =>
       isSupersede && supersedeId !== null
         ? w.supersedeCommitment({ oldId: supersedeId, ...fields })
         : w.createCommitment(fields),
