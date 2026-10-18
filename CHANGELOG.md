@@ -528,3 +528,69 @@ NOTE (challenge semantics changed):
   confirming this is the intended product rule: a challenger who attaches nothing
   pays for a round and sees nothing move.
 
+
+## Session 8 — 2026-10-19 — header layout; the deployed site 404'd on every deep link
+
+DONE:
+- Header restructured to what the reader asked for: appearance control moved
+  left to sit before the navigation, all seven destinations inline with the
+  `More` disclosure deleted (`NavMenu` removed rather than left as dead code),
+  language kept in the header on the right. Commits `0bfe58a`, `a0aa6e7`.
+- `ThemeSelect` (a three-option `<select>`) replaced by `ThemeToggle`, an icon
+  plus the value in words: a cycle cannot be read off an icon, and the
+  documented reason for the old `<select>` was exactly that an icon cannot say
+  "System". Superseded file deleted.
+- `AccountPill` groups the address, its copy button, and Disconnect into one
+  control; no balance is shown, because reading one needs a verified SDK method
+  this build does not have and StudioNet is gasless (0 GEN is expected, never
+  warned about).
+- **Every deep link was 404 on the Vercel deployment.** The app uses
+  `BrowserRouter`, so `/activity` and friends exist only on the client; the host
+  answered them with its own 404 and the app never loaded to take over. Fixed
+  with an SPA rewrite in `vercel.json` and `frontend/vercel.json` (the project's
+  Root Directory is `frontend`, so that one is active; both are kept because the
+  setting lives in the dashboard, not the repo). Root cause and the trade-off
+  are documented in `docs/deployment.md`.
+- **The header scrolled horizontally at 360px on every route** (921px of content
+  in a 360px viewport). A "Desktop overrides for the one-line header" section
+  had been pasted inside the `@media (max-width: 560px)` block, where it came
+  after the mobile wrap rules and cancelled them. Moved out; also stopped hiding
+  the language control at mobile widths, which made four translations
+  unreachable on a phone.
+
+PROOF:
+- `frontend/src/tests/`: `325 passed` (31 files); `tsc --noEmit` clean;
+  `vite build` ok.
+- `node artifacts/capture.mjs`: all 8 routes x 2 viewports, no horizontal
+  overflow; the screenshots in `artifacts/screenshots/` are regenerated from
+  this build.
+- Production, verified after deploy: `/`, `/activity`, `/demo`, `/commitments`,
+  `/fairness`, `/stats`, `/status`, `/how-it-works`, `/commitments/1` all `200`;
+  `/assets/index-*.js` still served as JavaScript; `docScrollWidth == 360` at a
+  360px viewport on `/`, `/activity`, `/commitments/1`.
+
+NOTE (a real false-green found and removed):
+- The first `NavMenu` used `<details><summary>`. jsdom does not implement
+  summary click-toggling, so the Escape test passed *vacuously* — the panel had
+  never opened. Replaced with a controlled `aria-expanded` button, whose open
+  state a test can actually drive, and which states the same thing to assistive
+  technology.
+
+NEXT:
+- Contract item 4: `request_review` period gate (`today_utc > period_end`) and
+  permissionless, so an observer can force a review the registrant never asks
+  for.
+- Contract item 7: the `reconsidered` invariant should degrade the affected
+  criterion to `inconclusive` with its own reason code instead of hard-failing
+  the whole round.
+- Drive the frontend write path from a connected browser wallet.
+
+BLOCKED:
+- Nothing on the critical path. Two sessions were editing this repo at once, so
+  a full-suite run can fail while the other session writes files mid-transform
+  (observed twice; both times green on re-run and green in isolation).
+- Left untouched on purpose, being another session's work: `frontend/src/config/
+  indexer.ts`, `artifacts/logo-512.png`, and `frontend/src/styles/app.test.css`
+  — an unimported scratch file whose only content asserts
+  `flex-wrap: nowrap`, which is the exact rule that caused the 360px overflow.
+  It should be deleted rather than kept.
