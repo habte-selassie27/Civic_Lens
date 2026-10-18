@@ -54,3 +54,14 @@ jobs:
           node-version: 20
       - run: node --test scripts/save-schema.test.mjs
       - run: node scripts/save-schema.mjs --check
+
+  indexer:
+    # Read indexer (indexer/): pure Node, node:sqlite, no network in tests.
+    name: Read Indexer Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: cd indexer && npm test

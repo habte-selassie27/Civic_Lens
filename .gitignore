@@ -21,6 +21,10 @@ node_modules
 # never the committed `artifacts/` evidence pack (see gltest.config.yaml)
 .gltest-artifacts/
 
+# Indexer SQLite cache — a local copy of public on-chain data, never committed
+/indexer/data/
+.lighthouseci/
+
 # Python bytecode and caches
 __pycache__/
 *.pyc

@@ -1,0 +1,14 @@
+{
+  "name": "civiclens-indexer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Read indexer for CivicLens — polls the deployed contract's views into SQLite and serves them read-only.",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "node --test"
+  }
+}
