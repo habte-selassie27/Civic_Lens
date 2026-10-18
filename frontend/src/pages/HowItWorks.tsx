@@ -8,51 +8,44 @@
 
 import { Link } from "react-router-dom";
 import { DOCS } from "@/config/explorer";
+import { OUTCOME_LABEL } from "@/domain/copy";
+import { useT } from "@/i18n";
 import { ResultChip } from "@/components/ResultChip";
 
 export function HowItWorks() {
+  const t = useT();
+
   return (
     <div className="stack-lg">
       <div>
-        <h1>How it works</h1>
-        <p className="lede">
-          CivicLens reviews public evidence against criteria that were published in advance. This
-          page explains what happens during a review, and what each result does and does not mean.
-        </p>
+        <h1>{t("howit.title")}</h1>
+        <p className="lede">{t("howit.lede")}</p>
       </div>
 
       {/* ---------------- the shape of a review ---------------- */}
       <section className="panel" aria-labelledby="hw-flow">
         <div className="panel__head">
-          <h2 id="hw-flow">What a review does</h2>
+          <h2 id="hw-flow">{t("howit.flow_heading")}</h2>
         </div>
         <div className="panel__body">
           <ol className="stack" style={{ paddingLeft: "1.2rem" }}>
             <li>
-              <strong>A commitment is registered</strong> with criteria stated in advance, along
-              with the link to where the commitment was published and the period it covers.
+              <strong>{t("howit.flow_1")}</strong>
             </li>
             <li>
-              <strong>Anyone adds public evidence</strong> — supporting or contradicting. Both are
-              accepted. What someone writes alongside a link is kept on the record but never read
-              by the review.
+              <strong>{t("howit.flow_2")}</strong>
             </li>
             <li>
-              <strong>The registrant requests a review.</strong> Sources are fetched and read
-              against each criterion.
+              <strong>{t("howit.flow_3")}</strong>
             </li>
             <li>
-              <strong>Validators work independently</strong> and must reach the same{" "}
-              <em>meaning</em>, not the same bytes. Each criterion gets a result, the reason, and
-              the sources it relied on.
+              <strong>{t("howit.flow_4")}</strong>
             </li>
             <li>
-              <strong>The overall outcome is derived in ordinary code</strong> from the
-              per-criterion results. The model never decides it.
+              <strong>{t("howit.flow_5")}</strong>
             </li>
             <li>
-              <strong>The result is recorded as a round.</strong> It can be challenged, which opens
-              a new round with new evidence. Earlier rounds stay on the record.
+              <strong>{t("howit.flow_6")}</strong>
             </li>
           </ol>
         </div>
@@ -61,30 +54,19 @@ export function HowItWorks() {
       {/* ---------------- equivalence ---------------- */}
       <section className="panel" aria-labelledby="hw-equiv">
         <div className="panel__head">
-          <h2 id="hw-equiv">What "agreement" means here</h2>
+          <h2 id="hw-equiv">{t("howit.equiv_heading")}</h2>
         </div>
         <div className="panel__body stack">
-          <p>
-            Public pages change, and a model will rarely phrase two readings identically. So
-            validators do not have to produce the same text. They have to agree on:
-          </p>
+          <p>{t("howit.equiv_body")}</p>
           <ul style={{ maxWidth: "var(--measure)", paddingLeft: "1.2rem" }}>
-            <li>the <strong>result</strong> for each criterion — exact match, no tolerance;</li>
-            <li>the <strong>reason code</strong> — exact, or within a documented equivalent group;</li>
-            <li>
-              for a numeric criterion, the extracted <strong>figure</strong> within a tolerance and
-              on the same side of the threshold.
-            </li>
+            <li>{t("howit.equiv_result")}</li>
+            <li>{t("howit.equiv_reason")}</li>
+            <li>{t("howit.equiv_figure")}</li>
           </ul>
-          <p>
-            Two safeguards stop validators agreeing on something wrong. A definite verdict must cite
-            sources that are actually in the submitted set, and a numeric verdict must agree with
-            its own extracted figure. A verdict that fails either check is rejected rather than
-            stored.
-          </p>
+          <p>{t("howit.equiv_safeguards")}</p>
           <p>
             <a href={DOCS.equivalence} target="_blank" rel="noopener noreferrer">
-              Read the equivalence principle in the GenLayer docs
+              {t("howit.equiv_link")}
             </a>
           </p>
         </div>
@@ -93,35 +75,33 @@ export function HowItWorks() {
       {/* ---------------- the outcome table ---------------- */}
       <section className="panel" aria-labelledby="hw-outcome">
         <div className="panel__head">
-          <h2 id="hw-outcome">How the overall outcome is derived</h2>
+          <h2 id="hw-outcome">{t("howit.outcome_heading")}</h2>
         </div>
         <div className="panel__body stack">
           <div className="table-wrap">
             <table className="table">
-              <caption className="sr-only">
-                The conditions under which each overall outcome is derived.
-              </caption>
+              <caption className="sr-only">{t("howit.outcome_caption")}</caption>
               <thead>
                 <tr>
-                  <th scope="col">If, among required criteria…</th>
-                  <th scope="col">The overall outcome is</th>
+                  <th scope="col">{t("howit.outcome_col_if")}</th>
+                  <th scope="col">{t("howit.outcome_col_then")}</th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td>all are supported</td>
+                  <td>{t("howit.outcome_all_supported")}</td>
                   <td>
                     <ResultChip status="supported" />
                   </td>
                 </tr>
                 <tr>
-                  <td>at least one is contradicted</td>
+                  <td>{t("howit.outcome_one_contradicted")}</td>
                   <td>
                     <ResultChip status="contradicted" />
                   </td>
                 </tr>
                 <tr>
-                  <td>none is contradicted but at least one is inconclusive</td>
+                  <td>{t("howit.outcome_none_contradicted")}</td>
                   <td>
                     <ResultChip status="inconclusive" />
                   </td>
@@ -129,116 +109,81 @@ export function HowItWorks() {
               </tbody>
             </table>
           </div>
-          <p>
-            Optional criteria are recorded and shown, but they never decide the overall outcome.
-            There is no score, no grade, and no ranking — the outcome is a statement about the
-            evidence on file, not a number to compare subjects by.
-          </p>
+          <p>{t("howit.no_score_body")}</p>
         </div>
       </section>
 
       {/* ---------------- inconclusive ---------------- */}
       <section className="panel" aria-labelledby="hw-inconclusive">
         <div className="panel__head">
-          <h2 id="hw-inconclusive">Why "inconclusive" exists</h2>
+          <h2 id="hw-inconclusive">{t("howit.inconclusive_heading")}</h2>
         </div>
         <div className="panel__body stack">
-          <p>
-            A lot of public commitments simply do not have enough published evidence to decide
-            anything. Without a third result, that situation has to be squeezed into either
-            "supported" or "contradicted", and both would be false.
-          </p>
+          <p>{t("howit.inconclusive_body")}</p>
 
           <div className="resolution">
             <p>
-              <span className="resolution__key">Inconclusive does not mean:</span>
+              <span className="resolution__key">{t("howit.does_not_mean")}</span>
             </p>
             <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.2rem" }}>
-              <li>the organization did not do what it said;</li>
-              <li>the commitment was broken, missed, or unfulfilled;</li>
-              <li>anyone acted in bad faith;</li>
-              <li>the evidence was weighed and found wanting.</li>
+              <li>{t("howit.does_not_mean_1")}</li>
+              <li>{t("howit.does_not_mean_2")}</li>
+              <li>{t("howit.does_not_mean_3")}</li>
+              <li>{t("howit.does_not_mean_4")}</li>
             </ul>
             <p style={{ marginTop: "var(--space-2)" }}>
-              <span className="resolution__key">It means:</span> the review could not determine
-              whether the evidence supports the criterion as written. That is a statement about the
-              evidence, and it is shown in a neutral colour — never a warning colour, never a score.
+              <span className="resolution__key">{t("howit.it_means")}</span>{" "}
+              {t("howit.it_means_body")}
             </p>
           </div>
 
-          <p>
-            Common causes: nothing relevant was submitted; two authoritative sources disagree; a
-            source could not be reached; the criterion's wording was too vague to match anything;
-            or a figure was published in a different unit than the criterion uses.
-          </p>
-          <p>
-            Every inconclusive result says what is missing and what would resolve it — for example a
-            published report, a clearer criterion version, or a source that reconciles the
-            disagreement.
-          </p>
-          <p>
-            Absence of evidence is <strong>always</strong> inconclusive. It is never treated as
-            contradiction.
-          </p>
+          <p>{t("howit.causes")}</p>
+          <p>{t("howit.resolution")}</p>
+          <p>{t("howit.absence")}</p>
         </div>
       </section>
 
       {/* ---------------- finality ---------------- */}
       <section className="panel" aria-labelledby="hw-finality">
         <div className="panel__head">
-          <h2 id="hw-finality">Accepted is not final</h2>
+          <h2 id="hw-finality">{t("howit.finality_heading")}</h2>
         </div>
         <div className="panel__body stack">
-          <p>
-            GenLayer's consensus moves through stages. Once validators agree, the result is{" "}
-            <strong>accepted</strong> — which means it can still be appealed. Only after the appeal
-            window closes does it become <strong>final</strong>.
-          </p>
-          <p>
-            CivicLens shows these two states differently and never collapses them. An accepted
-            result is labelled "Accepted — can still be appealed", and nothing in the interface
-            implies permanence before finality is reached.
-          </p>
-          <p>
-            Separately from protocol appeals, any CivicLens challenge opens a{" "}
-            <em>new review round</em> with new evidence attached. The two are different things: a
-            protocol appeal disputes the committee's decision on the same inputs, while a challenge
-            supplies new inputs. Neither replaces the other.
-          </p>
+          <p>{t("howit.finality_body_1")}</p>
+          <p>{t("howit.finality_body_2")}</p>
+          <p>{t("howit.finality_body_3")}</p>
         </div>
       </section>
 
       {/* ---------------- vocabulary ---------------- */}
       <section className="panel" aria-labelledby="hw-terms">
         <div className="panel__head">
-          <h2 id="hw-terms">Words used on this site</h2>
+          <h2 id="hw-terms">{t("howit.terms_heading")}</h2>
         </div>
         <div className="panel__body">
           <dl className="audit">
-            <dt>Evidence supports</dt>
-            <dd>Published evidence bears out the criterion as written. Not a judgement of intent.</dd>
-            <dt>Evidence contradicts</dt>
-            <dd>Published evidence conflicts with the criterion as written.</dd>
-            <dt>Inconclusive</dt>
-            <dd>The evidence did not allow a determination either way.</dd>
-            <dt>Validator</dt>
+            <dt>{OUTCOME_LABEL.supported}</dt>
+            <dd>{t("howit.term_supported_body")}</dd>
+            <dt>{OUTCOME_LABEL.contradicted}</dt>
+            <dd>{t("howit.term_contradicted_body")}</dd>
+            <dt>{OUTCOME_LABEL.inconclusive}</dt>
+            <dd>{t("howit.term_inconclusive_body")}</dd>
+            <dt>{t("howit.term_validator")}</dt>
             <dd>
-              An independent node that evaluates the evidence and must agree with the others on
-              meaning.{" "}
-              <a href={DOCS.home} target="_blank" rel="noopener noreferrer">
-                GenLayer docs
+              {t("howit.term_validator_body")} <a href={DOCS.home} target="_blank" rel="noopener noreferrer">
+                {t("colophon.genlayer_docs")}
               </a>
             </dd>
-            <dt>Leader</dt>
-            <dd>The validator that produces the first reading the others check.</dd>
-            <dt>Finality</dt>
-            <dd>The point after which a result can no longer be appealed.</dd>
+            <dt>{t("howit.term_leader")}</dt>
+            <dd>{t("howit.term_leader_body")}</dd>
+            <dt>{t("howit.term_finality")}</dt>
+            <dd>{t("howit.term_finality_body")}</dd>
           </dl>
         </div>
       </section>
 
       <p className="hint">
-        Next: <Link to="/fairness">safeguards and limitations</Link>.
+        {t("howit.next_prefix")} <Link to="/fairness">{t("howit.next_link")}</Link>.
       </p>
     </div>
   );

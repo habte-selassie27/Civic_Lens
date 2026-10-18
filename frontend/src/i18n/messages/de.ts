@@ -62,6 +62,156 @@ export const de: Partial<Record<MessageKey, string>> = {
   "landing.outcomes_heading": "Was eine Zusage zeigen kann",
   "landing.round_count": "— {count} Runde{plural}",
 
+  /* -- how it works ------------------------------------------------------- */
+  "howit.title": "So funktioniert es",
+  "howit.lede":
+    "CivicLens prüft öffentliche Belege gegen Kriterien, die zuvor veröffentlicht wurden. Diese Seite erklärt, was während einer Prüfung geschieht und was jedes Ergebnis bedeutet — und was nicht.",
+  "howit.flow_heading": "Was eine Prüfung tut",
+  "howit.flow_1":
+    "Eine Zusage wird registriert, mit vorab festgelegten Kriterien, dem Link, wo die Zusage veröffentlicht wurde, und dem abgedeckten Zeitraum.",
+  "howit.flow_2":
+    "Alle können öffentliche Belege hinzufügen — stützend oder widersprechend. Beides wird akzeptiert. Was jemand neben einem Link schreibt, bleibt im Protokoll, wird von der Prüfung aber nie gelesen.",
+  "howit.flow_3":
+    "Die registrierende Person beantragt eine Prüfung. Die Quellen werden abgerufen und je Kriterium gelesen.",
+  "howit.flow_4":
+    "Validatoren arbeiten unabhängig und müssen zur selben Bedeutung gelangen, nicht zu denselben Bytes. Jedes Kriterium erhält ein Ergebnis, einen Grund und die Quellen, auf die es sich stützt.",
+  "howit.flow_5":
+    "Das Gesamtergebnis wird von gewöhnlichem Code aus den Ergebnissen je Kriterium abgeleitet. Das Modell entscheidet es nie.",
+  "howit.flow_6":
+    "Das Ergebnis wird als Runde festgehalten. Es kann angefochten werden, was eine neue Runde mit neuen Belegen eröffnet. Frühere Runden bleiben im Protokoll.",
+  "howit.equiv_heading": 'Was hier „Einigung“ bedeutet',
+  "howit.equiv_body":
+    "Öffentliche Seiten ändern sich, und ein Modell formuliert zwei Lesarten selten gleich. Validatoren müssen daher nicht denselben Text erzeugen. Sie müssen sich einigen auf:",
+  "howit.equiv_result": "das Ergebnis je Kriterium — exakt, ohne Toleranz;",
+  "howit.equiv_reason": "den Grundcode — exakt oder innerhalb einer dokumentierten äquivalenten Gruppe;",
+  "howit.equiv_figure":
+    "bei einem numerischen Kriterium den entnommenen Wert innerhalb einer Toleranz und auf derselben Seite des Schwellwerts.",
+  "howit.equiv_safeguards":
+    "Zwei Schutzmechanismen verhindern, dass sich Validatoren auf etwas Falsches einigen. Ein eindeutiges Urteil muss Quellen zitieren, die tatsächlich in der eingereichten Menge stehen, und ein numerisches Urteil muss mit seinem eigenen entnommenen Wert übereinstimmen. Ein Urteil, das eine dieser Prüfungen verfehlt, wird verworfen statt gespeichert.",
+  "howit.equiv_link": "Das Äquivalenzprinzip in der GenLayer-Dokumentation lesen",
+  "howit.outcome_heading": "Wie das Gesamtergebnis abgeleitet wird",
+  "howit.outcome_caption":
+    "Die Bedingungen, unter denen jedes Gesamtergebnis abgeleitet wird.",
+  "howit.outcome_col_if": "Wenn unter den erforderlichen Kriterien…",
+  "howit.outcome_col_then": "ist das Gesamtergebnis",
+  "howit.outcome_all_supported": "alle gestützt sind",
+  "howit.outcome_one_contradicted": "mindestens eines widerlegt ist",
+  "howit.outcome_none_contradicted":
+    "keines widerlegt, aber mindestens eines inkonklus ist",
+  "howit.no_score_body":
+    "Optionale Kriterien werden festgehalten und angezeigt, entscheiden aber nie das Gesamtergebnis. Es gibt keine Punktzahl, keine Note und keine Rangfolge — das Ergebnis ist eine Aussage über die Belege in der Akte, keine Zahl zum Vergleich von Subjekten.",
+  "howit.inconclusive_heading": 'Warum es „inkonklus“ gibt',
+  "howit.inconclusive_body":
+    "Vielen öffentlichen Zusagen fehlen schlicht genug veröffentlichte Belege, um irgendetwas zu entscheiden. Ohne ein drittes Ergebnis müsste dieser Zustand in „gestützt“ oder „widerlegt“ gepresst werden — und beides wäre falsch.",
+  "howit.does_not_mean": "Inkonklus bedeutet nicht:",
+  "howit.does_not_mean_1": "dass die Organisation nicht getan hat, was sie sagte;",
+  "howit.does_not_mean_2": "dass die Zusage nicht eingehalten wurde;",
+  "howit.does_not_mean_3": "dass jemand böswillig gehandelt hat;",
+  "howit.does_not_mean_4": "dass die Belege abgewogen und zu dünn befunden wurden.",
+  "howit.it_means": "Es bedeutet:",
+  "howit.it_means_body":
+    "dass die Prüfung nicht feststellen konnte, ob die Belege das Kriterium in seiner vorliegenden Form stützen. Das ist eine Aussage über die Belege, und sie wird in einer neutralen Farbe gezeigt — nie in einer Warnfarbe, nie als Punktzahl.",
+  "howit.causes":
+    "Häufige Ursachen: es wurde nichts Relevantes eingereicht; zwei maßgebliche Quellen widersprechen sich; eine Quelle war nicht erreichbar; die Formulierung des Kriteriums war zu vage, um auf etwas zu passen; oder ein Wert wurde in einer anderen Einheit veröffentlicht als im Kriterium.",
+  "howit.resolution":
+    "Jedes inkonkluse Ergebnis nennt, was fehlt und was es klären würde — zum Beispiel einen veröffentlichten Bericht, eine klarere Formulierung des Kriteriums oder eine Quelle, die den Widerspruch auflöst.",
+  "howit.absence":
+    "Fehlende Belege sind IMMER inkonklus. Sie werden nie als Widerspruch behandelt.",
+  "howit.finality_heading": "Angenommen ist nicht endgültig",
+  "howit.finality_body_1":
+    "Der Konsens von GenLayer durchläuft Stufen. Sobald sich die Validatoren geeinigt haben, ist das Ergebnis angenommen — was bedeutet, dass es noch angefochten werden kann. Erst wenn das Berufungsfenster schließt, wird es endgültig.",
+  "howit.finality_body_2":
+    "CivicLens zeigt diese beiden Zustände getrennt und führt sie nie zusammen. Ein angenommenes Ergebnis ist als „Angenommen — noch anfechtbar“ gekennzeichnet, und nichts in der Oberfläche suggeriert Bestand vor Erreichen der Endgültigkeit.",
+  "howit.finality_body_3":
+    "Unabhängig von Protokollberufungen eröffnet jede CivicLens-Anfechtung eine neue Prüfungsrunde mit neuen Belegen. Das sind zwei verschiedene Dinge: Eine Protokollberufung bestreitet die Entscheidung des Gremiums auf denselben Grundlagen, während eine Anfechtung neue Grundlagen liefert. Keine ersetzt die andere.",
+  "howit.term_supported_body":
+    "Die veröffentlichten Belege stützen das Kriterium in seiner vorliegenden Form. Keine Bewertung von Absichten.",
+  "howit.term_contradicted_body":
+    "Die veröffentlichten Belege widersprechen dem Kriterium in seiner vorliegenden Form.",
+  "howit.term_inconclusive_body":
+    "Die Belege erlaubten keine Feststellung in die eine oder andere Richtung.",
+  "howit.terms_heading": "Im Gebrauch befindliche Wörter",
+  "howit.term_validator": "Validator",
+  "howit.term_validator_body":
+    "Ein unabhängiger Knoten, der die Belege bewertet und sich mit den anderen über die Bedeutung einigen muss.",
+  "howit.term_leader": "Leader",
+  "howit.term_leader_body":
+    "Der Validator, der die erste Lesart erstellt, die die anderen prüfen.",
+  "howit.term_finality": "Endgültigkeit",
+  "howit.term_finality_body":
+    "Der Punkt, nach dem ein Ergebnis nicht mehr angefochten werden kann.",
+  "howit.next_prefix": "Weiter:",
+  "howit.next_link": "Schutzmaßnahmen und Grenzen",
+
+  /* -- fairness and limitations ------------------------------------------- */
+  "fair.title": "Schutzmaßnahmen und Grenzen",
+  "fair.lede":
+    "CivicLens berichtet, was veröffentlichte Belege über eine öffentliche Zusage stützen. Diese Seite sagt, was das bedeutet, was es nicht bedeutet, und wo das System schwach ist.",
+  "fair.evidence_heading": "Belege, nicht Absichten",
+  "fair.evidence_1":
+    "CivicLens behauptet niemals Motive, Böswilligkeit oder dass jemand ein Versprechen gebrochen hat. Es vergleicht veröffentlichte Quellen mit vorab festgelegten Kriterien.",
+  "fair.evidence_2":
+    "Ein widerlegtes Kriterium bedeutet, dass die Belege dem Zugesagten widersprechen. Es bedeutet nicht, dass jemand gelogen hat, und die Oberfläche verwendet nie Wörter, die das nahelegten.",
+  "fair.inconclusive_heading": "Inkonklus ist kein Misserfolg",
+  "fair.no_score_body":
+    "Fehlende Belege sind inkonklus — nie widerlegend. Inkonklus wird in einer neutralen Farbe gezeigt, nie als Fehler gestaltet, nie zu einer negativen Punktzahl addiert und nie zum Rangieren oder Kennzeichnen eines Subjekts verwendet.",
+  "fair.inconclusive_link": "Warum es das dritte Ergebnis gibt",
+  "fair.authentic_heading": "Was der Konsens nicht beweisen kann",
+  "fair.authentic_1":
+    "Einigung ist keine Echtheit. Dass Validatoren sich darauf einigen, was ein Dokument sagt, belegt nicht, dass es echt, unverändert oder von der genannten Person geschrieben ist. CivicLens kann eine plausibel aussehende erfundene Quelle nicht erkennen.",
+  "fair.authentic_2":
+    "Gegenmaßnahmen sind Vorlieben, keine Garantien: offizielle Berichte, geprüfte Erklärungen und Behördendatensätze wiegen schwerer als selbst veröffentlichte Aussagen, und archivierte Stände werden verwendet, wo verfügbar. Aber keine Quelle gilt als nachweislich echt.",
+  "fair.authentic_3":
+    "Aus demselben Grund kann die Prüfung keine Negation beweisen. Hat ein Subjekt keinen Bericht veröffentlicht, kann CivicLens „nichts getan“ nicht von „getan, aber nicht veröffentlicht“ unterscheiden — das ist inkonklus und bleibt es.",
+  "fair.attribution_heading": "Ehrlichkeit bei der Zuschreibung",
+  "fair.attribution_1":
+    "Jede Zusage-Seite nennt, wer den Eintrag registriert hat und in welcher Rolle, und sagt, dass das Subjekt ihn nicht unbedingt geprüft oder gebilligt hat. CivicLens prüft nicht, ob eine registrierende Person tatsächlich für die genannte Organisation spricht — das kann niemand allein anhand einer Adresse.",
+  "fair.attribution_2":
+    "Die Rolle „für die eigene Organisation“ ist eine Selbstauskunft, keine geprüfte Identität.",
+  "fair.response_heading": "Recht auf Antwort",
+  "fair.response_1":
+    "Alle — auch die betroffene Organisation — können Belege einreichen und eine Anfechtung eröffnen. Eine Anfechtung fügt neue Belege bei und löst eine neue Prüfungsrunde aus. Antworten des Subjekts stehen auf der Zusage-Seite, und die vollständige Rundenhistorie samt Anfechtungen bleibt öffentlich.",
+  "fair.response_2":
+    "Grenzen dienen der Missbrauchsvermeidung, nicht dem Ausschluss: eine kleine Zahl an Einreichungen je Partei und eine kleine Zahl an Runden. Der Vertrag setzt sie durch und die Oberfläche zeigt sie, bevor jemand handelt.",
+  "fair.privacy_heading": "Datenschutz",
+  "fair.privacy_1":
+    "CivicLens gilt für öffentliche Zusagen öffentlicher Organisationen und Institutionen. Einträge, die eine private Person als Subjekt benennen, werden vom Vertrag abgelehnt, und es wird keine Funktion zum Profilieren von Personen gebaut.",
+  "fair.privacy_2":
+    "Was on-chain gespeichert wird: der Text der Zusage, die Kriterien, die Quellenlinks und die Adressen der Einreichenden, die zur Durchsetzung der Grenzen und zur Protokollierung nötig sind. Keine personenbezogenen Daten über Adressen und öffentliche Verweise hinaus. Notizen an Belegen sind öffentlich und sollten daher nichts Privates enthalten.",
+  "fair.gaming_heading": "Manipulationsresistenz und ihre Grenzen",
+  "fair.gaming_does": "Was die Gestaltung leistet:",
+  "fair.gaming_does_1": "nimmt stützende und widersprechende Belege gleichermaßen an;",
+  "fair.gaming_does_2": "beurteilt Belege nach Inhalt, nie nach dem Einreicher;",
+  "fair.gaming_does_3": "ignoriert Notizen der Einreichenden vollständig — der Prüfcode liest sie nie;",
+  "fair.gaming_does_4":
+    "begrenzt Einreichungen je Partei und je Zusage und lehnt Duplikate ab;",
+  "fair.gaming_does_5":
+    "sperrt Kriterien, sobald die Prüfung beginnt, damit ein Kriterium nicht stillschweigend abgeschwächt wird;",
+  "fair.gaming_does_6":
+    "behandelt Belege als Daten, sodass in ein Dokument eingebettete Anweisungen ignoriert werden;",
+  "fair.gaming_does_7":
+    "weist ein Urteil zurück, das Quellen außerhalb der eingereichten Menge zitiert.",
+  "fair.gaming_cannot": "Was es nicht kann:",
+  "fair.gaming_cannot_1":
+    "eine koordinierte Gruppe am Einreichen vieler Quellen hindern. Grenzen begrenzen das Volumen je Partei, nicht das Gesamtvolumen über viele Parteien.",
+  "fair.gaming_cannot_2":
+    "selektive Einreichung verhindern — niemand kann gezwungen werden, die Quelle nachzureichen, die das Ergebnis geändert hätte.",
+  "fair.gaming_cannot_3":
+    "ein gut ausgestattetes Subjekt daran hindern, ein Dokument zu veröffentlichen, das sich leicht günstig lesen lässt — oder absichtlich schwer.",
+  "fair.gaming_cannot_4":
+    "garantieren, dass ein Lesemodell ein komplexes Kriterium in jedem Fall so auslegt, wie es ein sorgfältiger Mensch täte.",
+  "fair.gaming_footer":
+    "Das sind echte Grenzen. Lesen Sie die Belege und die Gründe je Kriterium, nicht das eine Gesamtetikett.",
+  "fair.finality_heading": "Ehrlichkeit über Endgültigkeit",
+  "fair.finality_body":
+    "Ein angenommenes Ergebnis wird nicht als dauerhaft dargestellt. Angenommen und endgültig sind verschiedene, sichtbar verschiedene Zustände, und Berufung wie Anfechtung bleiben offen, solange sie es sind.",
+  "fair.data_heading": "Beispieldaten",
+  "fair.data_1":
+    "Beispielszenarien sind in jeder Ansicht gekennzeichnet, in der sie erscheinen. Sie spielen verzeichnete Ergebnisse zu erfundenen Organisationen nach und werden nie als Feststellungen über reale Entitäten dargestellt.",
+  "fair.data_link": "Die Beispielszenarien ansehen",
+  "fair.back_prefix": "Zurück zu",
+  "fair.back_link": "dem Anfang",
+
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":
     "CivicLens berichtet, was veröffentlichte Belege stützen. Absichten bewertet es nicht.",

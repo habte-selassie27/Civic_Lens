@@ -63,6 +63,155 @@ export const fr: Partial<Record<MessageKey, string>> = {
   "landing.outcomes_heading": "Ce qu'un engagement peut finir par montrer",
   "landing.round_count": "— {count} tour{plural}",
 
+  /* -- how it works ------------------------------------------------------- */
+  "howit.title": "Comment ça marche",
+  "howit.lede":
+    "CivicLens confronte les preuves publiques aux critères publiés à l'avance. Cette page explique ce qui se passe pendant une révision, et ce que chaque résultat signifie — et ne signifie pas.",
+  "howit.flow_heading": "Ce qu'une révision fait",
+  "howit.flow_1":
+    "Un engagement est enregistré avec des critères énoncés à l'avance, ainsi que le lien où l'engagement a été publié et la période qu'il couvre.",
+  "howit.flow_2":
+    "N'importe qui peut ajouter des preuves publiques — à l'appui ou contradictoires. Les deux sont acceptées. Ce que quelqu'un écrit à côté d'un lien est conservé au dossier, mais la révision ne le lit jamais.",
+  "howit.flow_3":
+    "Le déclarant demande une révision. Les sources sont récupérées et lues au regard de chaque critère.",
+  "howit.flow_4":
+    "Les validateurs travaillent indépendamment et doivent aboutir au même sens, pas aux mêmes octets. Chaque critère reçoit un résultat, un motif et les sources sur lesquelles il s'est appuyé.",
+  "howit.flow_5":
+    "Le résultat global est déduit par du code ordinaire à partir des résultats par critère. Le modèle ne le décide jamais.",
+  "howit.flow_6":
+    "Le résultat est enregistré comme un tour. Il peut être contesté, ce qui ouvre un nouveau tour avec de nouvelles preuves. Les tours précédents restent au dossier.",
+  "howit.equiv_heading": 'Ce que « l\'accord » signifie ici',
+  "howit.equiv_body":
+    "Les pages publiques changent, et un modèle formule rarement deux lectures de la même manière. Les validateurs n'ont donc pas à produire le même texte. Ils doivent s'accorder sur :",
+  "howit.equiv_result": "le résultat pour chaque critère — correspondance exacte, sans tolérance ;",
+  "howit.equiv_reason": "le code de motif — exact, ou dans un groupe équivalent documenté ;",
+  "howit.equiv_figure":
+    "pour un critère chiffré, la valeur extraite dans une tolérance et du même côté du seuil.",
+  "howit.equiv_safeguards":
+    "Deux garde-fous empêchent les validateurs de s'accorder sur une erreur. Un verdict catégorique doit citer des sources réellement présentes dans l'ensemble soumis, et un verdict chiffré doit être cohérent avec sa propre valeur extraite. Un verdict qui échoue à l'une de ces vérifications est rejeté plutôt qu'enregistré.",
+  "howit.equiv_link": "Lire le principe d'équivalence dans la documentation GenLayer",
+  "howit.outcome_heading": "Comment le résultat global est déduit",
+  "howit.outcome_caption":
+    "Les conditions dans lesquelles chaque résultat global est déduit.",
+  "howit.outcome_col_if": "Si, parmi les critères requis…",
+  "howit.outcome_col_then": "Le résultat global est",
+  "howit.outcome_all_supported": "tous sont étayés",
+  "howit.outcome_one_contradicted": "au moins un est contredit",
+  "howit.outcome_none_contradicted":
+    "aucun n'est contredit mais au moins un est non concluant",
+  "howit.no_score_body":
+    "Les critères facultatifs sont enregistrés et affichés, mais ils ne décident jamais du résultat global. Il n'y a ni note, ni classement, ni rang : le résultat est une affirmation sur les preuves au dossier, pas un nombre pour comparer des sujets.",
+  "howit.inconclusive_heading": 'Pourquoi « non concluant » existe',
+  "howit.inconclusive_body":
+    "Beaucoup d'engagements publics n'ont tout simplement pas assez de preuves publiées pour décider quoi que ce soit. Sans un troisième résultat, cette situation devrait être rangée dans « étayé » ou « contredit », et les deux seraient faux.",
+  "howit.does_not_mean": "Non concluant ne signifie pas :",
+  "howit.does_not_mean_1": "que l'organisation n'a pas fait ce qu'elle a annoncé ;",
+  "howit.does_not_mean_2": "que l'engagement a été rompu ou non tenu ;",
+  "howit.does_not_mean_3": "que quelqu'un a agi de mauvaise foi ;",
+  "howit.does_not_mean_4": "que les preuves ont été jugées insuffisantes.",
+  "howit.it_means": "Cela signifie :",
+  "howit.it_means_body":
+    "que la révision n'a pas pu déterminer si les preuves étayent le critère tel qu'il est formulé. C'est une affirmation sur les preuves, affichée dans une couleur neutre — jamais une couleur d'alerte, jamais une note.",
+  "howit.causes":
+    "Causes fréquentes : rien de pertinent n'a été déposé ; deux sources faisant autorité se contredisent ; une source n'a pas pu être atteinte ; la formulation du critère était trop vague pour correspondre à quoi que ce soit ; ou une valeur a été publiée dans une autre unité que celle du critère.",
+  "howit.resolution":
+    "Chaque résultat non concluant indique ce qui manque et ce qui lèverait l'ambiguïté : par exemple un rapport publié, une formulation de critère plus claire, ou une source qui réconcilie le désaccord.",
+  "howit.absence":
+    "L'absence de preuve est TOUJOURS non concluante. Elle n'est jamais traitée comme une contradiction.",
+  "howit.finality_heading": "Accepté n'est pas définitif",
+  "howit.finality_body_1":
+    "Le consensus de GenLayer passe par des étapes. Une fois l'accord des validateurs, le résultat est accepté — ce qui signifie qu'il peut encore être contesté. Ce n'est qu'après la fermeture de la fenêtre de contestation qu'il devient final.",
+  "howit.finality_body_2":
+    "CivicLens distingue ces deux états et ne les confond jamais. Un résultat accepté est libellé « Acceptée — encore contestable », et rien dans l'interface ne laisse entendre une permanence avant la finalité.",
+  "howit.finality_body_3":
+    "Indépendamment des recours du protocole, toute contestation CivicLens ouvre un nouveau tour de révision avec de nouvelles preuves jointes. Les deux sont différentes : un recours du protocole conteste la décision du comité sur les mêmes entrées, tandis qu'une contestation fournit de nouvelles entrées. L'une ne remplace pas l'autre.",
+  "howit.term_supported_body":
+    "Les preuves publiées étayent le critère tel qu'il est formulé. Ce n'est pas un jugement des intentions.",
+  "howit.term_contradicted_body":
+    "Les preuves publiées contredisent le critère tel qu'il est formulé.",
+  "howit.term_inconclusive_body": "Les preuves n'ont permis aucune détermination.",
+  "howit.terms_heading": "Mots employés sur ce site",
+  "howit.term_validator": "Validateur",
+  "howit.term_validator_body":
+    "Un nœud indépendant qui évalue les preuves et doit s'accorder avec les autres sur le sens.",
+  "howit.term_leader": "Leader",
+  "howit.term_leader_body":
+    "Le validateur qui produit la première lecture que les autres vérifient.",
+  "howit.term_finality": "Finalité",
+  "howit.term_finality_body":
+    "Le point après lequel un résultat ne peut plus être contesté.",
+  "howit.next_prefix": "Suivant :",
+  "howit.next_link": "garanties et limites",
+
+  /* -- fairness and limitations ------------------------------------------- */
+  "fair.title": "Garanties et limites",
+  "fair.lede":
+    "CivicLens rapporte ce que les preuves publiées étayent au sujet d'un engagement public. Cette page dit ce que cela signifie, ce que cela ne signifie pas, et où le système est faible.",
+  "fair.evidence_heading": "Les preuves, pas les intentions",
+  "fair.evidence_1":
+    "CivicLens n'affirme jamais une intention, une mauvaise foi, ni qu'une promesse n'a pas été tenue. Il compare des sources publiées à des critères énoncés à l'avance.",
+  "fair.evidence_2":
+    "Un critère contredit signifie que les preuves entrent en conflit avec ce qui a été annoncé. Cela ne signifie pas que quelqu'un a menti, et l'interface n'emploie jamais de mots qui le laisseraient croire.",
+  "fair.inconclusive_heading": "Non concluant n'est pas un échec",
+  "fair.no_score_body":
+    "L'absence de preuve est non concluante — jamais contradictoire. Le non concluant est affiché dans une couleur neutre, jamais stylé comme une erreur, jamais additionné à une note négative, et jamais utilisé pour classer ou signaler un sujet.",
+  "fair.inconclusive_link": "Pourquoi le troisième résultat existe",
+  "fair.authentic_heading": "Ce que le consensus ne peut pas prouver",
+  "fair.authentic_1":
+    "L'accord n'est pas une authentification. Que des validateurs s'accordent sur ce qu'un document dit n'établit pas que le document est authentique, intact, ou écrit par qui il prétend l'être. CivicLens ne peut pas détecter une source fabriquée mais crédible.",
+  "fair.authentic_2":
+    "Les mesures d'atténuation sont des préférences, pas des garanties : les rapports officiels, les déclarations auditées et les jeux de données gouvernementaux pèsent davantage que les affirmations auto-publiées, et des instantanés archivés sont utilisés lorsque cela est possible. Mais aucune source n'est traitée comme prouvée authentique.",
+  "fair.authentic_3":
+    "Pour la même raison, la révision ne peut pas prouver une absence. Si un sujet n'a publié aucun rapport, CivicLens ne peut pas distinguer « n'a rien fait » de « l'a fait sans publier » — c'est non concluant, et cela le reste.",
+  "fair.attribution_heading": "Honnêteté sur l'attribution",
+  "fair.attribution_1":
+    "Chaque page d'engagement indique qui a enregistré l'entrée et à quel titre, et précise que le sujet ne l'a pas nécessairement vérifiée ni approuvée. CivicLens ne vérifie pas que la personne qui enregistre parle réellement pour l'organisation qu'elle nomme — personne ne peut le faire à partir d'une seule adresse.",
+  "fair.attribution_2":
+    "Un rôle de déclarant « pour sa propre organisation » est une autodéclaration, pas une identité vérifiée.",
+  "fair.response_heading": "Droit de réponse",
+  "fair.response_1":
+    "Toute personne — y compris l'organisation concernée — peut déposer des preuves et ouvrir une contestation. Une contestation ajoute des preuves et déclenche un nouveau tour de révision. Les réponses du sujet sont affichées sur la page de l'engagement, et l'historique complet des tours et contestations reste public.",
+  "fair.response_2":
+    "Les limites existent pour empêcher les abus, pas pour écarter qui que ce soit : un petit nombre de dépôts par partie et un petit nombre de tours. Le contrat les applique et l'interface les affiche avant toute action.",
+  "fair.privacy_heading": "Confidentialité",
+  "fair.privacy_1":
+    "CivicLens vise les engagements publics d'organisations et d'institutions publiques. Le contrat rejette les entrées nommant une personne privée comme sujet, et aucune fonction de profilage des personnes n'est construite.",
+  "fair.privacy_2":
+    "Ce qui est stocké sur la chaîne : le texte de l'engagement, les critères, les liens des sources et les adresses des personnes qui déposent, nécessaires pour appliquer les limites et consigner qui a fait quoi. Aucune donnée personnelle au-delà des adresses et références publiques. Les notes jointes aux preuves sont publiques : elles ne devraient donc rien contenir de privé.",
+  "fair.gaming_heading": "Résistance à la manipulation, et ses limites",
+  "fair.gaming_does": "Ce que la conception fait :",
+  "fair.gaming_does_1": "accepte indifféremment preuves à l'appui et contradictoires ;",
+  "fair.gaming_does_2": "juge les preuves sur leur contenu, jamais sur qui les a déposées ;",
+  "fair.gaming_does_3":
+    "ignore entièrement les notes des personnes qui déposent — le code de révision ne les lit jamais ;",
+  "fair.gaming_does_4":
+    "borne les dépôts par partie et par engagement, et rejette les doublons ;",
+  "fair.gaming_does_5":
+    "verrouille les critères dès le début de la révision, pour qu'un critère ne puisse être adouci en silence ;",
+  "fair.gaming_does_6":
+    "traite les preuves comme des données : les instructions cachées dans un document sont donc ignorées ;",
+  "fair.gaming_does_7": "rejette un verdict citant des sources hors de l'ensemble soumis.",
+  "fair.gaming_cannot": "Ce qu'elle ne peut pas faire :",
+  "fair.gaming_cannot_1":
+    "empêcher un groupe coordonné de déposer beaucoup de sources. Les bornes limitent le volume par partie, pas le volume total entre plusieurs parties.",
+  "fair.gaming_cannot_2":
+    "empêcher un dépôt sélectif — personne ne peut être obligé d'ajouter la source qui aurait changé le résultat.",
+  "fair.gaming_cannot_3":
+    "empêcher un sujet bien doté de publier un document conçu pour être lu favorablement, ou pour être lu difficilement.",
+  "fair.gaming_cannot_4":
+    "garantir qu'un modèle de lecture interprète un critère complexe comme le ferait un humain careful, dans tous les cas.",
+  "fair.gaming_footer":
+    "Ce sont de vraies limites. Lisez les preuves et les motifs par critère, pas la seule étiquette globale.",
+  "fair.finality_heading": "Honnêteté sur la finalité",
+  "fair.finality_body":
+    "Un résultat accepté n'est pas présenté comme permanent. Accepté et final sont des états distincts, visiblement distincts, et le recours comme la contestation restent ouverts tant qu'ils le sont.",
+  "fair.data_heading": "Données d'exemple",
+  "fair.data_1":
+    "Les scénarios d'exemple sont étiquetés sur chaque surface où ils apparaissent. Ils rejouent des résultats enregistrés sur des organisations fictives et ne sont jamais présentés comme des constats sur des entités réelles.",
+  "fair.data_link": "Voir les scénarios d'exemple",
+  "fair.back_prefix": "Retour à",
+  "fair.back_link": "l'accueil",
+
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":
     "CivicLens rapporte ce que les preuves publiées étayent. Il n'évalue pas les intentions.",

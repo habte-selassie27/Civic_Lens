@@ -169,17 +169,18 @@ describe("catalog integrity", () => {
   });
 
   it("uses no score or rank vocabulary in any language", () => {
-    // CivicLens never assigns a number to an organization's conduct. Two
-    // sentences legitimately use the words "score"/"grades" to DENY that it
-    // does so ("it does not score organizations", "what a score or grade can
-    // and cannot tell you"), so those are allow-listed explicitly rather than
-    // banned outright — the guard is about what the app asserts, not the word
-    // itself appearing anywhere on screen.
+    // CivicLens never assigns a number to an organization's conduct. A few
+    // sentences legitimately use "score"/"grade"/"ranking" to DENY that it does
+    // so ("it does not score organizations", "there is no score, no grade, and
+    // no ranking"), so those keys are allow-listed explicitly rather than
+    // banned outright — the guard is about what the app ASSERTS, not about the
+    // word appearing anywhere on screen. Each entry must assert the denial;
+    // the test below verifies that.
     const DENIAL = [
       "landing.does_not_body",
-      "howit.no_score_title",
       "howit.no_score_body",
-      "fairness.no_score_body",
+      "howit.it_means_body",
+      "fair.no_score_body",
     ];
     const banned = ["score", "grade", "rating", "rank", "percentile"];
     for (const locale of LOCALES) {
@@ -194,9 +195,12 @@ describe("catalog integrity", () => {
   });
 
   it("uses the score vocabulary only to deny that CivicLens scores anything", () => {
-    // The allow-list above is only safe while every entry really does deny it.
-    // If someone adds a key there later, this test says so out loud.
+    // The allow-list in the previous test is only safe while every entry really
+    // does deny it. If someone adds a key there later, this fails out loud.
     expect(en["landing.does_not_body"]).toMatch(/does not score/i);
+    expect(en["howit.no_score_body"]).toMatch(/no score, no grade, and no ranking/i);
+    expect(en["howit.it_means_body"]).toMatch(/never a score/i);
+    expect(en["fair.no_score_body"]).toMatch(/negative score.*never used to rank/s);
     expect(en["banner.sample_notice"]).not.toMatch(/score|grade|rank/i);
   });
 

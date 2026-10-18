@@ -70,6 +70,148 @@ export const en = {
   "landing.outcomes_heading": "What a commitment can end up showing",
   "landing.round_count": "— {count} round{plural}",
 
+  /* -- how it works ------------------------------------------------------- */
+  "howit.title": "How it works",
+  "howit.lede":
+    "CivicLens reviews public evidence against criteria that were published in advance. This page explains what happens during a review, and what each result does and does not mean.",
+  "howit.flow_heading": "What a review does",
+  "howit.flow_1": "A commitment is registered with criteria stated in advance, along with the link to where the commitment was published and the period it covers.",
+  "howit.flow_2":
+    "Anyone adds public evidence — supporting or contradicting. Both are accepted. What someone writes alongside a link is kept on the record but never read by the review.",
+  "howit.flow_3": "The registrant requests a review. Sources are fetched and read against each criterion.",
+  "howit.flow_4":
+    "Validators work independently and must reach the same meaning, not the same bytes. Each criterion gets a result, the reason, and the sources it relied on.",
+  "howit.flow_5":
+    "The overall outcome is derived in ordinary code from the per-criterion results. The model never decides it.",
+  "howit.flow_6":
+    "The result is recorded as a round. It can be challenged, which opens a new round with new evidence. Earlier rounds stay on the record.",
+  "howit.equiv_heading": 'What "agreement" means here',
+  "howit.equiv_body":
+    "Public pages change, and a model will rarely phrase two readings identically. So validators do not have to produce the same text. They have to agree on:",
+  "howit.equiv_result": "the result for each criterion — exact match, no tolerance;",
+  "howit.equiv_reason": "the reason code — exact, or within a documented equivalent group;",
+  "howit.equiv_figure":
+    "for a numeric criterion, the extracted figure within a tolerance and on the same side of the threshold.",
+  "howit.equiv_safeguards":
+    "Two safeguards stop validators agreeing on something wrong. A definite verdict must cite sources that are actually in the submitted set, and a numeric verdict must agree with its own extracted figure. A verdict that fails either check is rejected rather than stored.",
+  "howit.equiv_link": "Read the equivalence principle in the GenLayer docs",
+  "howit.outcome_heading": "How the overall outcome is derived",
+  "howit.outcome_caption": "The conditions under which each overall outcome is derived.",
+  "howit.outcome_col_if": "If, among required criteria…",
+  "howit.outcome_col_then": "The overall outcome is",
+  "howit.outcome_all_supported": "all are supported",
+  "howit.outcome_one_contradicted": "at least one is contradicted",
+  "howit.outcome_none_contradicted": "none is contradicted but at least one is inconclusive",
+  "howit.no_score_body":
+    "Optional criteria are recorded and shown, but they never decide the overall outcome. There is no score, no grade, and no ranking — the outcome is a statement about the evidence on file, not a number to compare subjects by.",
+  "howit.inconclusive_heading": 'Why "inconclusive" exists',
+  "howit.inconclusive_body":
+    "A lot of public commitments simply do not have enough published evidence to decide anything. Without a third result, that situation has to be squeezed into either \"supported\" or \"contradicted\", and both would be false.",
+  "howit.does_not_mean": "Inconclusive does not mean:",
+  "howit.does_not_mean_1": "the organization did not do what it said;",
+  "howit.does_not_mean_2": "the commitment was broken, missed, or unfulfilled;",
+  "howit.does_not_mean_3": "anyone acted in bad faith;",
+  "howit.does_not_mean_4": "the evidence was weighed and found wanting.",
+  "howit.it_means": "It means:",
+  "howit.it_means_body":
+    "the review could not determine whether the evidence supports the criterion as written. That is a statement about the evidence, and it is shown in a neutral colour — never a warning colour, never a score.",
+  "howit.causes":
+    "Common causes: nothing relevant was submitted; two authoritative sources disagree; a source could not be reached; the criterion's wording was too vague to match anything; or a figure was published in a different unit than the criterion uses.",
+  "howit.resolution":
+    "Every inconclusive result says what is missing and what would resolve it — for example a published report, a clearer criterion version, or a source that reconciles the disagreement.",
+  "howit.absence":
+    "Absence of evidence is always inconclusive. It is never treated as contradiction.",
+  "howit.finality_heading": "Accepted is not final",
+  "howit.finality_body_1":
+    "GenLayer's consensus moves through stages. Once validators agree, the result is accepted — which means it can still be appealed. Only after the appeal window closes does it become final.",
+  "howit.finality_body_2":
+    "CivicLens shows these two states differently and never collapses them. An accepted result is labelled \"Accepted — can still be appealed\", and nothing in the interface implies permanence before finality is reached.",
+  "howit.finality_body_3":
+    "Separately from protocol appeals, any CivicLens challenge opens a new review round with new evidence attached. The two are different things: a protocol appeal disputes the committee's decision on the same inputs, while a challenge supplies new inputs. Neither replaces the other.",
+  "howit.term_supported_body":
+    "Published evidence bears out the criterion as written. Not a judgement of intent.",
+  "howit.term_contradicted_body":
+    "Published evidence conflicts with the criterion as written.",
+  "howit.term_inconclusive_body": "The evidence did not allow a determination either way.",
+  "howit.terms_heading": "Words used on this site",
+  "howit.term_validator": "Validator",
+  "howit.term_validator_body":
+    "An independent node that evaluates the evidence and must agree with the others on meaning.",
+  "howit.term_leader": "Leader",
+  "howit.term_leader_body": "The validator that produces the first reading the others check.",
+  "howit.term_finality": "Finality",
+  "howit.term_finality_body": "The point after which a result can no longer be appealed.",
+  "howit.next_prefix": "Next:",
+  "howit.next_link": "safeguards and limitations",
+
+  /* -- fairness and limitations ------------------------------------------- */
+  "fair.title": "Safeguards and limitations",
+  "fair.lede":
+    "CivicLens reports what published evidence supports about a public commitment. This page says what that means, what it does not mean, and where the system is weak.",
+  "fair.evidence_heading": "Evidence, not intent",
+  "fair.evidence_1":
+    "CivicLens never asserts motive, bad faith, or that anyone broke a promise. It compares published sources against criteria that were stated in advance.",
+  "fair.evidence_2":
+    "A contradicted criterion means the evidence conflicts with what was committed to. It does not mean anyone lied, and the interface never uses words that would suggest it.",
+  "fair.inconclusive_heading": "Inconclusive is not failure",
+  "fair.no_score_body":
+    "Absence of evidence is inconclusive — never contradicted. Inconclusive is shown in a neutral colour, never styled as an error, never rolled into a negative score, and never used to rank or flag a subject.",
+  "fair.inconclusive_link": "Why the third result exists",
+  "fair.authentic_heading": "What consensus cannot prove",
+  "fair.authentic_1":
+    "Agreement is not authenticity. Validators agreeing that a document says something does not establish that the document is genuine, unaltered, or written by who it claims to be. CivicLens cannot detect a fabricated source that looks plausible.",
+  "fair.authentic_2":
+    "Mitigations are preferences, not guarantees: official reports, audited statements and government datasets are weighted better than self-published claims, and archived snapshots are used where available. But no source is treated as proven authentic.",
+  "fair.authentic_3":
+    "For the same reason, the review cannot prove a negative. If a subject published no report, CivicLens cannot tell the difference between “did nothing” and “did it but did not publish” — that is inconclusive, and it stays that way.",
+  "fair.attribution_heading": "Attribution honesty",
+  "fair.attribution_1":
+    "Every commitment page states who registered the entry and in what role, and says that the subject has not necessarily verified or endorsed it. CivicLens does not verify that a registrant actually speaks for the organization it names — nobody can, from an address alone.",
+  "fair.attribution_2":
+    "A registrant role of “for their own organization” is a self-declaration, not a verified identity.",
+  "fair.response_heading": "Right of response",
+  "fair.response_1":
+    "Anyone — including the subject organization — can submit evidence and open a challenge. A challenge adds new evidence and triggers a new review round. The subject's responses are shown on the commitment page, and the full round and challenge history stays public.",
+  "fair.response_2":
+    "Limits exist to stop abuse, not to shut anyone out: a small number of submissions per party, and a small number of rounds. These are enforced by the contract and shown in the interface before anyone acts.",
+  "fair.privacy_heading": "Privacy",
+  "fair.privacy_1":
+    "CivicLens is for public commitments by public organizations and institutions. Entries naming a private individual as the subject are rejected by the contract, and no feature for profiling individuals is built.",
+  "fair.privacy_2":
+    "What is stored on chain: the commitment text, criteria, source links, and the submitter addresses needed to apply limits and record who did what. No personal data beyond addresses and public references. Notes attached to evidence are public, so they should not contain anything private.",
+  "fair.gaming_heading": "Gaming resistance, and its limits",
+  "fair.gaming_does": "What the design does:",
+  "fair.gaming_does_1": "accepts supporting and contradicting evidence alike;",
+  "fair.gaming_does_2": "judges evidence on content, never on who submitted it;",
+  "fair.gaming_does_3": "ignores submitter notes entirely — the review code never reads them;",
+  "fair.gaming_does_4":
+    "bounds submissions per party and per commitment, and rejects duplicates;",
+  "fair.gaming_does_5":
+    "locks criteria once review starts, so a criterion cannot be quietly softened;",
+  "fair.gaming_does_6":
+    "treats evidence as data, so instructions embedded inside a document are ignored;",
+  "fair.gaming_does_7": "rejects a verdict that cites sources outside the submitted set.",
+  "fair.gaming_cannot": "What it cannot do:",
+  "fair.gaming_cannot_1":
+    "stop a coordinated group from submitting many sources. Bounds limit volume per party, not total volume across many parties.",
+  "fair.gaming_cannot_2":
+    "stop selective submission — nobody can be forced to add the source that would have changed the result.",
+  "fair.gaming_cannot_3":
+    "prevent a well-resourced subject from publishing a document designed to be easy to read favourably, or from publishing one designed to be hard.",
+  "fair.gaming_cannot_4":
+    "guarantee that a reading model interprets a complex criterion the way a careful human would, in every case.",
+  "fair.gaming_footer":
+    "These are real limitations. Read the evidence and the per-criterion reasons, not the single overall label.",
+  "fair.finality_heading": "Finality honesty",
+  "fair.finality_body":
+    "An accepted result is not presented as permanent. Accepted and final are distinct, visibly distinct states, and appeal and challenge both remain open until they are not.",
+  "fair.data_heading": "Sample data",
+  "fair.data_1":
+    "Sample scenarios are labeled on every surface they appear on. They replay recorded results about fabricated organizations and are never presented as findings about real entities.",
+  "fair.data_link": "See the sample scenarios",
+  "fair.back_prefix": "Back to",
+  "fair.back_link": "the start",
+
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline": "CivicLens reports what published evidence supports. It doesn't judge intent.",
   "colophon.safeguards": "Safeguards and limitations",
