@@ -135,7 +135,7 @@ describe("system status page", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/nothing deployed to compare/)).toBeInTheDocument();
     expect(screen.getByText(/^Sample data — /)).toBeInTheDocument();
-    expect(screen.getByText(/1 item needs attention/)).toBeInTheDocument();
+    expect(screen.getByText(/Checks needing attention: 1/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Run checks again" })).toBeInTheDocument();
   });
 
@@ -171,7 +171,7 @@ describe("system status page", () => {
     expect(await screen.findByText("Older build")).toBeInTheDocument();
     expect(screen.getByText(/missing audit fields this frontend can use/)).toBeInTheDocument();
     expect(screen.getByText(/retrieval_statuses, max_quote_len/)).toBeInTheDocument();
-    expect(screen.getByText(/1 item needs attention/)).toBeInTheDocument();
+    expect(screen.getByText(/Checks needing attention: 1/)).toBeInTheDocument();
   });
 
   it("flags a required key missing as the wrong contract at the address", async () => {

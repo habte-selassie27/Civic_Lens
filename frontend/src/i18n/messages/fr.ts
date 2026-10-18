@@ -252,6 +252,83 @@ export const fr: Partial<Record<MessageKey, string>> = {
   "browse.error_title": "Les engagements n'ont pas pu être chargés.",
   "browse.loading": "Chargement des engagements",
 
+  /* -- system status ------------------------------------------------------ */
+  "statuspage.title": "État du système",
+  "statuspage.lede":
+    "Ce que ce navigateur peut vérifier de la configuration : l'adresse du contrat, une lecture en direct, les constantes auxquelles il répond, le réseau et le portefeuille. Les noms de méthodes ne peuvent pas être énumérés depuis une lecture — cette vérification se fait contre le schéma enregistré (node scripts/save-schema.mjs / genlayer schema).",
+  "statuspage.loading": "Exécution des vérifications de configuration",
+  "statuspage.all_ok": "Tout ce que cette page peut vérifier concorde.",
+  "statuspage.needs_attention": "Vérifications demandent votre attention : {count}.",
+  "statuspage.caption":
+    "Vérifications de configuration avec leur état et ce que chacune a trouvé.",
+  "statuspage.col_check": "Vérification",
+  "statuspage.col_state": "État",
+  "statuspage.col_detail": "Détail",
+  "statuspage.methods_heading": "Méthodes attendues",
+  "statuspage.methods_hint":
+    "Transcrites du schéma enregistré (docs/civic_lens.schema.json). Vérifiez qu'un déploiement y répond avec genlayer schema <address>.",
+  "statuspage.methods_reads": "Lectures",
+  "statuspage.methods_writes": "Écritures",
+  "statuspage.rerun": "Relancer les vérifications",
+  "statuspage.state_configured": "Configurée",
+  "statuspage.state_not_configured": "Non configurée",
+  "statuspage.state_info": "Info",
+  "statuspage.state_checking": "Vérification",
+  "statuspage.state_attention": "Requiert votre attention",
+  "statuspage.state_answers": "Répond",
+  "statuspage.state_matches": "Concordance",
+  "statuspage.state_older": "Version antérieure",
+  "statuspage.state_connected": "Connecté",
+  "statuspage.check_address": "Adresse du contrat",
+  "statuspage.check_read": "Lecture du contrat",
+  "statuspage.check_shape": "Forme des constantes",
+  "statuspage.check_bounds": "Bornes du client",
+  "statuspage.check_network": "Réseau",
+  "statuspage.check_wallet": "Portefeuille",
+  "statuspage.check_source": "Source des données",
+  "statuspage.address_view": "Voir sur l'explorateur",
+  "statuspage.address_missing":
+    "Aucune adresse n'est définie. Cette version fonctionne avec les scénarios d'exemple fournis et l'indique partout. Définissez VITE_CONTRACT_ADDRESS dans frontend/.env pour lire un contrat déployé.",
+  "statuspage.read_sample":
+    "Aucun contrat déployé à lire dans cette version — les constantes viennent de l'instantané fourni.",
+  "statuspage.read_checking": "Lecture de get_constants…",
+  "statuspage.read_answered": "A répondu en {ms} ms.",
+  "statuspage.read_error_hint_prefix":
+    "Vérifiez l'adresse, le réseau et que le point d'accès est joignable.",
+  "statuspage.read_error_hint_suffix": "échouera de la même façon tant que ceci ne répond pas.",
+  "statuspage.read_browse_link": "Parcourir",
+  "statuspage.shape_sample":
+    "Vérifié uniquement par rapport à l'instantané fourni — rien de déployé à comparer.",
+  "statuspage.shape_missing_key": "clé requise manquante : {key}",
+  "statuspage.shape_mismatch_intro":
+    "L'adresse répond, mais ses constantes ne correspondent pas à cette application :",
+  "statuspage.shape_mismatch_hint":
+    "Probablement un contrat plus ancien ou différent à cette adresse. Pointez VITE_CONTRACT_ADDRESS sur la version actuelle.",
+  "statuspage.shape_older_detail":
+    "Répond, mais il manque des champs d'audit que cette application peut exploiter : {fields}.",
+  "statuspage.shape_older_tail":
+    "Les statuts de lecture, les limites de citation et la sémantique en langage clair apparaîtront comme absents.",
+  "statuspage.shape_ok":
+    "Tous les champs que cette application consomme sont présents, y compris ceux d'audit.",
+  "statuspage.bounds_ok": "L'instantané de l'application correspond aux bornes déployées.",
+  "statuspage.bounds_differ":
+    "Bornes diffèrent de l'instantané de l'application : {count}. Les valeurs déployées font foi et l'application les utilise :",
+  "statuspage.bounds_line": "{key} : application {app}, déployé {deployed}",
+  "statuspage.network_gasless": " — sans frais, 0 GEN est donc attendu.",
+  "statuspage.network_funded": " — les écritures exigent un compte approvisionné.",
+  "statuspage.wallet_none":
+    "Aucune extension de portefeuille détectée. La lecture fonctionne sans elle ; les écritures exigent un portefeuille.",
+  "statuspage.wallet_no_account":
+    "Un portefeuille est disponible mais aucun compte n'est connecté. Connectez-vous depuis l'en-tête pour écrire.",
+  "statuspage.wallet_wrong_chain":
+    "Connecté sur une autre chaîne. La lecture fonctionne toujours ; les écritures exigent {chain} (chaîne {chainId}).",
+  "statuspage.wallet_ok": "{address} sur {chain}.",
+  "statuspage.source_sample":
+    "Données d'exemple — {reason}. Rien dans cette version n'est un constat sur une organisation réelle.",
+  "statuspage.source_sample_default": "scénarios fournis",
+  "statuspage.source_live":
+    "Preuves en direct du contrat configuré. Chaque page indique son propre mode.",
+
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":
     "CivicLens rapporte ce que les preuves publiées étayent. Il n'évalue pas les intentions.",

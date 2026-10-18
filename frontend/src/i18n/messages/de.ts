@@ -252,6 +252,83 @@ export const de: Partial<Record<MessageKey, string>> = {
   "browse.error_title": "Die Zusagen konnten nicht geladen werden.",
   "browse.loading": "Zusagen werden geladen",
 
+  /* -- system status ------------------------------------------------------ */
+  "statuspage.title": "Systemstatus",
+  "statuspage.lede":
+    "Was dieser Browser über die Konfiguration prüfen kann: die Vertragsadresse, ein Live-Lesen, die Konstanten, mit denen sie antwortet, das Netzwerk und die Wallet. Methodennamen lassen sich aus einem Lesen nicht aufzählen — diese Prüfung läuft gegen das gespeicherte Schema (node scripts/save-schema.mjs / genlayer schema).",
+  "statuspage.loading": "Konfigurationsprüfungen laufen",
+  "statuspage.all_ok": "Alles, was diese Seite prüfen kann, stimmt überein.",
+  "statuspage.needs_attention": "Prüfungen mit Handlungsbedarf: {count}.",
+  "statuspage.caption":
+    "Konfigurationsprüfungen mit ihrem Zustand und dem, was diejeweilige gefunden hat.",
+  "statuspage.col_check": "Prüfung",
+  "statuspage.col_state": "Zustand",
+  "statuspage.col_detail": "Einzelheit",
+  "statuspage.methods_heading": "Erwartete Methoden",
+  "statuspage.methods_hint":
+    "Aus dem gespeicherten Schema übernommen (docs/civic_lens.schema.json). Prüfen Sie mit genlayer schema <address>, ob eine Bereitstellung darauf antwortet.",
+  "statuspage.methods_reads": "Lesezugriffe",
+  "statuspage.methods_writes": "Schreibzugriffe",
+  "statuspage.rerun": "Prüfungen wiederholen",
+  "statuspage.state_configured": "Konfiguriert",
+  "statuspage.state_not_configured": "Nicht konfiguriert",
+  "statuspage.state_info": "Info",
+  "statuspage.state_checking": "Wird geprüft",
+  "statuspage.state_attention": "Handlungsbedarf",
+  "statuspage.state_answers": "Antwortet",
+  "statuspage.state_matches": "Stimmt überein",
+  "statuspage.state_older": "Älterer Stand",
+  "statuspage.state_connected": "Verbunden",
+  "statuspage.check_address": "Vertragsadresse",
+  "statuspage.check_read": "Vertragslesen",
+  "statuspage.check_shape": "Form der Konstanten",
+  "statuspage.check_bounds": "Grenzen im Client",
+  "statuspage.check_network": "Netzwerk",
+  "statuspage.check_wallet": "Wallet",
+  "statuspage.check_source": "Datenquelle",
+  "statuspage.address_view": "Im Explorer ansehen",
+  "statuspage.address_missing":
+    "Es ist keine Adresse gesetzt. Diese Version nutzt die mitgelieferten Beispielszenarien und weist überall darauf hin. Setzen Sie VITE_CONTRACT_ADDRESS in frontend/.env, um einen bereitgestellten Vertrag zu lesen.",
+  "statuspage.read_sample":
+    "In dieser Version gibt es keinen bereitgestellten Vertrag zu lesen — die Konstanten stammen aus dem mitgelieferten Stand.",
+  "statuspage.read_checking": "get_constants wird gelesen…",
+  "statuspage.read_answered": "Antwortete in {ms} ms.",
+  "statuspage.read_error_hint_prefix":
+    "Prüfen Sie Adresse, Netzwerk und Erreichbarkeit des Endpunkts.",
+  "statuspage.read_error_hint_suffix": "scheitert so lange genauso, bis dies antwortet.",
+  "statuspage.read_browse_link": "Übersicht",
+  "statuspage.shape_sample":
+    "Nur gegen den mitgelieferten Stand geprüft — nichts Bereitgestelltes zum Vergleich.",
+  "statuspage.shape_missing_key": "erforderlicher Schlüssel fehlt: {key}",
+  "statuspage.shape_mismatch_intro":
+    "Die Adresse antwortet, ihre Konstanten passen aber nicht zu dieser App:",
+  "statuspage.shape_mismatch_hint":
+    "Wahrscheinlich ein älterer oder anderer Vertrag an dieser Adresse. Richten Sie VITE_CONTRACT_ADDRESS auf den aktuellen Stand.",
+  "statuspage.shape_older_detail":
+    "Antwortet, aber Audit-Felder fehlen, die diese App nutzen könnte: {fields}.",
+  "statuspage.shape_older_tail":
+    "Abrufstatus, Zitatgrenzen und die Klartext-Semantik erscheinen dann als fehlend.",
+  "statuspage.shape_ok":
+    "Alle Felder, die diese App auswertet, sind vorhanden — auch die Audit-Felder.",
+  "statuspage.bounds_ok": "Der Stand der App stimmt mit den bereitgestellten Grenzen überein.",
+  "statuspage.bounds_differ":
+    "Grenzen weichen vom Stand der App ab: {count}. Die bereitgestellten Werte sind maßgeblich und die App verwendet sie:",
+  "statuspage.bounds_line": "{key}: App {app}, bereitgestellt {deployed}",
+  "statuspage.network_gasless": " — gebührenfrei, daher sind 0 GEN zu erwarten.",
+  "statuspage.network_funded": " — Schreibzugriffe erfordern ein finanziertes Konto.",
+  "statuspage.wallet_none":
+    "Keine Wallet-Erweiterung gefunden. Lesen funktioniert ohne; Schreiben braucht eine Wallet.",
+  "statuspage.wallet_no_account":
+    "Eine Wallet ist verfügbar, aber kein Konto verbunden. Verbinden Sie sich in der Kopfzeile, um zu schreiben.",
+  "statuspage.wallet_wrong_chain":
+    "In einer anderen Kette verbunden. Lesen funktioniert weiterhin; Schreiben braucht {chain} (Kette {chainId}).",
+  "statuspage.wallet_ok": "{address} auf {chain}.",
+  "statuspage.source_sample":
+    "Beispieldaten — {reason}. Nichts in dieser Version ist eine Feststellung über eine reale Organisation.",
+  "statuspage.source_sample_default": "mitgelieferte Szenarien",
+  "statuspage.source_live":
+    "Live-Belege aus dem konfigurierten Vertrag. Jede Ansicht weist ihren eigenen Modus aus.",
+
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":
     "CivicLens berichtet, was veröffentlichte Belege stützen. Absichten bewertet es nicht.",

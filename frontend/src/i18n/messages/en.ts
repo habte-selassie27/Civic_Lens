@@ -256,6 +256,81 @@ export const en = {
   "browse.error_title": "Commitments could not be loaded.",
   "browse.loading": "Loading commitments",
 
+  /* -- system status ------------------------------------------------------ */
+  "statuspage.title": "System status",
+  "statuspage.lede":
+    "What this browser can verify about the configuration: the contract address, a live read, the constants it answers with, the network, and the wallet. Method names cannot be enumerated from a read — that check runs against the saved schema (node scripts/save-schema.mjs / genlayer schema).",
+  "statuspage.loading": "Running configuration checks",
+  "statuspage.all_ok": "Everything this page can check matches.",
+  "statuspage.needs_attention": "Checks needing attention: {count}.",
+  "statuspage.caption": "Configuration checks with their state and what each one found.",
+  "statuspage.col_check": "Check",
+  "statuspage.col_state": "State",
+  "statuspage.col_detail": "Detail",
+  "statuspage.methods_heading": "Expected methods",
+  "statuspage.methods_hint":
+    "Transcribed from the saved schema (docs/civic_lens.schema.json). Verify a deployment answers them with genlayer schema <address>.",
+  "statuspage.methods_reads": "Reads",
+  "statuspage.methods_writes": "Writes",
+  "statuspage.rerun": "Run checks again",
+  "statuspage.state_configured": "Configured",
+  "statuspage.state_not_configured": "Not configured",
+  "statuspage.state_info": "Info",
+  "statuspage.state_checking": "Checking",
+  "statuspage.state_attention": "Needs attention",
+  "statuspage.state_answers": "Answers",
+  "statuspage.state_matches": "Matches",
+  "statuspage.state_older": "Older build",
+  "statuspage.state_connected": "Connected",
+  "statuspage.check_address": "Contract address",
+  "statuspage.check_read": "Contract read",
+  "statuspage.check_shape": "Constants shape",
+  "statuspage.check_bounds": "Client bounds",
+  "statuspage.check_network": "Network",
+  "statuspage.check_wallet": "Wallet",
+  "statuspage.check_source": "Data source",
+  "statuspage.address_view": "View on the explorer",
+  "statuspage.address_missing":
+    "No address is set. This build runs on the bundled sample scenarios and says so everywhere. Set VITE_CONTRACT_ADDRESS in frontend/.env to read a deployed contract.",
+  "statuspage.read_sample":
+    "No deployed contract to read in this build — constants come from the bundled snapshot.",
+  "statuspage.read_checking": "Reading get_constants…",
+  "statuspage.read_answered": "Answered in {ms} ms.",
+  "statuspage.read_error_hint_prefix":
+    "Check the address, the network, and that the endpoint is reachable.",
+  "statuspage.read_error_hint_suffix": "will fail the same way until this answers.",
+  "statuspage.read_browse_link": "Browse",
+  "statuspage.shape_sample":
+    "Checked against the bundled snapshot only — nothing deployed to compare.",
+  "statuspage.shape_missing_key": "required key missing: {key}",
+  "statuspage.shape_mismatch_intro":
+    "The address answers, but its constants do not match this frontend:",
+  "statuspage.shape_mismatch_hint":
+    "Likely an older or different contract at this address. Point VITE_CONTRACT_ADDRESS at the current build.",
+  "statuspage.shape_older_detail":
+    "Answers, but is missing audit fields this frontend can use: {fields}.",
+  "statuspage.shape_older_tail":
+    "Retrieval statuses, quote limits, and the plain-language semantics will read as absent.",
+  "statuspage.shape_ok": "Every field this frontend consumes is present, including the audit fields.",
+  "statuspage.bounds_ok": "The app's snapshot matches the deployed bounds.",
+  "statuspage.bounds_differ":
+    "Bounds differing from the app's snapshot: {count}. Deployed values are authoritative and the app uses them:",
+  "statuspage.bounds_line": "{key}: app {app}, deployed {deployed}",
+  "statuspage.network_gasless": " — gasless, so 0 GEN is expected.",
+  "statuspage.network_funded": " — writes need a funded account.",
+  "statuspage.wallet_none":
+    "No wallet extension detected. Reading works without one; writes need a wallet.",
+  "statuspage.wallet_no_account":
+    "A wallet is available but no account is connected. Connect from the header to write.",
+  "statuspage.wallet_wrong_chain":
+    "Connected on a different chain. Reads still work; writes need {chain} (chain {chainId}).",
+  "statuspage.wallet_ok": "{address} on {chain}.",
+  "statuspage.source_sample":
+    "Sample data — {reason}. Nothing on this build is a finding about a real organization.",
+  "statuspage.source_sample_default": "bundled scenarios",
+  "statuspage.source_live":
+    "Live evidence from the configured contract. Pages label their own mode.",
+
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline": "CivicLens reports what published evidence supports. It doesn't judge intent.",
   "colophon.safeguards": "Safeguards and limitations",
