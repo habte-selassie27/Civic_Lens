@@ -62,7 +62,7 @@ export const es: Partial<Record<MessageKey, string>> = {
     "Por eso la lectura la hacen validadores que trabajan de forma independiente y deben ponerse de acuerdo en el significado, no en bytes idénticos. El resultado global lo deriva después el código ordinario a partir de los resultados por criterio: el modelo nunca lo decide.",
   "landing.how_link": "Cómo se ejecuta una revisión",
   "landing.outcomes_heading": "Lo que puede mostrar un compromiso",
-  "landing.round_count": "— {count} ronda{plural}",
+  "landing.round_count": "— rondas de revisión: {count}",
 
   /* -- how it works ------------------------------------------------------- */
   "howit.title": "Cómo funciona",
@@ -212,6 +212,46 @@ export const es: Partial<Record<MessageKey, string>> = {
   "fair.data_link": "Mira los escenarios de muestra",
   "fair.back_prefix": "Volver a",
   "fair.back_link": "el inicio",
+
+  /* -- browse (/commitments) ---------------------------------------------- */
+  "browse.title": "Compromisos",
+  "browse.lede":
+    "Compromisos públicos registrados en CivicLens. Cada uno muestra sus criterios, las fuentes en el archivo y el resultado de cada ronda de revisión.",
+  "browse.filter_search": "Buscar",
+  "browse.filter_search_placeholder": "Sujeto o número",
+  "browse.filter_mode": "Datos",
+  "browse.filter_mode_all": "Muestra y en vivo",
+  "browse.filter_outcome": "Resultado",
+  "browse.filter_outcome_all": "Cualquier resultado",
+  "browse.filter_outcome_none": "Aún sin revisar",
+  "browse.filter_status": "Estado",
+  "browse.filter_status_all": "Cualquier estado",
+  "browse.filter_role": "Registrante",
+  "browse.filter_role_all": "Cualquier rol",
+  "browse.filter_sort": "Orden",
+  "browse.sort_newest": "Más recientes primero",
+  "browse.sort_ending_soonest": "Finalizan antes",
+  "browse.sort_most_reviewed": "Más revisados",
+  "browse.sort_most_sources": "Más fuentes",
+  "browse.refreshing": "Actualizando…",
+  "browse.scope_note":
+    "La búsqueda, los filtros y el orden se aplican a los compromisos registrados más recientemente ({count} mostrados), la página más grande que el contrato sirve en una lectura.",
+  "browse.empty_title": "Nada coincide con esos filtros",
+  "browse.empty_body_prefix": "Amplía los filtros, o",
+  "browse.empty_link": "registra un compromiso",
+  "browse.empty_body_suffix": "para añadir uno.",
+  "browse.table_caption":
+    "Compromisos con su estado, modo de datos, período de evaluación y número de rondas.",
+  "browse.col_subject": "Sujeto",
+  "browse.col_data": "Datos",
+  "browse.col_status": "Estado",
+  "browse.col_period": "Período",
+  "browse.col_rounds": "Rondas",
+  "browse.col_sources": "Fuentes",
+  "browse.tag_superseded": "Reemplazado por el n.º {id}",
+  "browse.demo_link": "Mira qué prueba cada uno de estos resultados de muestra",
+  "browse.error_title": "No se pudieron cargar los compromisos.",
+  "browse.loading": "Cargando compromisos",
 
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":

@@ -61,7 +61,7 @@ export const fr: Partial<Record<MessageKey, string>> = {
     "La lecture est donc faite par des validateurs qui travaillent indépendamment et doivent s'accorder sur le sens, pas sur des octets identiques. Le résultat global est ensuite déduit par du code ordinaire à partir des résultats par critère — le modèle ne le décide jamais.",
   "landing.how_link": "Comment se déroule une révision",
   "landing.outcomes_heading": "Ce qu'un engagement peut finir par montrer",
-  "landing.round_count": "— {count} tour{plural}",
+  "landing.round_count": "— tours de révision : {count}",
 
   /* -- how it works ------------------------------------------------------- */
   "howit.title": "Comment ça marche",
@@ -211,6 +211,46 @@ export const fr: Partial<Record<MessageKey, string>> = {
   "fair.data_link": "Voir les scénarios d'exemple",
   "fair.back_prefix": "Retour à",
   "fair.back_link": "l'accueil",
+
+  /* -- browse (/commitments) ---------------------------------------------- */
+  "browse.title": "Engagements",
+  "browse.lede":
+    "Les engagements publics enregistrés sur CivicLens. Chacun montre ses critères, les sources au dossier et le résultat de chaque tour de révision.",
+  "browse.filter_search": "Rechercher",
+  "browse.filter_search_placeholder": "Sujet ou numéro",
+  "browse.filter_mode": "Données",
+  "browse.filter_mode_all": "Exemple et en direct",
+  "browse.filter_outcome": "Résultat",
+  "browse.filter_outcome_all": "Tous les résultats",
+  "browse.filter_outcome_none": "Pas encore révisé",
+  "browse.filter_status": "État",
+  "browse.filter_status_all": "Tous les états",
+  "browse.filter_role": "Déclarant",
+  "browse.filter_role_all": "Tous les rôles",
+  "browse.filter_sort": "Tri",
+  "browse.sort_newest": "Plus récents d'abord",
+  "browse.sort_ending_soonest": "Les plus proches de la fin",
+  "browse.sort_most_reviewed": "Les plus révisés",
+  "browse.sort_most_sources": "Les plus de sources",
+  "browse.refreshing": "Actualisation…",
+  "browse.scope_note":
+    "La recherche, les filtres et le tri s'appliquent aux engagements enregistrés le plus récemment ({count} affichés) — la plus grande page que le contrat sert en une lecture.",
+  "browse.empty_title": "Rien ne correspond à ces filtres",
+  "browse.empty_body_prefix": "Élargissez les filtres, ou",
+  "browse.empty_link": "enregistrez un engagement",
+  "browse.empty_body_suffix": "pour en ajouter un.",
+  "browse.table_caption":
+    "Engagements avec leur état, leur mode de données, leur période d'évaluation et leur nombre de tours.",
+  "browse.col_subject": "Sujet",
+  "browse.col_data": "Données",
+  "browse.col_status": "État",
+  "browse.col_period": "Période",
+  "browse.col_rounds": "Tours",
+  "browse.col_sources": "Sources",
+  "browse.tag_superseded": "Remplacé par le n° {id}",
+  "browse.demo_link": "Voir ce que teste chacun de ces résultats d'exemple",
+  "browse.error_title": "Les engagements n'ont pas pu être chargés.",
+  "browse.loading": "Chargement des engagements",
 
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":

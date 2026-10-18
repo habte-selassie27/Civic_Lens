@@ -205,7 +205,8 @@ describe("catalog integrity", () => {
   });
 
   it("keeps every placeholder intact in every translation", () => {
-    // A translator dropping {network} would render a broken sentence.
+    // A translator dropping {network} would render a broken sentence, and one
+    // adding {placeholder} would render the braces to a reader.
     const placeholders = (text: string) => (text.match(/\{(\w+)\}/g) ?? []).sort();
     for (const [key, english] of Object.entries(en)) {
       const expected = placeholders(english);
@@ -215,6 +216,14 @@ describe("catalog integrity", () => {
         expect(placeholders(translated), `${locale.code}/${key}`).toEqual(expected);
       }
     }
+  });
+
+  it("has no plural-suffix placeholders — English inflection is not translatable", () => {
+    // A {plural} slot forces the translator to reproduce English's "record{s}"
+    // pattern, which is wrong in languages with different plural rules. Counted
+    // copy puts the noun before the number instead.
+    const offenders = Object.entries(en).filter(([, value]) => /\{plural\}/.test(value));
+    expect(offenders.map(([key]) => key)).toEqual([]);
   });
 
   it("fills placeholders from the vars argument", () => {

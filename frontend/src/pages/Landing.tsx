@@ -117,10 +117,7 @@ export function Landing() {
                 <li key={s.id} style={{ marginBottom: "var(--space-2)", breakInside: "avoid" }}>
                   <Link to={`/commitments/${s.id}`}>{s.subject}</Link>{" "}
                   <span className="hint" style={{ display: "inline" }}>
-                    {t("landing.round_count", {
-                      count: s.round_count,
-                      plural: s.round_count === 1 ? "" : "s",
-                    })}
+                    {t("landing.round_count", { count: s.round_count })}
                   </span>
                 </li>
               ))}

@@ -60,7 +60,7 @@ export const de: Partial<Record<MessageKey, string>> = {
     "Deshalb lesen Validatoren unabhängig voneinander und müssen sich über die Bedeutung einigen, nicht über identische Bytes. Das Gesamtergebnis wird anschließend von gewöhnlichem Code aus den Ergebnissen je Kriterium abgeleitet — das Modell entscheidet es nie.",
   "landing.how_link": "Wie eine Prüfung abläuft",
   "landing.outcomes_heading": "Was eine Zusage zeigen kann",
-  "landing.round_count": "— {count} Runde{plural}",
+  "landing.round_count": "— Prüfungsrunden: {count}",
 
   /* -- how it works ------------------------------------------------------- */
   "howit.title": "So funktioniert es",
@@ -211,6 +211,46 @@ export const de: Partial<Record<MessageKey, string>> = {
   "fair.data_link": "Die Beispielszenarien ansehen",
   "fair.back_prefix": "Zurück zu",
   "fair.back_link": "dem Anfang",
+
+  /* -- browse (/commitments) ---------------------------------------------- */
+  "browse.title": "Zusagen",
+  "browse.lede":
+    "Auf CivicLens registrierte öffentliche Zusagen. Jede zeigt ihre Kriterien, die vorliegenden Quellen und das Ergebnis jeder Prüfungsrunde.",
+  "browse.filter_search": "Suchen",
+  "browse.filter_search_placeholder": "Subjekt oder Nummer",
+  "browse.filter_mode": "Daten",
+  "browse.filter_mode_all": "Beispiel und live",
+  "browse.filter_outcome": "Ergebnis",
+  "browse.filter_outcome_all": "Jedes Ergebnis",
+  "browse.filter_outcome_none": "Noch nicht geprüft",
+  "browse.filter_status": "Zustand",
+  "browse.filter_status_all": "Jeder Zustand",
+  "browse.filter_role": "Registrierende",
+  "browse.filter_role_all": "Jede Rolle",
+  "browse.filter_sort": "Sortierung",
+  "browse.sort_newest": "Neueste zuerst",
+  "browse.sort_ending_soonest": "Endet am ehesten",
+  "browse.sort_most_reviewed": "Am meisten geprüft",
+  "browse.sort_most_sources": "Meiste Quellen",
+  "browse.refreshing": "Wird aktualisiert…",
+  "browse.scope_note":
+    "Suche, Filter und Sortierung gelten für die zuletzt registrierten Zusagen ({count} angezeigt) — der größten Seite, die der Vertrag in einem Lesen liefert.",
+  "browse.empty_title": "Nichts passt zu diesen Filtern",
+  "browse.empty_body_prefix": "Filter erweitern oder",
+  "browse.empty_link": "eine Zusage registrieren",
+  "browse.empty_body_suffix": "um eine hinzuzufügen.",
+  "browse.table_caption":
+    "Zusagen mit Zustand, Datenmodus, Bewertungszeitraum und Rundenanzahl.",
+  "browse.col_subject": "Subjekt",
+  "browse.col_data": "Daten",
+  "browse.col_status": "Zustand",
+  "browse.col_period": "Zeitraum",
+  "browse.col_rounds": "Runden",
+  "browse.col_sources": "Quellen",
+  "browse.tag_superseded": "Abgelöst durch Nr. {id}",
+  "browse.demo_link": "Ansehen, was jedes dieser Beispielergebnisse prüft",
+  "browse.error_title": "Die Zusagen konnten nicht geladen werden.",
+  "browse.loading": "Zusagen werden geladen",
 
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":

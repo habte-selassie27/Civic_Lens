@@ -68,7 +68,8 @@ export const en = {
     "So the reading is made by validators that work independently and must agree on meaning, not on identical bytes. The overall outcome is then derived by ordinary code from the per-criterion results — the model never decides it.",
   "landing.how_link": "How a review actually runs",
   "landing.outcomes_heading": "What a commitment can end up showing",
-  "landing.round_count": "— {count} round{plural}",
+  // Count phrasing puts the noun first for the same reason as browse.scope_note.
+  "landing.round_count": "— review rounds: {count}",
 
   /* -- how it works ------------------------------------------------------- */
   "howit.title": "How it works",
@@ -211,6 +212,49 @@ export const en = {
   "fair.data_link": "See the sample scenarios",
   "fair.back_prefix": "Back to",
   "fair.back_link": "the start",
+
+  /* -- browse (/commitments) ---------------------------------------------- */
+  "browse.title": "Commitments",
+  "browse.lede":
+    "Public commitments registered on CivicLens. Each one shows its criteria, the sources on file, and the result of every review round.",
+  "browse.filter_search": "Search",
+  "browse.filter_search_placeholder": "Subject or number",
+  "browse.filter_mode": "Data",
+  "browse.filter_mode_all": "Sample and live",
+  "browse.filter_outcome": "Outcome",
+  "browse.filter_outcome_all": "Any outcome",
+  "browse.filter_outcome_none": "Not yet reviewed",
+  "browse.filter_status": "State",
+  "browse.filter_status_all": "Any state",
+  "browse.filter_role": "Registrant",
+  "browse.filter_role_all": "Any role",
+  "browse.filter_sort": "Sort",
+  "browse.sort_newest": "Newest first",
+  "browse.sort_ending_soonest": "Ending soonest",
+  "browse.sort_most_reviewed": "Most reviewed",
+  "browse.sort_most_sources": "Most sources",
+  "browse.refreshing": "Refreshing…",
+  // Nouns precede the number here on purpose: an English-style "record{s}"
+  // suffix cannot be carried into languages with different plural rules, so
+  // the phrasing is kept grammatical for any count in every locale.
+  "browse.scope_note":
+    "Search, filters, and sorting apply to the most recently registered records ({count} shown) — the largest page the contract serves in one read.",
+  "browse.empty_title": "Nothing matches those filters",
+  "browse.empty_body_prefix": "Widen the filters, or",
+  "browse.empty_link": "register a commitment",
+  "browse.empty_body_suffix": "to add one.",
+  "browse.table_caption":
+    "Commitments with their state, data mode, evaluation period, and round count.",
+  "browse.col_subject": "Subject",
+  "browse.col_data": "Data",
+  "browse.col_status": "State",
+  "browse.col_period": "Period",
+  "browse.col_rounds": "Rounds",
+  "browse.col_sources": "Sources",
+  "browse.tag_superseded": "Superseded by #{id}",
+  "browse.demo_link": "See what each of these sample outcomes tests",
+  "browse.error_title": "Commitments could not be loaded.",
+  "browse.loading": "Loading commitments",
 
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline": "CivicLens reports what published evidence supports. It doesn't judge intent.",
