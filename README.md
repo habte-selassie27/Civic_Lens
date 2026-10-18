@@ -54,7 +54,7 @@ Four logical components in one deployment (M1 decision, justified in `docs/archi
 | ReviewChallenge | Challenges, grounds, per-party limits, new rounds |
 | OutcomeRecord | Append-only round history: per-criterion results, derived overall outcome |
 
-**Methods (13):** 7 views (`get_constants`, `get_commitments`, `get_commitment`, `get_evidence`, `get_rounds`, `get_outcome`, `get_challenges`) and 6 writes (`create_commitment`, `submit_evidence`, `request_review`, `open_challenge`, `supersede_commitment`, `withdraw_commitment`). There is deliberately **no** criteria-mutation method: criteria are immutable by absence, and the only legal path to different criteria is `supersede_commitment`, which creates a linked new version. Saved schema: [`docs/civic_lens.schema.json`](docs/civic_lens.schema.json) — note this still reflects the pre-hardening 14-method build; a redeploy is required.
+**Methods (13):** 7 views (`get_constants`, `get_commitments`, `get_commitment`, `get_evidence`, `get_rounds`, `get_outcome`, `get_challenges`) and 6 writes (`create_commitment`, `submit_evidence`, `request_review`, `open_challenge`, `supersede_commitment`, `withdraw_commitment`). There is deliberately **no** criteria-mutation method: criteria are immutable by absence, and the only legal path to different criteria is `supersede_commitment`, which creates a linked new version. Saved schema: [`docs/civic_lens.schema.json`](docs/civic_lens.schema.json) — captured from the current deployment and matching it (13 methods: 7 views, 6 writes).
 
 **Equivalence design (per call, full detail in [`docs/equivalence-design.md`](docs/equivalence-design.md)):**
 
@@ -104,11 +104,13 @@ Full policy: [`docs/fairness.md`](docs/fairness.md). In short:
 |---|---|
 | Network | studionet (GenLayer Studio, chain id 61999) |
 | Contract | `contracts/civic_lens.py` (`CivicLens`) |
-| Contract address | [`0x07d77BF8…8B12`](https://explorer-studio.genlayer.com/address/0x07d77BF87b8c76A0d6A6F925bAA18cae2f098B12) |
-| Deploy tx | [`0x0cf870f5…19e4a`](https://explorer-studio.genlayer.com/tx/0x0cf870f5fae52a57d97f19f0db7e94d6ad87f837345cd13d11ce7726fe319e4a) (ACCEPTED, 5/5 AGREE) |
-| First write tx (create_commitment) | [`0xcbcd44ca…231e9a0`](https://explorer-studio.genlayer.com/tx/0xcbcd44ca77b8f574ebe052ea0411963f2f0c26ce9708074d69ff80561231e9a0) (ACCEPTED) |
+| Contract address | [`0xA8cc5b18…27d6`](https://explorer-studio.genlayer.com/address/0xA8cc5b18C4ED3b3F5122bE02c972C17f224b27d6) |
+| Deploy tx | Not captured — deployed via the [Studio web UI import](https://studio.genlayer.com/?import-contract=0xA8cc5b18C4ED3b3F5122bE02c972C17f224b27d6), which does not surface the tx hash to the CLI. The explorer address page is the on-chain record. |
+| First write tx (create_commitment) | [`0xa897676c…c5df5a`](https://explorer-studio.genlayer.com/tx/0xa897676c7d62b445c31bd0fb8bcb986f0963e4dd13d6a8f6b3eb9c2dd7c5df5a) (ACCEPTED) |
 | Schema saved | [`docs/civic_lens.schema.json`](docs/civic_lens.schema.json) (13 methods) |
 | Full record | [`docs/deployment.md`](docs/deployment.md) |
+
+> The address above is the **current** deployment (2026-10-15). The earlier CLI deployment `0x07d77BF8…98B12` (deploy tx [`0x0cf870f5…19e4a`](https://explorer-studio.genlayer.com/tx/0x0cf870f5fae52a57d97f19f0db7e94d6ad87f837345cd13d11ce7726fe319e4a)) was superseded after a figure unit-scale fix; the four records were re-registered on the current address and re-reviewed by real consensus. The full supersession history is auditable in [`docs/deployment.md`](docs/deployment.md).
 
 ### Live data on this deployment
 
@@ -253,7 +255,7 @@ each link's URL.
 - **One contract, four logical components:** chosen so the required direct-test suite can cover everything; a future version could split them once multi-contract testing is viable.
 - **StudioNet is a test network:** accepted outcomes on test networks are for demonstration; production deployment would target a funded network with real finality windows.
 - **Display-only fetches** (if any) are labeled as such in the UI; only contract-evaluated evidence feeds outcomes.
-- **Frontend write path unproven in the browser:** a contract is deployed at `0x07d77BF8…f098B12`, and the **read** path is verified against it — all 7 view methods return real data and `getBundle` round-trips in ~2.5s. Every **write** method has been driven for real from the `genlayer` CLI against this deployment (`create_commitment`, `submit_evidence`, `request_review`, `open_challenge` — see [`docs/deployment.md`](docs/deployment.md)), but not yet from a connected browser wallet. That remains the next milestone.
+- **Frontend write path unproven in the browser:** the current deployment is at `0xA8cc5b18…27d6`, and the **read** path is verified against it — all 7 view methods return real data (`get_constants`, `get_commitments`, `get_commitment`, `get_evidence`, `get_rounds`, `get_outcome`, `get_challenges`), with the four live records confirmed `outcome_accepted`. Every **write** method has been driven for real from the `genlayer` CLI against this deployment (`create_commitment`, `submit_evidence`, `request_review`, `open_challenge` — see [`docs/deployment.md`](docs/deployment.md)), but not yet from a connected browser wallet. That remains the next milestone.
 - **A challenge must attach new evidence to change anything.** Grounds are a claim, not evidence: the contract holds a previous finding unless the new round cites something added since the last review, and a targeted criterion must be explicitly reconsidered. A challenger who opens a challenge with no new evidence pays for a round and sees the finding stand — by design, and stated in `CHALLENGE_SEMANTICS`, but it is a sharp edge worth knowing about.
 - **The model can still get a figure's scale wrong.** The prompt now states each numeric criterion's unit and threshold and spells out the unit arithmetic, but nothing mechanically forces `figure_milli` onto the right magnitude. A 1000x error would surface as a wrong displayed number; the verbatim-quote check catches the figure *being absent*, not the scale being off. Observed and fixed once; the guard is instructional, not enforced.
 - **Tests always run on sample data:** `vite.config.ts` pins `VITE_CONTRACT_ADDRESS` to empty under Vitest, so the suite never depends on a live deployment even when a real address is configured.
