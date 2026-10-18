@@ -24,6 +24,7 @@ import {
 import { mapLimit } from "@/domain/scan";
 import { reads } from "@/services";
 import { EmptyState, ErrorView, LoadingRegion, SampleBanner } from "@/components/Chrome";
+import { useT } from "@/i18n";
 import { ResultChip } from "@/components/ResultChip";
 
 const WINDOW_SIZE = 20;
@@ -38,6 +39,7 @@ interface StatsState {
 }
 
 export function Stats() {
+  const t = useT();
   const [attempt, setAttempt] = useState(0);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [state, setState] = useState<StatsState>({ loading: true, error: null, rows: null });
@@ -92,18 +94,15 @@ export function Stats() {
     return (
       <div className="stack-lg">
         <div>
-          <h1>Platform stats</h1>
-          <p className="hint">
-            Counting the window — the most recent commitments plus each one&apos;s latest
-            outcome.
-          </p>
+          <h1>{t("stats.title")}</h1>
+          <p className="hint">{t("stats.window_leading")}</p>
         </div>
         {progress && (
           <p className="hint" role="status" aria-live="polite">
-            Read {progress.done} of {progress.total} outcomes.
+            {t("stats.progress", { done: progress.done, total: progress.total })}
           </p>
         )}
-        <LoadingRegion label="Counting the current window" />
+        <LoadingRegion label={t("stats.counting")} />
       </div>
     );
   }
@@ -115,9 +114,9 @@ export function Stats() {
           <h1>Platform stats</h1>
         </div>
         <ErrorView
-          error={state.error ?? new Error("The window produced no data.")}
+          error={state.error ?? new Error(t("stats.window_empty"))}
           onRetry={() => setAttempt((a) => a + 1)}
-          title="The window could not be counted."
+          title={t("stats.window_error_title")}
         />
       </div>
     );
@@ -132,18 +131,13 @@ export function Stats() {
       {reads.isSample && reads.sampleReason && <SampleBanner reason={reads.sampleReason} />}
 
       <div>
-        <h1>Platform stats</h1>
-        <p className="hint">
-          Counts over the {stats.commitments} most recent commitment
-          {stats.commitments === 1 ? "" : "s"} — the largest page the contract serves in one
-          read. Records older than the window are not counted, and no network-wide total is
-          claimed.
-        </p>
+        <h1>{t("stats.title")}</h1>
+        <p className="hint">{t("stats.scope")}</p>
       </div>
 
       {stats.commitments === 0 ? (
-        <EmptyState title="Nothing to count yet">
-          <p>The window is empty. Register a commitment and its reviews will appear here.</p>
+        <EmptyState title={t("stats.empty_title")}>
+          <p>{t("stats.empty_body")}</p>
           <div className="actions" style={{ marginTop: "var(--space-2)" }}>
             <Link className="btn btn--small" to="/commitments/new">
               Register a commitment
@@ -154,29 +148,29 @@ export function Stats() {
         <>
           <section className="panel" aria-labelledby="stats-records">
             <div className="panel__head">
-              <h2 id="stats-records">Records</h2>
+              <h2 id="stats-records">{t("stats.records_heading")}</h2>
             </div>
             <div className="panel__body">
               <div className="table-wrap">
                 <table className="table">
-                  <caption className="sr-only">Totals across the current window.</caption>
+                  <caption className="sr-only">{t("stats.records_caption")}</caption>
                   <tbody>
                     <tr>
-                      <th scope="row">Commitments</th>
+                      <th scope="row">{t("stats.row_commitments")}</th>
                       <td className="num">{stats.commitments}</td>
                     </tr>
                     <tr>
-                      <th scope="row">Evidence items on file</th>
+                      <th scope="row">{t("stats.row_evidence")}</th>
                       <td className="num">{stats.evidence}</td>
                     </tr>
                     <tr>
-                      <th scope="row">Review rounds recorded</th>
+                      <th scope="row">{t("stats.row_rounds")}</th>
                       <td className="num">{stats.rounds}</td>
                     </tr>
                     <tr>
-                      <th scope="row">Data mode</th>
+                      <th scope="row">{t("stats.row_data_mode")}</th>
                       <td>
-                        {stats.byMode.live} live · {stats.byMode.sample} sample
+                        {stats.byMode.live} {t("stats.mode_live")} · {stats.byMode.sample} {t("stats.mode_sample")}
                       </td>
                     </tr>
                   </tbody>
@@ -187,12 +181,12 @@ export function Stats() {
 
           <section className="panel" aria-labelledby="stats-states">
             <div className="panel__head">
-              <h2 id="stats-states">Where the records stand</h2>
+              <h2 id="stats-states">{t("stats.states_heading")}</h2>
             </div>
             <div className="panel__body">
               <div className="table-wrap">
                 <table className="table">
-                  <caption className="sr-only">Commitments by current state.</caption>
+                  <caption className="sr-only">{t("stats.states_caption")}</caption>
                   <tbody>
                     {stats.byStatus.map(({ status, count }) => (
                       <tr key={status}>
@@ -208,14 +202,12 @@ export function Stats() {
 
           <section className="panel" aria-labelledby="stats-outcomes">
             <div className="panel__head">
-              <h2 id="stats-outcomes">Review outcomes</h2>
+              <h2 id="stats-outcomes">{t("stats.outcomes_heading")}</h2>
             </div>
             <div className="panel__body">
               <div className="table-wrap">
                 <table className="table">
-                  <caption className="sr-only">
-                    Latest outcome for each commitment in the window.
-                  </caption>
+                  <caption className="sr-only">{t("stats.outcomes_caption")}</caption>
                   <tbody>
                     {OUTCOME_ORDER.map((status) => (
                       <tr key={status}>
@@ -233,7 +225,7 @@ export function Stats() {
                     </tr>
                     {stats.unreadOutcomes > 0 && (
                       <tr>
-                        <th scope="row">Outcome could not be read</th>
+                        <th scope="row">{t("stats.unread_outcome")}</th>
                         <td className="num">{stats.unreadOutcomes}</td>
                       </tr>
                     )}
@@ -241,31 +233,25 @@ export function Stats() {
                 </table>
               </div>
               <p className="hint">
-                Inconclusive is a result of its own: the evidence did not settle the question
-                at the last review. It sits beside the other outcomes and is never folded into
-                a negative one. &quot;Outcome could not be read&quot; means the read itself did
-                not answer — those records are counted as no outcome at all.
+                {t("stats.inconclusive_note")}
               </p>
             </div>
           </section>
 
           <section className="panel" aria-labelledby="stats-sources">
             <div className="panel__head">
-              <h2 id="stats-sources">How sources were read</h2>
+              <h2 id="stats-sources">{t("stats.sources_heading")}</h2>
             </div>
             <div className="panel__body">
               {stats.retrievalKnown === 0 ? (
                 <p className="hint" style={{ marginTop: 0 }}>
-                  No reviewed record in the window reported retrieval statuses yet.
+                  {t("stats.sources_none")}
                 </p>
               ) : (
                 <>
                   <div className="table-wrap">
                     <table className="table">
-                      <caption className="sr-only">
-                        Retrieval statuses summed over the latest reviewed round of each
-                        record that reports them.
-                      </caption>
+                      <caption className="sr-only">{t("stats.sources_caption")}</caption>
                       <tbody>
                         <tr>
                           <th scope="row">{RETRIEVAL_LABEL.fetched}</th>
@@ -283,11 +269,8 @@ export function Stats() {
                     </table>
                   </div>
                   <p className="hint">
-                    {readSources} source{readSources === 1 ? "" : "s"} read and {unreadSources}{" "}
-                    not readable, across the {stats.retrievalKnown} reviewed record
-                    {stats.retrievalKnown === 1 ? "" : "s"} that reported retrieval statuses.
-                    A source that could not be read is recorded as exactly that — it is not
-                    counted as evidence for or against a criterion.
+                    {readSources} {t("stats.sources_count")} read and {unreadSources} not readable, across the {stats.retrievalKnown} reviewed records that reported retrieval statuses.
+                    {t("stats.sources_tail")}
                   </p>
                 </>
               )}
@@ -300,7 +283,7 @@ export function Stats() {
               className="btn btn--small"
               onClick={() => setAttempt((a) => a + 1)}
             >
-              Count again
+              {t("stats.count_again")}
             </button>
           </div>
         </>

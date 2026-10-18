@@ -22,6 +22,13 @@ export const fr: Partial<Record<MessageKey, string>> = {
   "nav.status": "État du système",
   "nav.main": "Principal",
   "nav.skip_to_content": "Aller au contenu",
+  "nav.more": "Plus",
+
+  /* -- account controls ---------------------------------------------------- */
+  "wallet.address_label": "adresse du compte",
+  "wallet.connect": "Connecter un compte",
+  "wallet.none": "Aucun portefeuille",
+  "wallet.disconnect": "Déconnecter",
 
   /* -- appearance + language ---------------------------------------------- */
   "theme.label": "Thème",
@@ -328,6 +335,44 @@ export const fr: Partial<Record<MessageKey, string>> = {
   "statuspage.source_sample_default": "scénarios fournis",
   "statuspage.source_live":
     "Preuves en direct du contrat configuré. Chaque page indique son propre mode.",
+
+  /* -- platform stats ------------------------------------------------------ */
+  "stats.title": "Statistiques de la plateforme",
+  "stats.window_leading":
+    "Comptage de la fenêtre — les engagements les plus récents ainsi que leur dernier résultat.",
+  "stats.progress": "{done} résultats lus sur {total}.",
+  "stats.counting": "Comptage de la fenêtre actuelle",
+  "stats.window_empty": "La fenêtre n'a produit aucune donnée.",
+  "stats.window_error_title": "La fenêtre n'a pas pu être comptée.",
+  "stats.scope":
+    "Comptages sur les engagements les plus récents — la plus grande page que le contrat sert en une lecture. Les entrées antérieures à la fenêtre ne sont pas comptées, et aucun total réseau n'est affirmé.",
+  "stats.empty_title": "Rien à compter pour l'instant",
+  "stats.empty_body":
+    "La fenêtre est vide. Enregistrez un engagement et ses révisions apparaîtront ici.",
+  "stats.records_heading": "Entrées",
+  "stats.records_caption": "Totaux sur la fenêtre actuelle.",
+  "stats.row_commitments": "Engagements",
+  "stats.row_evidence": "Éléments de preuve au dossier",
+  "stats.row_rounds": "Tours de révision enregistrés",
+  "stats.row_data_mode": "Mode de données",
+  "stats.mode_live": "en direct",
+  "stats.mode_sample": "d'exemple",
+  "stats.states_heading": "Où en sont les entrées",
+  "stats.states_caption": "Engagements par état actuel.",
+  "stats.outcomes_heading": "Résultats de la révision",
+  "stats.outcomes_caption": "Dernier résultat de chaque engagement dans la fenêtre.",
+  "stats.unread_outcome": "Le résultat n'a pas pu être lu",
+  "stats.inconclusive_note":
+    "Le non concluant est un résultat à part entière : les preuves n'ont pas tranché la question au dernier tour. Il figure à côté des autres résultats et n'est jamais additionné à un résultat négatif. « Le résultat n'a pas pu être lu » signifie que la lecture elle-même n'a pas répondu — ces entrées sont comptées comme aucun résultat.",
+  "stats.sources_heading": "Comment les sources ont été lues",
+  "stats.sources_caption":
+    "Statuts de lecture additionnés sur le dernier tour de révision de chaque entrée qui les rapporte.",
+  "stats.sources_none":
+    "Aucune entrée révisée dans la fenêtre n'a encore rapporté de statuts de lecture.",
+  "stats.sources_tail":
+    "Une source qui n'a pas pu être lue est enregistrée exactement comme telle : elle n'est pas comptée comme preuve pour ou contre un critère.",
+  "stats.sources_count": "sources",
+  "stats.count_again": "Compter à nouveau",
 
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":

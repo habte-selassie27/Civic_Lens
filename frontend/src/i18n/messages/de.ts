@@ -22,6 +22,13 @@ export const de: Partial<Record<MessageKey, string>> = {
   "nav.status": "Systemstatus",
   "nav.main": "Hauptnavigation",
   "nav.skip_to_content": "Zum Inhalt springen",
+  "nav.more": "Mehr",
+
+  /* -- account controls ---------------------------------------------------- */
+  "wallet.address_label": "Kontoadresse",
+  "wallet.connect": "Konto verbinden",
+  "wallet.none": "Keine Wallet",
+  "wallet.disconnect": "Trennen",
 
   /* -- appearance + language ---------------------------------------------- */
   "theme.label": "Design",
@@ -328,6 +335,44 @@ export const de: Partial<Record<MessageKey, string>> = {
   "statuspage.source_sample_default": "mitgelieferte Szenarien",
   "statuspage.source_live":
     "Live-Belege aus dem konfigurierten Vertrag. Jede Ansicht weist ihren eigenen Modus aus.",
+
+  /* -- platform stats ------------------------------------------------------ */
+  "stats.title": "Plattform-Statistik",
+  "stats.window_leading":
+    "Zählung des Fensters — die neuesten Zusagen plus deren jeweils neuestes Ergebnis.",
+  "stats.progress": "{done} von {total} Ergebnissen gelesen.",
+  "stats.counting": "Aktuelles Fenster wird gezählt",
+  "stats.window_empty": "Das Fenster hat keine Daten geliefert.",
+  "stats.window_error_title": "Das Fenster konnte nicht gezählt werden.",
+  "stats.scope":
+    "Zählungen über die neuesten Zusagen — der größten Seite, die der Vertrag in einem Lesen liefert. Ältere Einträge werden nicht gezählt, und es wird kein Netzwerk-Gesamtwert behauptet.",
+  "stats.empty_title": "Noch nichts zu zählen",
+  "stats.empty_body":
+    "Das Fenster ist leer. Registrieren Sie eine Zusage, und ihre Prüfungen erscheinen hier.",
+  "stats.records_heading": "Einträge",
+  "stats.records_caption": "Gesamtwerte im aktuellen Fenster.",
+  "stats.row_commitments": "Zusagen",
+  "stats.row_evidence": "Belegpositionen in der Akte",
+  "stats.row_rounds": "Verzeichnete Prüfungsrunden",
+  "stats.row_data_mode": "Datenmodus",
+  "stats.mode_live": "live",
+  "stats.mode_sample": "Beispiel",
+  "stats.states_heading": "Wo die Einträge stehen",
+  "stats.states_caption": "Zusagen nach aktuellem Zustand.",
+  "stats.outcomes_heading": "Prüfergebnisse",
+  "stats.outcomes_caption": "Neuestes Ergebnis je Zusage im Fenster.",
+  "stats.unread_outcome": "Ergebnis konnte nicht gelesen werden",
+  "stats.inconclusive_note":
+    "Inkonklus ist ein eigenes Ergebnis: Die Belege haben die Frage in der letzten Prüfung nicht entschieden. Es steht neben den anderen Ergebnissen und wird nie zu einem negativen addiert. „Ergebnis konnte nicht gelesen werden“ bedeutet, dass das Lesen selbst nicht geantwortet hat — diese Einträge zählen als kein Ergebnis.",
+  "stats.sources_heading": "Wie Quellen gelesen wurden",
+  "stats.sources_caption":
+    "Abrufstatus summiert über die neueste Prüfungsrunde jedes Eintrags, der sie meldet.",
+  "stats.sources_none":
+    "Kein geprüfter Eintrag im Fenster hat Abrufstatus gemeldet.",
+  "stats.sources_tail":
+    "Eine Quelle, die nicht gelesen werden konnte, wird genau so verzeichnet: Sie zählt nicht als Belege für oder gegen ein Kriterium.",
+  "stats.sources_count": "Quellen",
+  "stats.count_again": "Erneut zählen",
 
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":

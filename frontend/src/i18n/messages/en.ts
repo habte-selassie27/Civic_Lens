@@ -29,6 +29,13 @@ export const en = {
   "nav.status": "System status",
   "nav.main": "Main",
   "nav.skip_to_content": "Skip to content",
+  "nav.more": "More",
+
+  /* -- account controls ---------------------------------------------------- */
+  "wallet.address_label": "account address",
+  "wallet.connect": "Connect account",
+  "wallet.none": "No wallet",
+  "wallet.disconnect": "Disconnect",
 
   /* -- appearance + language controls ------------------------------------- */
   "theme.label": "Theme",
@@ -330,6 +337,41 @@ export const en = {
   "statuspage.source_sample_default": "bundled scenarios",
   "statuspage.source_live":
     "Live evidence from the configured contract. Pages label their own mode.",
+
+  /* -- platform stats ------------------------------------------------------ */
+  "stats.title": "Platform stats",
+  "stats.window_leading": "Counting the window — the most recent commitments plus each one's latest outcome.",
+  "stats.progress": "Read {done} of {total} outcomes.",
+  "stats.counting": "Counting the current window",
+  "stats.window_empty": "The window produced no data.",
+  "stats.window_error_title": "The window could not be counted.",
+  "stats.scope":
+    "Counts over the most recent commitments — the largest page the contract serves in one read. Records older than the window are not counted, and no network-wide total is claimed.",
+  "stats.empty_title": "Nothing to count yet",
+  "stats.empty_body": "The window is empty. Register a commitment and its reviews will appear here.",
+  "stats.records_heading": "Records",
+  "stats.records_caption": "Totals across the current window.",
+  "stats.row_commitments": "Commitments",
+  "stats.row_evidence": "Evidence items on file",
+  "stats.row_rounds": "Review rounds recorded",
+  "stats.row_data_mode": "Data mode",
+  "stats.mode_live": "live",
+  "stats.mode_sample": "sample",
+  "stats.states_heading": "Where the records stand",
+  "stats.states_caption": "Commitments by current state.",
+  "stats.outcomes_heading": "Review outcomes",
+  "stats.outcomes_caption": "Latest outcome for each commitment in the window.",
+  "stats.unread_outcome": "Outcome could not be read",
+  "stats.inconclusive_note":
+    "Inconclusive is a result of its own: the evidence did not settle the question at the last review. It sits beside the other outcomes and is never folded into a negative one. “Outcome could not be read” means the read itself did not answer — those records are counted as no outcome at all.",
+  "stats.sources_heading": "How sources were read",
+  "stats.sources_caption":
+    "Retrieval statuses summed over the latest reviewed round of each record that reports them.",
+  "stats.sources_none": "No reviewed record in the window reported retrieval statuses yet.",
+  "stats.sources_tail":
+    "A source that could not be read is recorded as exactly that — it is not counted as evidence for or against a criterion.",
+  "stats.sources_count": "sources",
+  "stats.count_again": "Count again",
 
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline": "CivicLens reports what published evidence supports. It doesn't judge intent.",

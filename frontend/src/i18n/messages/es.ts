@@ -23,6 +23,13 @@ export const es: Partial<Record<MessageKey, string>> = {
   "nav.status": "Estado del sistema",
   "nav.main": "Principal",
   "nav.skip_to_content": "Saltar al contenido",
+  "nav.more": "Más",
+
+  /* -- account controls ---------------------------------------------------- */
+  "wallet.address_label": "dirección de la cuenta",
+  "wallet.connect": "Conectar cuenta",
+  "wallet.none": "Sin cartera",
+  "wallet.disconnect": "Desconectar",
 
   /* -- appearance + language ---------------------------------------------- */
   "theme.label": "Tema",
@@ -329,6 +336,44 @@ export const es: Partial<Record<MessageKey, string>> = {
   "statuspage.source_sample_default": "escenarios incluidos",
   "statuspage.source_live":
     "Pruebas en vivo del contrato configurado. Cada página indica su propio modo.",
+
+  /* -- platform stats ------------------------------------------------------ */
+  "stats.title": "Estadísticas de la plataforma",
+  "stats.window_leading":
+    "Contando la ventana: los compromisos más recientes más el resultado más reciente de cada uno.",
+  "stats.progress": "Se leyeron {done} de {total} resultados.",
+  "stats.counting": "Contando la ventana actual",
+  "stats.window_empty": "La ventana no produjo datos.",
+  "stats.window_error_title": "No se pudo contar la ventana.",
+  "stats.scope":
+    "Cuentas sobre los compromisos más recientes, la página más grande que el contrato sirve en una lectura. No se cuentan los registros anteriores a la ventana y no se afirma ningún total de toda la red.",
+  "stats.empty_title": "Todavía nada que contar",
+  "stats.empty_body":
+    "La ventana está vacía. Registra un compromiso y sus revisiones aparecerán aquí.",
+  "stats.records_heading": "Registros",
+  "stats.records_caption": "Totales en la ventana actual.",
+  "stats.row_commitments": "Compromisos",
+  "stats.row_evidence": "Elementos de prueba en el archivo",
+  "stats.row_rounds": "Rondas de revisión registradas",
+  "stats.row_data_mode": "Modo de datos",
+  "stats.mode_live": "en vivo",
+  "stats.mode_sample": "de muestra",
+  "stats.states_heading": "Dónde están los registros",
+  "stats.states_caption": "Compromisos por estado actual.",
+  "stats.outcomes_heading": "Resultados de la revisión",
+  "stats.outcomes_caption": "Resultado más reciente de cada compromiso en la ventana.",
+  "stats.unread_outcome": "No se pudo leer el resultado",
+  "stats.inconclusive_note":
+    "Lo inconclusivo es un resultado propio: las pruebas no zanjaron la cuestión en la última revisión. Se muestra junto a los demás resultados y nunca se suma a uno negativo. «No se pudo leer el resultado» significa que la lectura misma no respondió: esos registros se cuentan como ningún resultado.",
+  "stats.sources_heading": "Cómo se leyeron las fuentes",
+  "stats.sources_caption":
+    "Estados de lectura sumados sobre la ronda de revisión más reciente de cada registro que los reporta.",
+  "stats.sources_none":
+    "Ningún registro revisado en la ventana reportó estados de lectura todavía.",
+  "stats.sources_tail":
+    "Una fuente que no se pudo leer se registra exactamente como eso: no se cuenta como prueba a favor ni en contra de un criterio.",
+  "stats.sources_count": "fuentes",
+  "stats.count_again": "Contar de nuevo",
 
   /* -- colophon ----------------------------------------------------------- */
   "colophon.tagline":
