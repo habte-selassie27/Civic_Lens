@@ -374,6 +374,126 @@ td.num {
 }
 
 /* ==========================================================================
+   Reading preferences (dark / light / system, language)
+   ==========================================================================
+   Both controls live in the masthead state row. They are chrome, not content:
+   compact, quiet, and they must never be the loudest thing on a page. */
+
+.theme-select {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.theme-select__label {
+  font-size: var(--t-14);
+  color: var(--ink-faint);
+}
+
+.select--compact {
+  min-height: 30px;
+  padding: 0 var(--space-2);
+  font-size: var(--t-14);
+  border-radius: var(--radius-control);
+  border: 1px solid var(--control-rule);
+  background: var(--sheet);
+  color: var(--record-ink);
+}
+
+.language {
+  position: relative;
+}
+
+.language__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.language__menu {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: 20;
+  min-width: 15rem;
+  padding: var(--space-2);
+  background: var(--sheet);
+  border: 1px solid var(--control-rule);
+  border-radius: var(--radius-panel);
+  box-shadow: 0 6px 18px rgb(0 0 0 / 12%);
+}
+
+.language__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.language__item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-2);
+  font: inherit;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.language__item:hover {
+  background: var(--citation-tint);
+}
+
+.language__item[aria-checked="true"] {
+  /* Current language: weight AND a rule — never colour alone (section 10). */
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--citation);
+}
+
+.language__endonym {
+  color: var(--record-ink);
+}
+
+.language__name {
+  font-size: var(--t-14);
+  color: var(--ink-faint);
+}
+
+.language__note {
+  margin: var(--space-2) 0 0;
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--rule);
+  font-size: var(--t-14);
+  color: var(--ink-faint);
+  max-width: none;
+}
+
+@media (max-width: 640px) {
+  /* Narrow screens: open from the left edge so the menu stays on screen. */
+  .language__menu {
+    right: auto;
+    left: 0;
+    min-width: 12rem;
+  }
+
+  .theme-select__label {
+    /* On 360px the label is redundant beside the three-option control; the
+       select stays labeled for screen readers via aria-labelledby. */
+    display: none;
+  }
+}
+
+@media print {
+  .theme-select,
+  .language {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
    Buttons and controls
    ========================================================================== */
 
@@ -390,14 +510,16 @@ td.num {
   border-radius: var(--radius-control);
   border: 1px solid var(--citation);
   background: var(--citation);
-  color: #fff;
+  /* Flips with the theme: white on the light theme's dark blue, near-black on
+     the dark theme's light blue. Tokenised so neither is hardcoded here. */
+  color: var(--on-citation);
   cursor: pointer;
   transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease);
 }
 
 .btn:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--citation) 86%, #000);
-  border-color: color-mix(in srgb, var(--citation) 86%, #000);
+  background: var(--citation-deep);
+  border-color: var(--citation-deep);
 }
 
 .btn:disabled {
@@ -1439,6 +1561,9 @@ details.disclosure > summary:hover {
 
 @media print {
   :root {
+    /* Paper is light. Pinning the scheme also makes every light-dark() token
+       resolve to its light value, so a dark-themed screen prints legibly. */
+    color-scheme: only light;
     --microfiche: #ffffff;
     --sheet: #ffffff;
   }

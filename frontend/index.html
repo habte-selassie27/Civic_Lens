@@ -3,13 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light" />
+    <!--
+      The app follows the visitor's theme (light / dark / system). Saying so in
+      the meta tag lets the browser paint native controls — form fields, scrollbars,
+      the canvas behind the page — in the right scheme before our CSS arrives.
+    -->
+    <meta name="color-scheme" content="light dark" />
     <meta
       name="description"
       content="CivicLens reports what published evidence supports about a public commitment. It doesn't judge intent."
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>CivicLens — public-commitment verification</title>
+    <script>
+      /*
+       * Applied BEFORE first paint: restore the stored theme choice (or "system")
+       * onto <html data-theme>, which is what the `light-dark()` tokens in
+       * styles/tokens.css resolve against. Without this, a visitor who chose dark
+       * would see a white flash on every full page load. Kept inline and tiny on
+       * purpose: an imported module would arrive too late.
+       */
+      (function () {
+        try {
+          var v = localStorage.getItem("civiclens.theme");
+          if (v !== "light" && v !== "dark") v = "system";
+          document.documentElement.setAttribute("data-theme", v);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "system");
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

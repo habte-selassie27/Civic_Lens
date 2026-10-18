@@ -22,10 +22,10 @@ import type {
 } from "@/domain/types";
 import {
   EVIDENCE_TYPE_LABEL,
-  INCONCLUSIVE_RESOLUTION,
-  NOT_USED_LABEL,
   REASON_LABEL,
+  notUsedLabel,
   reasonCopy,
+  resolutionCopy,
 } from "@/domain/copy";
 import { REASON_CODES } from "@/domain/types";
 import { displayUnit, formatDate, formatMilli, thresholdPhrase } from "@/domain/format";
@@ -205,7 +205,7 @@ export function CriterionLedger({
               {notUsed.length > 0 && (
                 <details className="disclosure">
                   <summary>
-                    {NOT_USED_LABEL} — {notUsed.length} source{notUsed.length === 1 ? "" : "s"}
+                    {notUsedLabel()} — {notUsed.length} source{notUsed.length === 1 ? "" : "s"}
                   </summary>
                   {notUsed.map((item) => (
                     <Fragment key={item.id}>
@@ -279,8 +279,8 @@ export function CriterionLedger({
                         REASON_LABEL[REASON_CODES[0]]}
                     </p>
                   )}
-                  {result && INCONCLUSIVE_RESOLUTION[result.reason_code] && (
-                    <p>{INCONCLUSIVE_RESOLUTION[result.reason_code]}</p>
+                  {result && resolutionCopy(result.reason_code) && (
+                    <p>{resolutionCopy(result.reason_code)}</p>
                   )}
                 </div>
               )}

@@ -9,39 +9,64 @@
  *
  * Nothing in this file may introduce a warning/red semantic. If a future
  * contributor reaches for `--danger`, that is the design failing.
+ *
+ * THEMES (added later): every colour token is written as
+ * `light-dark(<light>, <dark>)`, which the browser resolves against the
+ * element's `color-scheme`:
+ *
+ *   :root                      -> `light dark`  -> follows the OS setting
+ *   :root[data-theme="light"]  -> `only light`  -> pinned
+ *   :root[data-theme="dark"]   -> `only dark`   -> pinned
+ *
+ * So "system" needs no duplicated block and no media query, and both themes
+ * stay defined in one place. `color-scheme` also makes native controls (select
+ * dropdowns, scrollbars, date pickers) match the theme. The dark values were
+ * chosen against the same WCAG guards as the light ones and are verified for
+ * every text pair by tests/contrast.test.ts.
  */
 
 :root {
+  color-scheme: light dark;
+
   /* -- palette (section 2.1) ------------------------------------------------ */
-  --microfiche: #ebefee; /* page background — cool grey-green */
-  --record-ink: #1b2430; /* text, headings */
-  --citation: #2a5da8; /* links, primary actions, focus ring */
-  --verdigris: #2d7a68; /* evidence supports */
-  --plum: #78396a; /* evidence contradicts */
-  --graphite: #5c6672; /* inconclusive — neutral on purpose */
-  --rule: #c5cfcd; /* borders, dividers */
-  --sheet: #ffffff; /* document surfaces */
+  --microfiche: light-dark(#ebefee, #141a20); /* page background — cool grey-green */
+  --record-ink: light-dark(#1b2430, #e7ecf1); /* text, headings */
+  --citation: light-dark(#2a5da8, #8fb4ee); /* links, primary actions, focus ring */
+  --verdigris: light-dark(#2d7a68, #63c3a8); /* evidence supports */
+  --plum: light-dark(#78396a, #d193c2); /* evidence contradicts */
+  --graphite: light-dark(#5c6672, #a9b4c0); /* inconclusive — neutral on purpose */
+  --rule: light-dark(#c5cfcd, #333e49); /* borders, dividers */
+  --sheet: light-dark(#ffffff, #1b232b); /* document surfaces */
 
   /* -- derived ink (same hues, for text on --sheet and --microfiche) --------
      --ink-faint is darkened from the obvious #6B7783: that value is 3.94:1 on
      --microfiche and fails WCAG AA (4.5:1) for hint text, which sits on the
-     page background in .hint and .field__hint. This value measures 4.76:1 on
-     --microfiche and 5.52:1 on --sheet. Verified by tests/contrast.test.ts. */
-  --ink-strong: #16202b;
-  --ink-muted: #4a5561;
-  --ink-faint: #5f6a75;
+     page background in .hint and .field__hint. These values clear 4.5:1 on
+     BOTH --microfiche and --sheet in both themes (light 4.76:1 / 5.52:1, dark
+     7.78:1 / 7.05:1). Verified by tests/contrast.test.ts. */
+  --ink-strong: light-dark(#16202b, #f3f7fb);
+  --ink-muted: light-dark(#4a5561, #c0cad4);
+  --ink-faint: light-dark(#5f6a75, #a3aeba);
 
   /* Control boundaries. WCAG 1.4.11 requires 3:1 for the edge of an
-     interactive control; --rule (1.59:1 on --sheet) is for decorative and
+     interactive control; --rule (1.59:1 on --sheet light) is for decorative and
      structural rules only, which are exempt. Form inputs use this instead.
-     Measures 3.74:1 on --sheet and 3.23:1 on --microfiche. */
-  --control-rule: #788786;
+     Measures 3.74:1 on --sheet and 3.23:1 on --microfiche in light; 3.76:1 and
+     4.15:1 in dark. */
+  --control-rule: light-dark(#788786, #6f7d8a);
 
   /* -- tinted surfaces (2% mixes of the palette into --sheet) --------------- */
-  --verdigris-tint: #f0f6f4;
-  --plum-tint: #f7f1f5;
-  --graphite-tint: #f2f4f5;
-  --citation-tint: #eef2f9;
+  --verdigris-tint: light-dark(#f0f6f4, #172a25);
+  --plum-tint: light-dark(#f7f1f5, #2b1f2a);
+  --graphite-tint: light-dark(#f2f4f5, #212933);
+  --citation-tint: light-dark(#eef2f9, #1c2635);
+
+  /* -- filled primary action -------------------------------------------------
+     A filled button is the one surface where the text colour flips between
+     themes: white on the light theme's dark blue, near-black on the dark
+     theme's light blue. Written as tokens so no component hardcodes either. */
+  --on-citation: light-dark(#ffffff, #0e141a);
+  --citation-deep: light-dark(#25508f, #a9c8f6);
 
   /* -- focus (section 10: 3:1 against adjacent colors) ---------------------- */
   --focus-ring: 0 0 0 2px var(--microfiche), 0 0 0 4px var(--citation);
@@ -82,6 +107,16 @@
 
   /* -- document grammar ----------------------------------------------------- */
   --sheet-left-rule: 3px;
+}
+
+/* An explicit choice pins the scheme; anything else (including "system",
+   which the theme control writes as data-theme="system") follows the OS. */
+:root[data-theme="light"] {
+  color-scheme: only light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: only dark;
 }
 
 @media (prefers-reduced-motion: reduce) {

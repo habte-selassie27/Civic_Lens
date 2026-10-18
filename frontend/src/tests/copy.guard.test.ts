@@ -11,7 +11,6 @@ import {
   ACTION,
   DATA_MODE_LABEL,
   EVIDENCE_TYPE_LABEL,
-  INCONCLUSIVE_RESOLUTION,
   LOADED_TERMS,
   OUTCOME_LABEL,
   OVERALL_REASON_LABEL,
@@ -24,6 +23,7 @@ import {
   mapError,
   overallReasonCopy,
   reasonCopy,
+  resolutionCopy,
 } from "@/domain/copy";
 import {
   COMMITMENT_STATUSES,
@@ -35,10 +35,43 @@ import {
   ROUND_TRIGGERS,
 } from "@/domain/types";
 import { OVERALL_REASONS_USED } from "@/domain/actions";
+import { LOCALES, setLocale } from "@/i18n";
+
+/**
+ * Resolve a lazy copy map into plain values for assertions. Copy maps hold
+ * catalog keys and translate on access, so tests that inspect the COPY must go
+ * through this rather than reading the keys.
+ */
+function resolvedCopy(map: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(Object.entries(map));
+}
+
+/** Runs `body` in a given locale, then restores English. */
+function inLocale<T>(code: (typeof LOCALES)[number]["code"], body: () => T): T {
+  setLocale(code);
+  try {
+    return body();
+  } finally {
+    setLocale("en");
+  }
+}
 
 describe("neutral copy guard", () => {
   it("contains no loaded terms in any outcome, reason, or status string", () => {
     expect(findLoadedTerms()).toEqual([]);
+  });
+
+  it("contains no loaded terms in any language", () => {
+    // The guarantee is about the words a reader SEES, not about the English
+    // catalog. A translator must not be able to reintroduce "failed", "fraud",
+    // or "liar" in Spanish, French, or German and ship it.
+    const offenders: string[] = [];
+    for (const locale of LOCALES) {
+      inLocale(locale.code, () => {
+        for (const problem of findLoadedTerms()) offenders.push(`${locale.code}: ${problem}`);
+      });
+    }
+    expect(offenders).toEqual([]);
   });
 
   it("keeps the inconclusive vocabulary free of failure language", () => {
@@ -51,9 +84,9 @@ describe("neutral copy guard", () => {
       REASON_LABEL.source_conflict,
       REASON_LABEL.criterion_ambiguous,
       REASON_LABEL.unit_mismatch,
-      INCONCLUSIVE_RESOLUTION.no_relevant_evidence,
-      INCONCLUSIVE_RESOLUTION.source_conflict,
-      INCONCLUSIVE_RESOLUTION.criterion_ambiguous,
+      resolutionCopy("no_relevant_evidence"),
+      resolutionCopy("source_conflict"),
+      resolutionCopy("criterion_ambiguous"),
     ]
       .join(" ")
       .toLowerCase();
@@ -132,14 +165,19 @@ describe("neutral copy guard", () => {
 
 describe("no-score guard", () => {
   it("never renders a score, grade, or rank vocabulary", () => {
+    // The copy maps are lazy (keys resolved on access), so the JSON has to be
+    // built from resolved values — stringifying the maps would emit the KEYS,
+    // not the copy a reader sees.
     const all = JSON.stringify([
-      OUTCOME_LABEL,
-      RESULT_LABEL,
-      OVERALL_REASON_LABEL,
-      REASON_LABEL,
-      INCONCLUSIVE_RESOLUTION,
-      STATUS_LABEL,
-      ACTION,
+      resolvedCopy(OUTCOME_LABEL),
+      resolvedCopy(RESULT_LABEL),
+      resolvedCopy(OVERALL_REASON_LABEL),
+      resolvedCopy(REASON_LABEL),
+      ["no_relevant_evidence", "source_conflict", "criterion_ambiguous"].map((code) =>
+        resolutionCopy(code as never),
+      ),
+      resolvedCopy(STATUS_LABEL),
+      resolvedCopy(ACTION),
     ]).toLowerCase();
 
     for (const banned of ["score", "grade", "rating", "rank", "/100", "percentile"]) {

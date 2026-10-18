@@ -12,10 +12,10 @@
 import { Link } from "react-router-dom";
 import type { EvidenceItem, ResultStatus, ReviewStatus, RoundRecord } from "@/domain/types";
 import {
-  NOT_USED_LABEL,
   RETRIEVAL_IS_READ,
   RETRIEVAL_LABEL,
   TRIGGER_LABEL,
+  notUsedLabel,
   overallReasonCopy,
 } from "@/domain/copy";
 import { formatDate } from "@/domain/format";
@@ -160,7 +160,7 @@ export function RoundTimeline({ rounds, evidence, currentRound, commitmentId }: 
 
             {consideredNotUsed.length > 0 && (
               <div style={{ margin: "var(--space-3) 0" }}>
-                <p className="ledger__sub">{NOT_USED_LABEL} in this round</p>
+                <p className="ledger__sub">{notUsedLabel()} in this round</p>
                 <ul style={{ margin: 0, paddingLeft: "1.1rem", fontSize: "var(--t-14)" }}>
                   {consideredNotUsed.map((id) => {
                     const item = evidenceById.get(id);

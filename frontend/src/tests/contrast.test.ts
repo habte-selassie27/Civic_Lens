@@ -27,10 +27,26 @@ const tokensCss = readFileSync(
   "utf8",
 );
 
-function token(name: string): string {
-  const match = tokensCss.match(new RegExp(`--${name}:\\s*(#[0-9a-fA-F]{3,8})`));
-  if (!match) throw new Error(`Token --${name} not found in tokens.css`);
-  return match[1];
+type Theme = "light" | "dark";
+const THEMES: Theme[] = ["light", "dark"];
+
+/**
+ * Read the REAL tokens.css so this test tracks the shipped palette rather than
+ * a copy that can drift. Vitest's root is the frontend directory.
+ *
+ * Colour tokens are declared as `light-dark(<light>, <dark>)`, so each token
+ * yields BOTH values and every pair below is checked in both themes — a dark
+ * palette that quietly fails AA would otherwise ship unnoticed.
+ */
+function tokenPair(name: string): Record<Theme, string> {
+  const declaration = tokensCss.match(new RegExp(`--${name}:\\s*([^;]+);`));
+  if (!declaration) throw new Error(`Token --${name} not found in tokens.css`);
+  const value = declaration[1].trim();
+  const themed = value.match(/^light-dark\(\s*(#[0-9a-fA-F]{3,8})\s*,\s*(#[0-9a-fA-F]{3,8})\s*\)$/);
+  if (themed) return { light: themed[1], dark: themed[2] };
+  const plain = value.match(/^(#[0-9a-fA-F]{3,8})$/);
+  if (plain) return { light: plain[1], dark: plain[1] };
+  throw new Error(`Token --${name} is neither light-dark() nor a plain hex: ${value}`);
 }
 
 function channels(hex: string): [number, number, number] {
@@ -54,7 +70,7 @@ function contrast(a: string, b: string): number {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-const T = (name: string) => token(name);
+const T = (name: string, theme: Theme): string => tokenPair(name)[theme];
 
 /** [foreground, background, minimum, what it is] */
 const TEXT_PAIRS: Array<[string, string, number, string]> = [
@@ -90,33 +106,63 @@ const NON_TEXT_PAIRS: Array<[string, string, number, string]> = [
 ];
 
 describe("WCAG contrast (UI-CivicLens 2.1)", () => {
-  it.each(TEXT_PAIRS)("%s on %s — %s", (fg, bg, min, what) => {
-    const ratio = contrast(T(fg), T(bg));
-    expect(
-      ratio,
-      `${what}: ${fg} on ${bg} is ${ratio.toFixed(2)}:1, needs ${min}:1`,
-    ).toBeGreaterThanOrEqual(min);
+  it.each(TEXT_PAIRS)("%s on %s — %s (both themes)", (fg, bg, min, what) => {
+    for (const theme of THEMES) {
+      const ratio = contrast(T(fg, theme), T(bg, theme));
+      expect(
+        ratio,
+        `${what} (${theme}): ${fg} on ${bg} is ${ratio.toFixed(2)}:1, needs ${min}:1`,
+      ).toBeGreaterThanOrEqual(min);
+    }
   });
 
-  it.each(NON_TEXT_PAIRS)("%s on %s — %s", (fg, bg, min, what) => {
-    const ratio = contrast(T(fg), T(bg));
-    expect(
-      ratio,
-      `${what}: ${fg} on ${bg} is ${ratio.toFixed(2)}:1, needs ${min}:1`,
-    ).toBeGreaterThanOrEqual(min);
+  it.each(NON_TEXT_PAIRS)("%s on %s — %s (both themes)", (fg, bg, min, what) => {
+    for (const theme of THEMES) {
+      const ratio = contrast(T(fg, theme), T(bg, theme));
+      expect(
+        ratio,
+        `${what} (${theme}): ${fg} on ${bg} is ${ratio.toFixed(2)}:1, needs ${min}:1`,
+      ).toBeGreaterThanOrEqual(min);
+    }
+  });
+
+  it("keeps the filled button legible in both themes", () => {
+    // The one surface whose text colour flips: a hardcoded #fff fails in dark.
+    for (const theme of THEMES) {
+      const ratio = contrast(T("on-citation", theme), T("citation", theme));
+      expect(ratio, `button label on its fill (${theme})`).toBeGreaterThanOrEqual(4.5);
+      const hover = contrast(T("on-citation", theme), T("citation-deep", theme));
+      expect(hover, `button label on hover fill (${theme})`).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("declares every colour token with an explicit dark value", () => {
+    // "light-dark()" is what makes system mode work without a duplicated
+    // block; a token that fell back to one value would be theme-blind.
+    const colourTokens = [
+      "microfiche", "record-ink", "citation", "verdigris", "plum", "graphite",
+      "rule", "sheet", "ink-strong", "ink-muted", "ink-faint", "control-rule",
+      "verdigris-tint", "plum-tint", "graphite-tint", "citation-tint",
+      "on-citation", "citation-deep",
+    ];
+    for (const name of colourTokens) {
+      expect(tokenPair(name).dark, `--${name} needs a dark value`).toMatch(/^#[0-9a-fA-F]{3,8}$/);
+    }
   });
 
   it("keeps --rule as a decorative token, not a control edge", () => {
     // --rule deliberately does NOT meet 3:1: it draws dividers between rounds
     // and evidence rows, which convey grouping rather than component state.
     // If someone promotes it to a control border, this test fails loudly.
-    const ruleRatio = contrast(T("rule"), T("sheet"));
-    expect(ruleRatio).toBeLessThan(3);
+    for (const theme of THEMES) {
+      const ruleRatio = contrast(T("rule", theme), T("sheet", theme));
+      expect(ruleRatio, `--rule stays decorative (${theme})`).toBeLessThan(3);
 
-    // And a separate token exists precisely so controls do not use --rule.
-    const controlRatio = contrast(T("control-rule"), T("sheet"));
-    expect(controlRatio).toBeGreaterThanOrEqual(3);
-    expect(T("control-rule")).not.toBe(T("rule"));
+      // And a separate token exists precisely so controls do not use --rule.
+      const controlRatio = contrast(T("control-rule", theme), T("sheet", theme));
+      expect(controlRatio, `--control-rule clears 3:1 (${theme})`).toBeGreaterThanOrEqual(3);
+      expect(T("control-rule", theme)).not.toBe(T("rule", theme));
+    }
   });
 
   it("introduces no warning or danger colour", () => {
@@ -130,14 +176,17 @@ describe("WCAG contrast (UI-CivicLens 2.1)", () => {
       expect(declared, `${name} must not be declared`).not.toContain(name);
     }
     // And the palette still uses plum, not a pure red, for contradicts.
-    expect(T("plum")).not.toBe("#FF0000");
+    for (const theme of THEMES) {
+      expect(T("plum", theme)).not.toBe("#FF0000");
+    }
   });
 
   it("keeps the three result hues far apart", () => {
     // Luminance similarity between verdigris and graphite is intentional and
     // harmless: §2.1 forbids relying on colour alone, so each result carries a
     // distinct icon SHAPE and a text label (asserted in pages.test.tsx). What
-    // must hold here is that the hues themselves are unambiguous.
+    // must hold here is that the hues themselves are unambiguous — in both
+    // themes.
     const hue = (hex: string): number => {
       const [r, g, b] = channels(hex).map((v) => v / 255);
       const max = Math.max(r, g, b);
@@ -151,22 +200,24 @@ describe("WCAG contrast (UI-CivicLens 2.1)", () => {
       return (h + 360) % 360;
     };
 
-    const results: Array<[string, string]> = [
-      ["supported", T("verdigris")],
-      ["contradicted", T("plum")],
-      ["inconclusive", T("graphite")],
-    ];
-    expect(new Set(results.map(([, c]) => c)).size).toBe(3);
+    for (const theme of THEMES) {
+      const results: Array<[string, string]> = [
+        ["supported", T("verdigris", theme)],
+        ["contradicted", T("plum", theme)],
+        ["inconclusive", T("graphite", theme)],
+      ];
+      expect(new Set(results.map(([, c]) => c)).size).toBe(3);
 
-    for (const [aName, a] of results) {
-      for (const [bName, b] of results) {
-        if (aName === bName) continue;
-        const d = Math.abs(hue(a) - hue(b));
-        const separation = Math.min(d, 360 - d);
-        expect(
-          separation,
-          `${aName} and ${bName} hues are only ${separation.toFixed(0)}° apart`,
-        ).toBeGreaterThanOrEqual(30);
+      for (const [aName, a] of results) {
+        for (const [bName, b] of results) {
+          if (aName === bName) continue;
+          const d = Math.abs(hue(a) - hue(b));
+          const separation = Math.min(d, 360 - d);
+          expect(
+            separation,
+            `${theme}: ${aName} and ${bName} hues are only ${separation.toFixed(0)}° apart`,
+          ).toBeGreaterThanOrEqual(30);
+        }
       }
     }
   });

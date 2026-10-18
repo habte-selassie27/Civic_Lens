@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { CONTRACT_ADDRESS } from "@/config/contracts";
 import { DOCS, explorerAddressUrl } from "@/config/explorer";
 import { mapError } from "@/domain/copy";
+import { useT } from "@/i18n";
 import { ActionButton } from "./DisabledReason";
 
 /* -------------------------------------------------------------------------- */
@@ -18,30 +19,29 @@ import { ActionButton } from "./DisabledReason";
 /* -------------------------------------------------------------------------- */
 
 export function Colophon() {
+  const t = useT();
   const addressHref = CONTRACT_ADDRESS ? explorerAddressUrl(CONTRACT_ADDRESS) : null;
 
   return (
     <footer className="colophon">
       <div className="colophon__inner">
-        <span>
-          CivicLens reports what published evidence supports. It doesn't judge intent.
-        </span>
+        <span>{t("colophon.tagline")}</span>
         <span className="colophon__spacer">
-          <Link to="/fairness">Safeguards and limitations</Link>
+          <Link to="/fairness">{t("colophon.safeguards")}</Link>
         </span>
         <span>
           <a href={DOCS.home} target="_blank" rel="noopener noreferrer">
-            GenLayer docs
+            {t("colophon.genlayer_docs")}
           </a>
         </span>
         <span>
-          Contract:{" "}
+          {t("colophon.contract")}{" "}
           {addressHref ? (
             <a href={addressHref} target="_blank" rel="noopener noreferrer">
               <code>{CONTRACT_ADDRESS}</code>
             </a>
           ) : (
-            <em>not deployed yet — this build runs on sample data</em>
+            <em>{t("colophon.not_deployed")}</em>
           )}
         </span>
       </div>
@@ -82,21 +82,19 @@ export function Banner({ title, children, tone = "info", actions }: BannerProps)
  * contract — the honest-labeling rule (section 0.8).
  */
 export function SampleBanner({ reason }: { reason: string }) {
+  const t = useT();
   return (
     <Banner
-      title="Sample data"
+      title={t("banner.sample_title")}
       tone="blocking"
       actions={
         <Link className="btn btn--small" to="/demo">
-          See what each scenario tests
+          {t("banner.sample_cta")}
         </Link>
       }
     >
       <p>{reason}</p>
-      <p>
-        Nothing on this screen is a finding about a real organization. Every subject here is
-        fabricated for demonstration.
-      </p>
+      <p>{t("banner.sample_notice")}</p>
     </Banner>
   );
 }
@@ -113,22 +111,24 @@ export interface ErrorViewProps {
 }
 
 /** Maps an error through domain/copy and offers the right next step. */
-export function ErrorView({ error, onRetry, title = "That didn't load." }: ErrorViewProps) {
+export function ErrorView({ error, onRetry, title }: ErrorViewProps) {
+  const t = useT();
   const mapped = mapError(error);
+  const heading = title ?? t("error.default_title");
 
   return (
     <div className="fault" role="alert">
-      {title && <p className="banner__title">{title}</p>}
+      {heading && <p className="banner__title">{heading}</p>}
       <p className="fault__message">{mapped.message}</p>
       {onRetry && (
         <div className="actions" style={{ marginTop: "var(--space-2)" }}>
           <ActionButton variant="quiet" onClick={onRetry}>
-            Try again
+            {t("error.retry")}
           </ActionButton>
         </div>
       )}
       <details className="disclosure">
-        <summary>Details</summary>
+        <summary>{t("error.details")}</summary>
         <p className="fault__detail">{mapped.detail}</p>
       </details>
     </div>
@@ -137,15 +137,16 @@ export function ErrorView({ error, onRetry, title = "That didn't load." }: Error
 
 /** Shown when reads fail because no contract is configured at all. */
 export function ConfigError({ reason }: { reason: string }) {
+  const t = useT();
   return (
     <div className="fault" role="alert">
-      <p className="banner__title">This build has no contract to read.</p>
+      <p className="banner__title">{t("error.no_contract_title")}</p>
       <p className="fault__message">{reason}</p>
       <p className="hint">
-        Copy <code>frontend/.env.example</code> to <code>frontend/.env</code> and set{" "}
-        <code>VITE_CONTRACT_ADDRESS</code>. Until then the app serves the bundled sample scenarios,
-        and every surface says so.
+        <code>frontend/.env.example</code> → <code>frontend/.env</code> →{" "}
+        <code>VITE_CONTRACT_ADDRESS</code>
       </p>
+      <p className="hint">{t("error.no_contract_hint")}</p>
     </div>
   );
 }
