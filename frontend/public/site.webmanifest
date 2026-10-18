@@ -1,11 +1,11 @@
 {
-  "name": "GenLayer Football Market",
-  "short_name": "GenLayer Market",
-  "description": "AI-powered football match predictions on GenLayer blockchain",
+  "name": "CivicLens",
+  "short_name": "CivicLens",
+  "description": "CivicLens reports what published evidence supports about a public commitment. It doesn't judge intent.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#9B6AF6",
+  "background_color": "#EBEFEE",
+  "theme_color": "#1B2430",
   "icons": [
     {
       "src": "/favicon.svg",
