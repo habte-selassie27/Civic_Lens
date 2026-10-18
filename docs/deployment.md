@@ -141,6 +141,54 @@ frontend    vitest run                      -> 164 passed
 frontend    vite build                      -> ok
 ```
 
+## Hosting the app (Vercel)
+
+The app is a single-page app: `BrowserRouter` renders `/activity`, `/stats`,
+`/commitments/1` and the rest on the client, so no such file exists on disk.
+A static host that only serves files answers a direct request for one of those
+paths with its own 404 — the app never loads, so client-side routing cannot
+take over. Every deep link is affected; the root path still works, which is
+what makes it look like "only some pages are broken".
+
+The fix is a catch-all rewrite to the shell, and it lives in two files on
+purpose:
+
+| File | Applies when the Vercel project's **Root Directory** is |
+|---|---|
+| `vercel.json` (repo root) | the repository root — builds via the workspace `npm run build`, output `frontend/dist` |
+| `frontend/vercel.json` | `frontend/` — builds the Vite project directly, output `dist` |
+
+Vercel reads only the config at the project's Root Directory, so exactly one of
+these is in force and the other is inert. Both are kept because the setting
+lives in the dashboard rather than in the repository, and a fresh clone or a
+re-import can land on either. Check **Project → Settings → Build and
+Development → Root Directory** to see which one is active; both produce the
+same routing behaviour.
+
+`"source": "/(.*)"` applies the rewrite only when no static file matches the
+request, so existing assets, the favicon, and the manifest are still served
+from disk (verified against the deployed preview: `/assets/index-*.js` came
+back as JavaScript, not HTML). One consequence worth knowing: a request for an
+asset that does *not* exist also falls through to the shell and returns
+`200 text/html` instead of `404`. That is the ordinary SPA trade-off, and it is
+why a missing file can look like a blank page rather than a host-level 404 —
+the app's own asset URLs are content-hashed and always exist, so this only
+surfaces when a path is mistyped or an old hash is still cached somewhere.
+
+Verified before promoting: `npm run build` at the repo root exits 0 and produces
+`frontend/dist/index.html`; a local preview server returns `200` with the app
+shell for `GET /activity`; and on a Vercel preview deployment of this config,
+`/activity`, `/stats`, `/fairness` and `/commitments/1` all return the shell
+while `/assets/index-*.js` is still served as JavaScript. The routing failure
+was on the host, not in the app.
+
+Not fixed by this file, and not a defect in CivicLens: the browser console in
+that capture also shows `MetaMask encountered an error setting the global
+Ethereum provider` and a `MaxListenersExceededWarning` from `contentscript.js`.
+Both originate in wallet extensions colliding over `window.ethereum`, not in
+application code. They can stop the wallet from connecting, which is why wallet
+work should be checked in a clean browser profile with a single wallet enabled.
+
 ## Superseded deployments (kept for audit honesty)
 
 | Address | Deploy tx | Why superseded |

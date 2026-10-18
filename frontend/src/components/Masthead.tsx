@@ -61,9 +61,6 @@ export function Masthead() {
           {/* Appearance before the navigation: it changes how the whole row
               is read, so it belongs on the reading side of the hairline. */}
           <ThemeToggle />
-          {/* Language sits beside the theme control as a per-reader preference. */}
-          <LanguageButton />
-
           <nav className="masthead__nav" aria-label={t("nav.main")}>
             {NAV.map((item) => (
               <NavLink key={item.to} to={item.to}>
@@ -86,6 +83,14 @@ export function Masthead() {
               <span className="sr-only">{sourceLabel}</span>
               {network}
             </span>
+          </div>
+
+          {/* Language sits beside the wallet group as a per-reader preference,
+              separated from the wallet by a hairline so the row reads as: nav,
+              wallet + network, language. */}
+          <div className="masthead__lang">
+            <span className="masthead__lang__rule" aria-hidden="true" />
+            <LanguageButton />
           </div>
         </div>
       </div>

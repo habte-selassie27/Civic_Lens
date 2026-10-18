@@ -1,10 +1,9 @@
-/**
- * Base + component styles for CivicLens (UI-CivicLens sections 2, 5, 10).
- *
+/** Base + component styles for CivicLens (UI-CivicLens sections 2, 5, 10).
+
  * Structure rules encoded here:
  * - Quoted material (commitment text, excerpts, criterion wording) is a
  *   DOCUMENT: --sheet surface, left rule in --rule, serif type. That grammar
- *   always means "this is someone else's words".
+ *   always means \"this is someone else's words\".
  * - Interface chrome is flat and quiet. Rules and borders carry structure.
  * - Color is never the only signal: every result has a shape AND a label.
  */
@@ -26,7 +25,6 @@ body {
   font-family: var(--font-interface);
   font-size: var(--t-16);
   line-height: 1.5;
-  /* The page body never scrolls sideways (section 10). */
   overflow-wrap: break-word;
 }
 
@@ -42,15 +40,9 @@ h4 {
   text-wrap: balance;
 }
 
-h1 {
-  font-size: var(--t-28);
-}
-h2 {
-  font-size: var(--t-22);
-}
-h3 {
-  font-size: var(--t-18);
-}
+h1 { font-size: var(--t-28); }
+h2 { font-size: var(--t-22); }
+h3 { font-size: var(--t-18); }
 
 p {
   margin: 0 0 var(--space-3);
@@ -84,10 +76,7 @@ button {
  * common cause of a horizontally scrolling page at 360px. A single 42-char hex
  * string has no break opportunity, so it must be told it may break anywhere.
  */
-code,
-kbd,
-samp,
-pre {
+code, kbd, samp, pre {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 0.92em;
   overflow-wrap: anywhere;
@@ -95,10 +84,7 @@ pre {
 }
 
 /* Tabular figures for every number (section 2.2). */
-.num,
-time,
-.ledger__figure,
-td.num {
+.num, time, .ledger__figure, td.num {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
 }
@@ -107,7 +93,7 @@ td.num {
 .sr-only {
   /*
    * Visually hidden but announced by screen readers.
-
+   *
    * `position: absolute` alone is not enough. Without an explicit inset the
    * box anchors at its STATIC position — which, inside a horizontally scrolled
    * data table, is far off to the right. `white-space: nowrap` then lets the
@@ -167,15 +153,9 @@ td.num {
   padding: var(--space-5) var(--space-4) var(--space-7);
 }
 
-.stack > * + * {
-  margin-top: var(--space-4);
-}
+.stack > * + * { margin-top: var(--space-4); }
+.stack-lg > * + * { margin-top: var(--space-6); }
 
-.stack-lg > * + * {
-  margin-top: var(--space-6);
-}
-
-/* Persistent chrome (section 3) */
 .masthead {
   position: sticky;
   top: 0;
@@ -185,56 +165,98 @@ td.num {
   border-bottom: 1px solid var(--rule);
 }
 
-/*
- * One row, three groups: [wordmark + navigation] · [source, preferences,
- * account]. `lead` grows so `tools` sits hard against the right edge; the
- * groups never trade places when the bar wraps at narrow widths.
- */
+/* One full row at desktop widths: wordmark + appearance + navigation +
+   disconnect + network chip + language. */
 .masthead__inner {
-  /* The header carries more than the reading column now — navigation,
-     language, account and network chrome all sit on one line — so it gets a
-     wider measure than the 1120px content column below. */
   max-width: 1280px;
   margin: 0 auto;
   padding: var(--space-2) var(--space-4);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-3);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .masthead__lead {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: var(--space-2);
   flex: 1 1 auto;
   min-width: 0;
 }
 
-/* The hierarchy: navigation reads as one block on the left, account chrome as
-   another on the right, divided by a hairline. Without the rule the controls
-   float — they have no visual tie to each other and read as loose items. */
-.masthead__tools {
+/* Core navigation. Compact by design — the bar has to hold the brand, links,
+   and controls on one line at 1280px, so padding is removed from the links
+   by default. */
+.masthead__nav {
   display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.masthead__nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0;
+  font-size: var(--t-14);
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-radius: var(--radius-control);
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.masthead__nav a:hover {
+  color: var(--record-ink);
+  background: var(--sheet);
+}
+
+.masthead__nav a[aria-current="page"] {
+  color: var(--record-ink);
+  background: var(--sheet);
+  border-color: var(--rule);
+  font-weight: 600;
+}
+
+/* Account + network chip + language: one unit per desktop row segment. */
+.masthead__chrome {
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   flex: 0 0 auto;
-  padding-left: var(--space-3);
-  border-left: 1px solid var(--rule);
+  white-space: nowrap;
+}
+
+.masthead__lang {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+}
+
+.masthead__lang__rule {
+  width: 1px;
+  align-self: stretch;
+  min-height: 20px;
+  background: var(--rule);
+}
+
+.masthead__lang__inner {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .masthead__notice {
   padding: 0 var(--space-4) var(--space-3);
 }
 
-/* Account + network chip: one unit, so a narrower window drops them onto a
-   second line together instead of orphaning the network chip alone. */
-.masthead__chrome {
+.masthead__lang__inner {
   display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  flex: none;
 }
 
 .wordmark {
@@ -255,72 +277,15 @@ td.num {
   transform: translateY(-4px);
 }
 
-/*
- * Core navigation. Compact by design — the bar has to hold the brand, three
- * links, and four controls on one line at 1120px, so the padding that made
- * each link a wide button is the first thing to give.
- */
-.masthead__nav {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  flex-wrap: wrap;
-  min-width: 0;
-}
-
-.masthead__nav a {
-  display: inline-flex;
-  align-items: center;
-  min-height: var(--tap);
-  /* No horizontal padding: the nav gap already separates the links, and the
-     full row (nav + account + network chip) has to fit on one line. */
-  padding: 0;
-  font-size: var(--t-14);
-  color: var(--ink-muted);
-  text-decoration: none;
-  border-radius: var(--radius-control);
-  border: 1px solid transparent;
-}
-
-.masthead__nav a:hover {
-  color: var(--record-ink);
-  background: var(--sheet);
-}
-
-.masthead__nav a[aria-current="page"] {
-  color: var(--record-ink);
-  background: var(--sheet);
-  border-color: var(--rule);
-  font-weight: 600;
-}
-
-/*
- * Links get their tap padding back only when there is room for the whole row
- * on one line. Below 1280px the padding is what makes the network chip wrap
- * onto a second line, so the links tighten to the gap instead of pushing the
- * account chrome off the row. The gap between links is the same value, so the
- * rhythm stays even either way.
- */
-@media (min-width: 1280px) {
-  .masthead__nav a {
-    padding: 0 var(--space-1);
-  }
-}
-
-/* Appearance control: icon plus the value in words. Bordered to match the
-   other header controls, so the row reads as one family of controls rather
-   than a loose label beside two buttons. */
+/* Appearance control: icon plus the value in words. */
 .theme-toggle {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1);
-  /* Same box height as the header's other controls (.btn--small, 32px). */
   min-height: 32px;
   padding: 0 var(--space-2);
   font: inherit;
   font-size: var(--t-14);
-  /* Same quiet-button treatment as the language and account controls, so the
-     three boxed controls in the row read as one family of interactive things. */
   color: var(--citation);
   background: transparent;
   border: 1px solid var(--rule);
@@ -353,11 +318,7 @@ td.num {
   background: var(--rule);
 }
 
-/*
- * Deliberately quieter than .btn--quiet: Disconnect is the least-used control
- * in the header and must not compete with the address next to it, but it still
- * has to be a real target and clearly a button.
- */
+/* Deliberately quieter than .btn--quiet. */
 .account__action {
   display: inline-flex;
   align-items: center;
@@ -394,16 +355,88 @@ td.num {
   color: var(--ink-muted);
 }
 
-.colophon__inner a {
-  color: var(--citation);
-}
+.colophon__inner a { color: var(--citation); }
+.colophon__spacer { margin-left: auto; }
 
-.colophon__spacer {
-  margin-left: auto;
+/* Desktop-only overrides: the one-line header. */
+@media (min-width: 1280px) {
+  .masthead__inner {
+    flex-wrap: nowrap;
+  }
+
+  .masthead__lead {
+    flex-wrap: nowrap;
+    flex-basis: auto;
+    justify-content: flex-start;
+  }
+
+  .masthead__nav {
+    flex-wrap: nowrap;
+  }
+
+  .masthead__nav a {
+    padding: 0 var(--space-1);
+    white-space: nowrap;
+  }
+
+  .masthead__chrome {
+    margin-right: var(--space-3);
+  }
+
+  .masthead__lang {
+    margin-left: auto;
+  }
+
+  .masthead__lang__rule {
+    display: block;
+  }
+
+  .masthead__lang__inner {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .masthead__lang a {
+    white-space: nowrap;
+  }
+
+  .masthead__lang__rule {
+    display: block;
+  }
+
+  .masthead__chrome {
+    margin-right: var(--space-3);
+  }
+
+  .masthead__lang {
+    margin-left: auto;
+  }
+
+  .masthead__nav a {
+    padding: 0 var(--space-1);
+    white-space: nowrap;
+  }
+
+  .masthead__lead {
+    flex-wrap: nowrap;
+    flex-basis: auto;
+    justify-content: flex-start;
+  }
+
+  .masthead__nav {
+    flex-wrap: nowrap;
+  }
+
+  .masthead__inner {
+    flex-wrap: nowrap;
+    min-width: 0;
+    align-items: center;
+  }
 }
 
 /* ==========================================================================
-   Document grammar — "this is someone else's words"
+   Document grammar — \"this is someone else's words\"
    ========================================================================== */
 
 .sheet {
@@ -418,9 +451,7 @@ td.num {
   max-width: var(--measure);
 }
 
-.sheet--commitment {
-  font-size: var(--t-18);
-}
+.sheet--commitment { font-size: var(--t-18); }
 
 .sheet__label {
   display: block;
@@ -451,10 +482,7 @@ td.num {
   padding: var(--space-4);
 }
 
-.panel--flush {
-  padding: 0;
-  overflow: hidden;
-}
+.panel--flush { padding: 0; overflow: hidden; }
 
 .panel__head {
   display: flex;
@@ -473,9 +501,7 @@ td.num {
   color: var(--ink-muted);
 }
 
-.panel__body {
-  padding: var(--space-4);
-}
+.panel__body { padding: var(--space-4); }
 
 .section-title {
   font-size: var(--t-14);
@@ -502,10 +528,7 @@ td.num {
    Reading preferences (dark / light / system, language)
    ==========================================================================
    Both are chrome, not content: compact, quiet, and never the loudest thing
-   on a page. The language menu styles live here; the appearance control is
-   styled with the masthead it sits in, since it is a plain button rather than
-   a form control. */
-
+   on a page. */
 .select--compact {
   min-height: 30px;
   padding: 0 var(--space-2);
@@ -516,9 +539,7 @@ td.num {
   color: var(--record-ink);
 }
 
-.language {
-  position: relative;
-}
+.language { position: relative; }
 
 .language__trigger {
   display: inline-flex;
@@ -539,11 +560,7 @@ td.num {
   box-shadow: 0 6px 18px rgb(0 0 0 / 12%);
 }
 
-.language__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
+.language__list { list-style: none; margin: 0; padding: 0; }
 
 .language__item {
   display: flex;
@@ -559,9 +576,7 @@ td.num {
   cursor: pointer;
 }
 
-.language__item:hover {
-  background: var(--citation-tint);
-}
+.language__item:hover { background: var(--citation-tint); }
 
 .language__item[aria-checked="true"] {
   /* Current language: weight AND a rule — never colour alone (section 10). */
@@ -569,14 +584,8 @@ td.num {
   box-shadow: inset 2px 0 0 var(--citation);
 }
 
-.language__endonym {
-  color: var(--record-ink);
-}
-
-.language__name {
-  font-size: var(--t-14);
-  color: var(--ink-faint);
-}
+.language__endonym { color: var(--record-ink); }
+.language__name { font-size: var(--t-14); color: var(--ink-faint); }
 
 .language__note {
   margin: var(--space-2) 0 0;
@@ -588,17 +597,10 @@ td.num {
 }
 
 @media (max-width: 640px) {
-  /* Narrow screens: open from the left edge so the menu stays on screen. */
-  .language__menu {
-    right: auto;
-    left: 0;
-    min-width: 12rem;
-  }
-
+  .language__menu { right: auto; left: 0; min-width: 12rem; }
 }
 
 @media print {
-  /* Chrome a reader does not need on paper: preferences, navigation, account. */
   .language,
   .theme-toggle,
   .account {
@@ -623,8 +625,6 @@ td.num {
   border-radius: var(--radius-control);
   border: 1px solid var(--citation);
   background: var(--citation);
-  /* Flips with the theme: white on the light theme's dark blue, near-black on
-     the dark theme's light blue. Tokenised so neither is hardcoded here. */
   color: var(--on-citation);
   cursor: pointer;
   transition: background var(--fast) var(--ease), border-color var(--fast) var(--ease);
@@ -683,28 +683,10 @@ td.num {
   margin-bottom: var(--space-4);
 }
 
-.field__label {
-  font-size: var(--t-14);
-  font-weight: 600;
-  color: var(--record-ink);
-}
-
-.field__req {
-  color: var(--plum);
-  font-weight: 700;
-}
-
-.field__hint {
-  font-size: var(--t-14);
-  color: var(--ink-faint);
-  margin: 0;
-}
-
-.field__error {
-  font-size: var(--t-14);
-  color: var(--plum);
-  margin: 0;
-}
+.field__label { font-size: var(--t-14); font-weight: 600; color: var(--record-ink); }
+.field__req { color: var(--plum); font-weight: 700; }
+.field__hint { font-size: var(--t-14); color: var(--ink-faint); margin: 0; }
+.field__error { font-size: var(--t-14); color: var(--plum); margin: 0; }
 
 .input,
 .textarea,
@@ -716,27 +698,15 @@ td.num {
   font-size: var(--t-16);
   color: var(--record-ink);
   background: var(--sheet);
-  /* --control-rule, not --rule: WCAG 1.4.11 wants 3:1 on a control edge. */
   border: 1px solid var(--control-rule);
   border-radius: var(--radius-control);
 }
 
-.textarea {
-  min-height: 6rem;
-  resize: vertical;
-  line-height: 1.55;
-}
-
+.textarea { min-height: 6rem; resize: vertical; line-height: 1.55; }
 .input::placeholder,
-.textarea::placeholder {
-  color: var(--ink-faint);
-}
+.textarea::placeholder { color: var(--ink-faint); }
 
-.radio-row {
-  display: flex;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
+.radio-row { display: flex; gap: var(--space-4); flex-wrap: wrap; }
 
 .radio-row label {
   display: inline-flex;
@@ -774,20 +744,16 @@ td.num {
   flex: none;
 }
 
-/* supported: check mark inside a circle — verdigris */
 .chip--supported {
   color: var(--verdigris);
   background: var(--verdigris-tint);
 }
 
-/* contradicted: horizontal bar inside a diamond — plum */
 .chip--contradicted {
   color: var(--plum);
   background: var(--plum-tint);
 }
 
-/* inconclusive: DASHED circle with a dash inside — graphite.
-   The dashed outline is the point: "no determination", not "bad". */
 .chip--inconclusive,
 .chip--pending {
   color: var(--graphite);
@@ -795,10 +761,7 @@ td.num {
   border-style: dashed;
 }
 
-/* pending: hourglass — graphite */
-.chip--pending .chip__mark {
-  opacity: 0.85;
-}
+.chip--pending .chip__mark { opacity: 0.85; }
 
 .chip--finality-accepted {
   color: var(--citation);
@@ -828,14 +791,12 @@ td.num {
   white-space: nowrap;
 }
 
-/* sample = perforated left edge (a tag torn from a file) */
 .badge--sample {
   border-style: dashed;
   border-color: var(--graphite);
   color: var(--graphite);
 }
 
-/* live = solid, double-ruled (a filed, stamped document) */
 .badge--live {
   border-color: var(--verdigris);
   color: var(--verdigris);
@@ -879,19 +840,14 @@ td.num {
    Criterion Ledger (5.1) — the one memorable element
    ========================================================================== */
 
-.ledger {
-  display: flex;
-  flex-direction: column;
-}
+.ledger { display: flex; flex-direction: column; }
 
 .ledger__row {
   border-bottom: 1px solid var(--rule);
   padding: var(--space-4);
 }
 
-.ledger__row:last-child {
-  border-bottom: 0;
-}
+.ledger__row:last-child { border-bottom: 0; }
 
 .ledger__head {
   display: flex;
@@ -909,10 +865,7 @@ td.num {
   flex: none;
 }
 
-.ledger__wording {
-  flex: 1;
-  min-width: 0;
-}
+.ledger__wording { flex: 1; min-width: 0; }
 
 .ledger__meta {
   display: flex;
@@ -937,10 +890,7 @@ td.num {
   max-width: var(--measure);
 }
 
-.ledger__chip {
-  flex: none;
-  padding-top: 2px;
-}
+.ledger__chip { flex: none; padding-top: 2px; }
 
 .ledger__body {
   margin-top: var(--space-3);
@@ -950,12 +900,7 @@ td.num {
   gap: var(--space-3);
 }
 
-/* The author `display: flex` above outranks the UA rule for [hidden], so
-   without this rule the "Show detail" toggle would flip its label and ARIA
-   state while the body stayed on screen. Guarded by contrast.test.ts. */
-.ledger__body[hidden] {
-  display: none;
-}
+.ledger__body[hidden] { display: none; }
 
 .ledger__sub {
   font-size: var(--t-14);
@@ -965,10 +910,7 @@ td.num {
   margin: 0 0 var(--space-2);
 }
 
-.ledger__toggle {
-  margin-top: var(--space-2);
-  min-height: 32px;
-}
+.ledger__toggle { margin-top: var(--space-2); min-height: 32px; }
 
 /* Evidence item inside the ledger */
 .ev {
@@ -979,19 +921,9 @@ td.num {
   border-top: 1px solid var(--rule);
 }
 
-.ev:first-of-type {
-  border-top: 0;
-}
-
-.ev__body {
-  flex: 1;
-  min-width: 0;
-}
-
-.ev__title {
-  font-size: var(--t-16);
-  margin: 0 0 var(--space-1);
-}
+.ev:first-of-type { border-top: 0; }
+.ev__body { flex: 1; min-width: 0; }
+.ev__title { font-size: var(--t-16); margin: 0 0 var(--space-1); }
 
 .ev__meta {
   display: flex;
@@ -1002,9 +934,7 @@ td.num {
   margin: 0;
 }
 
-.ev__excerpt {
-  margin-top: var(--space-2);
-}
+.ev__excerpt { margin-top: var(--space-2); }
 
 /* Numeric criteria: figure, unit, threshold, verdict in plain words */
 .figure {
@@ -1027,17 +957,8 @@ td.num {
   color: var(--record-ink);
 }
 
-.figure__cell {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.figure__key {
-  font-size: var(--t-14);
-  color: var(--ink-faint);
-}
-
+.figure__cell { display: flex; flex-direction: column; gap: 2px; }
+.figure__key { font-size: var(--t-14); color: var(--ink-faint); }
 .figure__plain {
   font-family: var(--font-interface);
   font-size: var(--t-16);
@@ -1054,19 +975,9 @@ td.num {
   color: var(--ink-muted);
 }
 
-.resolution p {
-  margin: 0 0 var(--space-2);
-  max-width: var(--measure);
-}
-
-.resolution p:last-child {
-  margin-bottom: 0;
-}
-
-.resolution__key {
-  font-weight: 700;
-  color: var(--graphite);
-}
+.resolution p { margin: 0 0 var(--space-2); max-width: var(--measure); }
+.resolution p:last-child { margin-bottom: 0; }
+.resolution__key { font-weight: 700; color: var(--graphite); }
 
 /* ==========================================================================
    Commitment header, outcome panel, audit
@@ -1085,9 +996,7 @@ td.num {
   flex-wrap: wrap;
 }
 
-.commitment-head__subject {
-  font-size: var(--t-28);
-}
+.commitment-head__subject { font-size: var(--t-28); }
 
 .split {
   display: grid;
@@ -1140,9 +1049,7 @@ td.num {
   border-radius: var(--radius-chip);
 }
 
-.attribution p {
-  margin: 0;
-}
+.attribution p { margin: 0; }
 
 .audit {
   display: grid;
@@ -1152,17 +1059,10 @@ td.num {
   margin: 0;
 }
 
-.audit dt {
-  color: var(--ink-faint);
-}
+.audit dt { color: var(--ink-faint); }
+.audit dd { margin: 0; color: var(--record-ink); overflow-wrap: anywhere; }
 
-.audit dd {
-  margin: 0;
-  color: var(--record-ink);
-  overflow-wrap: anywhere;
-}
-
-/* Round timeline (5.9) — numbering is appropriate HERE because it is a sequence */
+/* Round timeline (5.9) */
 .timeline {
   list-style: none;
   margin: 0;
@@ -1235,9 +1135,7 @@ details.disclosure > summary {
   align-items: center;
 }
 
-details.disclosure > summary:hover {
-  color: var(--record-ink);
-}
+details.disclosure > summary:hover { color: var(--record-ink); }
 
 /* ==========================================================================
    Tables (browse list)
@@ -1264,20 +1162,11 @@ details.disclosure > summary:hover {
   vertical-align: top;
 }
 
-.table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.table a {
-  font-weight: 600;
-}
+.table tbody tr:last-child td { border-bottom: 0; }
+.table a { font-weight: 600; }
 
 .table-wrap {
   overflow-x: auto;
-  /* A flex/grid child defaults to min-width:auto, so it refuses to shrink below
-     its content and `overflow-x: auto` never engages — the table then pushes
-     the whole page sideways at 360px instead of scrolling inside its own box.
-     min-width:0 is what lets the wrapper actually constrain the table. */
   min-width: 0;
   max-width: 100%;
 }
@@ -1307,11 +1196,7 @@ details.disclosure > summary:hover {
   color: var(--record-ink);
 }
 
-.tx__detail {
-  color: var(--ink-muted);
-  margin: 0;
-  max-width: var(--measure);
-}
+.tx__detail { color: var(--ink-muted); margin: 0; max-width: var(--measure); }
 
 .tx__row {
   display: flex;
@@ -1330,17 +1215,9 @@ details.disclosure > summary:hover {
   flex: none;
 }
 
-@keyframes tx-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+@keyframes tx-spin { to { transform: rotate(360deg); } }
 
-@media (prefers-reduced-motion: reduce) {
-  .spinner {
-    animation-duration: 2.4s;
-  }
-}
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.4s; } }
 
 /* ==========================================================================
    Banners, errors, empty states
@@ -1363,20 +1240,10 @@ details.disclosure > summary:hover {
   background: var(--plum-tint);
 }
 
-.banner__title {
-  font-weight: 700;
-  color: var(--record-ink);
-}
+.banner__title { font-weight: 700; color: var(--record-ink); }
 
-.banner p {
-  margin: 0 0 var(--space-2);
-  color: var(--ink-muted);
-  max-width: var(--measure);
-}
-
-.banner p:last-child {
-  margin-bottom: 0;
-}
+.banner p { margin: 0 0 var(--space-2); color: var(--ink-muted); max-width: var(--measure); }
+.banner p:last-child { margin-bottom: 0; }
 
 .empty {
   padding: var(--space-6) var(--space-4);
@@ -1387,11 +1254,7 @@ details.disclosure > summary:hover {
   background: var(--sheet);
 }
 
-.empty__title {
-  font-weight: 600;
-  color: var(--record-ink);
-  margin: 0 0 var(--space-2);
-}
+.empty__title { font-weight: 600; color: var(--record-ink); margin: 0 0 var(--space-2); }
 
 /* Error mapping (7.1): says what happened and what to do. No apologies. */
 .fault {
@@ -1402,10 +1265,7 @@ details.disclosure > summary:hover {
   background: var(--sheet);
 }
 
-.fault__message {
-  margin: 0 0 var(--space-2);
-  color: var(--record-ink);
-}
+.fault__message { margin: 0 0 var(--space-2); color: var(--record-ink); }
 
 .fault__detail {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -1427,17 +1287,9 @@ details.disclosure > summary:hover {
   min-height: 1rem;
 }
 
-@keyframes skeleton-sweep {
-  to {
-    background-position: -200% 0;
-  }
-}
+@keyframes skeleton-sweep { to { background-position: -200% 0; } }
 
-@media (prefers-reduced-motion: reduce) {
-  .skeleton {
-    animation: none;
-  }
-}
+@media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
 
 /* ==========================================================================
    CopyField (5.11)
@@ -1486,9 +1338,7 @@ details.disclosure > summary:hover {
   background: var(--microfiche);
 }
 
-.criterion-card + .criterion-card {
-  margin-top: var(--space-3);
-}
+.criterion-card + .criterion-card { margin-top: var(--space-3); }
 
 .criterion-card__head {
   display: flex;
@@ -1546,9 +1396,7 @@ details.disclosure > summary:hover {
   transition: border-color var(--fast) var(--ease);
 }
 
-.scenario:hover {
-  border-color: var(--citation);
-}
+.scenario:hover { border-color: var(--citation); }
 
 .scenario__head {
   padding: var(--space-3) var(--space-4);
@@ -1560,21 +1408,10 @@ details.disclosure > summary:hover {
   flex-wrap: wrap;
 }
 
-.scenario__name {
-  font-weight: 600;
-  font-size: var(--t-16);
-}
+.scenario__name { font-weight: 600; font-size: var(--t-16); }
 
-.scenario__body {
-  padding: 0 var(--space-4) var(--space-4);
-  flex: 1;
-}
-
-.scenario__tests {
-  font-size: var(--t-14);
-  color: var(--ink-muted);
-  margin: 0 0 var(--space-3);
-}
+.scenario__body { padding: 0 var(--space-4) var(--space-4); flex: 1; }
+.scenario__tests { font-size: var(--t-14); color: var(--ink-muted); margin: 0 0 var(--space-3); }
 
 .filters {
   display: flex;
@@ -1586,19 +1423,14 @@ details.disclosure > summary:hover {
   border-bottom: 1px solid var(--rule);
 }
 
-.filters .field {
-  margin-bottom: 0;
-  min-width: 12rem;
-}
+.filters .field { margin-bottom: 0; min-width: 12rem; }
 
 /* ==========================================================================
    Responsive (section 10: must work at 360px)
    ========================================================================== */
 
 @media (max-width: 860px) {
-  .split {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  .split { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 560px) {
@@ -1609,30 +1441,19 @@ details.disclosure > summary:hover {
 
   .masthead__inner {
     padding: var(--space-2) var(--space-3);
-  }
-
-  /*
-   * Narrow screens get three tidy rows rather than one crowded one: identity,
-   * then navigation, then controls. `space-between` matters — when the nav
-   * wraps onto its own line it returns to the left edge instead of orphaning
-   * the wordmark alone on a full row.
-   */
-  .masthead__inner {
-    padding: var(--space-2) var(--space-3);
     gap: var(--space-2);
+    flex-wrap: wrap;
+    align-items: center;
   }
 
   .masthead__lead {
     flex-basis: 100%;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
   }
 
-  .masthead__tools {
-    flex-basis: 100%;
-    /* No divider on its own row: the hairline separated navigation from
-       controls, and there is nothing to separate it from any more. */
-    border-left: 0;
-    padding-left: 0;
+  .masthead__nav {
     flex-wrap: wrap;
   }
 
@@ -1640,51 +1461,65 @@ details.disclosure > summary:hover {
     padding: 0 var(--space-2);
   }
 
+  .masthead__chrome {
+    flex-basis: 100%;
+    justify-content: center;
+  }
+
+  .masthead__lang {
+    flex-basis: 100%;
+    justify-content: center;
+  }
+
+  .masthead__lang__rule {
+    display: none;
+  }
+
+  .masthead__lang__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .masthead__lang a {
+    white-space: nowrap;
+  }
+
+  .masthead__connect {
+    display: none;
+  }
+
+  .masthead__connect__rule {
+    display: none;
+  }
+
   .shell__main {
     padding: var(--space-4) var(--space-3) var(--space-6);
   }
 
-  .commitment-head__subject {
-    font-size: var(--t-22);
-  }
+  .commitment-head__subject { font-size: var(--t-22); }
 
-  /* The Ledger stacks: the result chip moves UNDER the wording. */
   .ledger__head {
     flex-direction: column;
     gap: var(--space-2);
   }
 
-  .ledger__chip {
-    order: 3;
-    padding-top: 0;
-  }
-
-  .ledger__body {
-    padding-left: 0;
-  }
-
-  .ledger__index {
-    display: none;
-  }
+  .ledger__chip { order: 3; padding-top: 0; }
+  .ledger__body { padding-left: 0; }
+  .ledger__index { display: none; }
 
   .audit {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-1);
   }
 
-  .audit dd {
-    margin-bottom: var(--space-2);
-  }
+  .audit dd { margin-bottom: var(--space-2); }
 
   .panel__head,
   .panel__body,
-  .ledger__row {
-    padding: var(--space-3);
-  }
+  .ledger__row { padding: var(--space-3); }
 
-  .colophon__spacer {
-    margin-left: 0;
-  }
+  .colophon__spacer { margin-left: 0; }
 }
 
 /* ==========================================================================
@@ -1693,17 +1528,12 @@ details.disclosure > summary:hover {
 
 @media print {
   :root {
-    /* Paper is light. Pinning the scheme also makes every light-dark() token
-       resolve to its light value, so a dark-themed screen prints legibly. */
     color-scheme: only light;
     --microfiche: #ffffff;
     --sheet: #ffffff;
   }
 
-  body {
-    background: #fff;
-    font-size: 11pt;
-  }
+  body { background: #fff; font-size: 11pt; }
 
   .masthead,
   .colophon,
@@ -1716,10 +1546,7 @@ details.disclosure > summary:hover {
     display: none !important;
   }
 
-  .shell__main {
-    max-width: none;
-    padding: 0;
-  }
+  .shell__main { max-width: none; padding: 0; }
 
   .panel,
   .ledger__row,
@@ -1728,10 +1555,7 @@ details.disclosure > summary:hover {
     break-inside: avoid;
   }
 
-  /* Print every ledger row, whatever the on-screen expansion state. */
-  .ledger__row[hidden] {
-    display: block !important;
-  }
+  .ledger__row[hidden] { display: block !important; }
 
   a[href^="http"]::after {
     content: " (" attr(href) ")";
@@ -1739,8 +1563,9 @@ details.disclosure > summary:hover {
     color: #555;
   }
 }
+
 /* A source the review could not read. Distinct from a neutral `.tag`, and NOT
-   a warning colour: "not read" is a fact about the network, not a fault of
+   a warning colour: \"not read\" is a fact about the network, not a fault of
    anyone. It is what the contract recorded, shown as recorded. */
 .tag--unread {
   border-style: dashed;
@@ -1749,18 +1574,14 @@ details.disclosure > summary:hover {
   background: var(--graphite-tint);
 }
 
-/* Provenance of a bundled demo record. Replays of real on-chain rounds and
-   authored illustrations sit in the same list, so the label that separates them
-   has to be visible before the reader looks at any outcome. Deliberately
-   neutral: neither kind is styled as more authoritative than the other. */
+/* Provenance of a bundled demo record. */
 .tag--provenance {
   border-color: var(--graphite);
   color: var(--graphite);
   background: var(--graphite-tint);
 }
 
-/* A sample reference for a document that does not exist. Shown as monospace
-   text, never as a link, so it cannot be mistaken for a citation someone read. */
+/* A sample reference for a document that does not exist. */
 .source-ref {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: var(--t-14);
@@ -1768,14 +1589,8 @@ details.disclosure > summary:hover {
   word-break: break-all;
 }
 
-/* ---------------------------------------------------------------------------
- * Evaluation-period strip (commitment page). Three segments; the current one
- * carries aria-current="step" and a text label, so the state is never conveyed
- * by colour alone.
- * ------------------------------------------------------------------------ */
-.window-strip {
-  margin-top: var(--space-3);
-}
+/* Evaluation-period strip (commitment page). */
+.window-strip { margin-top: var(--space-3); }
 
 .window-strip__track {
   display: flex;
@@ -1799,9 +1614,7 @@ details.disclosure > summary:hover {
   font-weight: 600;
 }
 
-/* Registration hints (criteria lint) — reading aids for the registrant.
-   Stated with a rule and tint, never styled as an error: nothing here blocks
-   submission. */
+/* Registration hints (criteria lint). */
 .lint {
   margin-top: var(--space-3);
   padding: var(--space-2) var(--space-3);
@@ -1821,4 +1634,42 @@ details.disclosure > summary:hover {
   padding-left: 1.1rem;
   font-size: var(--t-14);
   color: var(--ink-muted);
+}
+
+/* ==========================================================================
+   Desktop-only overrides: the one-line header.
+   ========================================================================== */
+
+@media (min-width: 1280px) {
+  .masthead__inner {
+    flex-wrap: nowrap;
+    align-items: center;
+  }
+
+  .masthead__lead {
+    flex-wrap: nowrap;
+    flex-basis: auto;
+    justify-content: flex-start;
+  }
+
+  .masthead__nav {
+    flex-wrap: nowrap;
+  }
+
+  .masthead__nav a {
+    padding: 0 var(--space-1);
+    white-space: nowrap;
+  }
+
+  .masthead__chrome {
+    margin-right: var(--space-3);
+  }
+
+  .masthead__lang {
+    margin-left: auto;
+  }
+
+  .masthead__lang__rule {
+    display: block;
+  }
 }

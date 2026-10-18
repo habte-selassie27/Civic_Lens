@@ -17,6 +17,9 @@ node_modules
 /frontend/dist/
 *.compiled.js
 
+# Vercel project linkage — machine-specific (project id, org id), never shared
+.vercel
+
 # gltest wipes and recreates this at every session start — scratch only,
 # never the committed `artifacts/` evidence pack (see gltest.config.yaml)
 .gltest-artifacts/
