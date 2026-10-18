@@ -24,7 +24,7 @@ import {
   writeStoredPreference,
 } from "@/domain/theme";
 import { ThemeProvider } from "@/theme/ThemeProvider";
-import { ThemeSelect } from "@/components/ThemeSelect";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 /** A Storage-shaped stub: getItem/setItem only, and it can be made to throw. */
 function fakeStorage(initial: Record<string, string> | null = null, throws = false) {
@@ -100,29 +100,58 @@ describe("theme control", () => {
     window.localStorage.clear();
   });
 
-  it("offers system, light, and dark and applies the choice to the document", async () => {
+  it("cycles system -> light -> dark -> system and applies each to the document", async () => {
     const restore = stubPrefersDark(false);
     try {
       render(
         <ThemeProvider>
-          <ThemeSelect />
+          <ThemeToggle />
         </ThemeProvider>,
       );
 
-      const select = screen.getByLabelText("Theme") as HTMLSelectElement;
-      expect([...select.options].map((o) => o.value)).toEqual(["system", "light", "dark"]);
+      const toggle = screen.getByRole("button", { name: /Theme/ });
+      expect(toggle).toHaveAccessibleName("Theme: System");
+      // The value is readable text, never an icon the reader has to decode.
+      expect(toggle.textContent).toContain("System");
 
-      await userEvent.selectOptions(select, "dark");
+      await userEvent.click(toggle);
+      expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("light");
+      expect(toggle.textContent).toContain("Light");
 
+      await userEvent.click(toggle);
       expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("dark");
       // Persisted, so a reload keeps it.
       expect(window.localStorage.getItem(THEME_STORAGE_KEY)).toBe("dark");
 
-      await userEvent.selectOptions(select, "light");
-      expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("light");
-
-      await userEvent.selectOptions(select, "system");
+      await userEvent.click(toggle);
       expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("system");
+      expect(toggle.textContent).toContain("System");
+    } finally {
+      restore();
+    }
+  });
+
+  it("always shows the new state, even when the colours do not change yet", async () => {
+    // From "system" on a light OS, the first click lands on "light" — which is
+    // already what the page shows. The label still moves, so the control never
+    // looks like it ignored the click. (A cycling control cannot promise a
+    // visible change on every press and still be able to return to "system".)
+    const restore = stubPrefersDark(false);
+    try {
+      render(
+        <ThemeProvider>
+          <ThemeToggle />
+        </ThemeProvider>,
+      );
+      const toggle = screen.getByRole("button", { name: /Theme/ });
+
+      await userEvent.click(toggle);
+      expect(toggle).toHaveAccessibleName("Theme: Light");
+      expect(toggle).toHaveTextContent("Light");
+
+      await userEvent.click(toggle);
+      expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("dark");
+      expect(toggle).toHaveAccessibleName("Theme: Dark");
     } finally {
       restore();
     }
@@ -134,11 +163,11 @@ describe("theme control", () => {
       window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
       render(
         <ThemeProvider>
-          <ThemeSelect />
+          <ThemeToggle />
         </ThemeProvider>,
       );
       expect(document.documentElement.getAttribute(THEME_ATTRIBUTE)).toBe("dark");
-      expect((screen.getByLabelText("Theme") as HTMLSelectElement).value).toBe("dark");
+      expect(screen.getByRole("button", { name: /Theme: Dark/ })).toBeInTheDocument();
     } finally {
       restore();
     }
@@ -152,7 +181,7 @@ describe("theme control", () => {
     try {
       const { unmount } = render(
         <ThemeProvider>
-          <ThemeSelect />
+          <ThemeToggle />
         </ThemeProvider>,
       );
       // While "system", the attribute stays "system" — the CSS decides via
@@ -171,8 +200,35 @@ describe("theme control", () => {
     const restore = stubPrefersDark(false);
     try {
       // Chrome must render in any embedding (a test, a preview, an embed).
-      render(<ThemeSelect />);
-      expect((screen.getByLabelText("Theme") as HTMLSelectElement).value).toBe("system");
+      render(<ThemeToggle />);
+      expect(screen.getByRole("button", { name: /Theme: System/ })).toBeInTheDocument();
+    } finally {
+      restore();
+    }
+  });
+
+  it("never leaves the state to an icon alone", async () => {
+    // Three preferences, one button: the accessible name must always state
+    // which one is in effect, in every state of the cycle.
+    const restore = stubPrefersDark(false);
+    try {
+      render(
+        <ThemeProvider>
+          <ThemeToggle />
+        </ThemeProvider>,
+      );
+      const toggle = screen.getByRole("button", { name: /Theme/ });
+      for (const expected of ["System", "Light", "Dark"]) {
+        expect(toggle).toHaveAccessibleName(`Theme: ${expected}`);
+        // Readable as text too, so the state survives a screen reader that
+        // skips the accessible name and a reader who cannot see the icon.
+        expect(toggle).toHaveTextContent(expected);
+        await userEvent.click(toggle);
+      }
+      // Three clicks return to where it started: the cycle is closed, so a
+      // reader can always get back to following the OS.
+      expect(toggle).toHaveAccessibleName("Theme: System");
+      expect(toggle).toHaveTextContent("System");
     } finally {
       restore();
     }

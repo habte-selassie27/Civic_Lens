@@ -185,14 +185,43 @@ td.num {
   border-bottom: 1px solid var(--rule);
 }
 
+/*
+ * One row, three groups: [wordmark + navigation] · [source, preferences,
+ * account]. `lead` grows so `tools` sits hard against the right edge; the
+ * groups never trade places when the bar wraps at narrow widths.
+ */
 .masthead__inner {
   max-width: 1120px;
   margin: 0 auto;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-2) var(--space-4);
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   flex-wrap: wrap;
+}
+
+.masthead__lead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The hierarchy: navigation reads as one block on the left, account chrome as
+   another on the right, divided by a hairline. Without the rule the controls
+   float — they have no visual tie to each other and read as loose items. */
+.masthead__tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--rule);
+}
+
+.masthead__notice {
+  padding: 0 var(--space-4) var(--space-3);
 }
 
 .wordmark {
@@ -213,18 +242,24 @@ td.num {
   transform: translateY(-4px);
 }
 
+/*
+ * Core navigation. Compact by design — the bar has to hold the brand, three
+ * links, and four controls on one line at 1120px, so the padding that made
+ * each link a wide button is the first thing to give.
+ */
 .masthead__nav {
   display: flex;
+  align-items: center;
   gap: var(--space-1);
   flex-wrap: wrap;
-  margin-left: auto;
+  min-width: 0;
 }
 
 .masthead__nav a {
   display: inline-flex;
   align-items: center;
   min-height: var(--tap);
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-2);
   font-size: var(--t-14);
   color: var(--ink-muted);
   text-decoration: none;
@@ -244,12 +279,146 @@ td.num {
   font-weight: 600;
 }
 
-.masthead__state {
-  display: flex;
+/* Secondary navigation: a disclosure, styled to match the header's controls. */
+.navmenu {
+  position: relative;
+}
+
+/* The trigger is a plain button; `aria-expanded` carries the open state, so
+   styling hangs off that attribute rather than a <details> parent. */
+.navmenu__button {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  font: inherit;
   font-size: var(--t-14);
   color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.navmenu__button:hover,
+.navmenu__button[aria-expanded="true"] {
+  color: var(--record-ink);
+  background: var(--sheet);
+}
+
+.navmenu__caret {
+  font-size: 0.7em;
+  transition: transform var(--fast) var(--ease);
+}
+
+.navmenu[open] .navmenu__caret {
+  transform: rotate(180deg);
+}
+
+.navmenu__list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-1));
+  z-index: 30;
+  min-width: 220px;
+  margin: 0;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-panel);
+  box-shadow: 0 12px 24px -18px rgb(0 0 0 / 0.45);
+}
+
+.navmenu__item a {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--t-14);
+  color: var(--ink-muted);
+  text-decoration: none;
+  border-radius: var(--radius-control);
+}
+
+.navmenu__item a:hover {
+  color: var(--record-ink);
+  background: var(--microfiche);
+}
+
+.navmenu__item a[aria-current="page"] {
+  color: var(--record-ink);
+  font-weight: 600;
+}
+
+/* A group break between reference pages and the monitoring pages. */
+.navmenu__item--grouped {
+  border-top: 1px solid var(--rule);
+  margin-top: var(--space-1);
+  padding-top: var(--space-1);
+}
+
+/* Appearance control: icon plus the value in words. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  font: inherit;
+  font-size: var(--t-14);
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  color: var(--record-ink);
+  background: var(--sheet);
+}
+
+.theme-toggle__value {
+  white-space: nowrap;
+}
+
+/* Account area: address, its copy button, and Disconnect read as one thing. */
+.account {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.account__rule {
+  width: 1px;
+  align-self: stretch;
+  min-height: 20px;
+  background: var(--rule);
+}
+
+/*
+ * Deliberately quieter than .btn--quiet: Disconnect is the least-used control
+ * in the header and must not compete with the address next to it, but it still
+ * has to be a real target and clearly a button.
+ */
+.account__action {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--space-2);
+  font: inherit;
+  font-size: var(--t-14);
+  color: var(--ink-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.account__action:hover {
+  color: var(--plum);
+  background: var(--plum-tint);
 }
 
 /* Footer */
@@ -376,19 +545,10 @@ td.num {
 /* ==========================================================================
    Reading preferences (dark / light / system, language)
    ==========================================================================
-   Both controls live in the masthead state row. They are chrome, not content:
-   compact, quiet, and they must never be the loudest thing on a page. */
-
-.theme-select {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.theme-select__label {
-  font-size: var(--t-14);
-  color: var(--ink-faint);
-}
+   Both are chrome, not content: compact, quiet, and never the loudest thing
+   on a page. The language menu styles live here; the appearance control is
+   styled with the masthead it sits in, since it is a plain button rather than
+   a form control. */
 
 .select--compact {
   min-height: 30px;
@@ -479,16 +639,18 @@ td.num {
     min-width: 12rem;
   }
 
-  .theme-select__label {
-    /* On 360px the label is redundant beside the three-option control; the
-       select stays labeled for screen readers via aria-labelledby. */
-    display: none;
+  .navmenu__list {
+    right: auto;
+    left: 0;
   }
 }
 
 @media print {
-  .theme-select,
-  .language {
+  /* Chrome a reader does not need on paper: preferences, navigation, account. */
+  .navmenu,
+  .language,
+  .theme-toggle,
+  .account {
     display: none !important;
   }
 }
@@ -1498,13 +1660,33 @@ details.disclosure > summary:hover {
     padding: var(--space-2) var(--space-3);
   }
 
-  .masthead__nav {
-    width: 100%;
-    margin-left: 0;
-    overflow-x: auto;
+  /*
+   * Narrow screens get three tidy rows rather than one crowded one: identity,
+   * then navigation, then controls. `space-between` matters — when the nav
+   * wraps onto its own line it returns to the left edge instead of orphaning
+   * the wordmark alone on a full row.
+   */
+  .masthead__inner {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
   }
 
-  .masthead__nav a {
+  .masthead__lead {
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+
+  .masthead__tools {
+    flex-basis: 100%;
+    /* No divider on its own row: the hairline separated navigation from
+       controls, and there is nothing to separate it from any more. */
+    border-left: 0;
+    padding-left: 0;
+    flex-wrap: wrap;
+  }
+
+  .masthead__nav a,
+  .navmenu__button {
     padding: 0 var(--space-2);
   }
 
