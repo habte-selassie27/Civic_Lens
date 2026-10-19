@@ -714,3 +714,47 @@ NEXT:
 BLOCKED:
 - Nothing new. Signing a real transaction is still the user's step; the stub wallet
   proves the app reaches the wallet but cannot sign.
+
+## Open defect — 2026-10-19 — a review can be requested before the period ends
+
+Found while answering "why does commitment #5 show Review pending?". No code
+changed for this entry; it records the defect and clears the blocker that was
+holding up contract item 4.
+
+WHAT IS CORRECT (checked, not assumed):
+- Commitment #5 reads `status: 'evidence_open'`, `current_round: 0`,
+  `round_count: 0`, `evidence_count: 0` (read directly with
+  `genlayer call … get_commitment --args 5` on StudioNet).
+- "Review pending" is therefore the honest label, not a defect. Reviews are not
+  automatic: `request_review` is a manual, registrant-only call, so no round has
+  run and no outcome exists. `pending` (`result.pending`) is a UI-only state and
+  is deliberately NOT `inconclusive` — `inconclusive` is a *finding* from a
+  completed review, with a reason code. Nothing is styled or exported as failure.
+
+WHAT IS WRONG:
+- Period is 1 Jan 2026 – 31 Dec 2026, so 73 days remained on 2026-10-19, and
+  `evidence_count` was 0. `request_review` contains no date comparison at all,
+  and `canRequestReview` in `frontend/src/domain/actions.ts` allows
+  `evidence_open` unconditionally — so the button is enabled.
+- Clicking it runs a real consensus round over an empty evidence set, records
+  `inconclusive` / `no_relevant_evidence` as round 1, and spends one of
+  `MAX_ROUNDS = 3`. Honest but premature, and easy to misread as a finding.
+
+BLOCKER CLEARED — verified this session, not guessed:
+- `genlayer.vm.get_timestamp() -> datetime` (SDK reference,
+  https://sdk.genlayer.com/main/_static/ai/api.txt): "Returns the current
+  timestamp as a timezone-aware datetime. In deterministic mode it is the
+  transaction timestamp." Transaction time is identical on every validator, so a
+  period gate in `request_review` is deterministic and consensus-safe.
+- Consistent with existing usage: the contract already calls `gl.vm.*`
+  (`gl.vm.UserError`, `gl.vm.Return`, `gl.vm.run_nondet_unsafe`).
+
+FIX SHAPE (awaiting the user's choice; not started):
+- Contract: reject `request_review` while the period is open, with a
+  deterministic `EXPECTED:` reason (contract item 4).
+- UI: disable the action with a plain-words countdown reason. Note the UI gate is
+  advisory only — calling the contract directly bypasses it.
+- Cost: contract change means lint + direct + integration tests, a StudioNet
+  redeploy, and updating `VITE_CONTRACT_ADDRESS` on Vercel.
+
+RELATED LIMITS: `MAX_ROUNDS = 3`, `MAX_CHALLENGES_PER_PARTY = 1`.
