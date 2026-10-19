@@ -249,7 +249,8 @@ export type TxPhase =
   | "final"
   | "dropped"
   | "rejected"
-  | "reverted";
+  | "reverted"
+  | "not_sent";
 
 export const TX_PHASE_LABEL = lazyMap<TxPhase>({
   submitted: "tx_phase.submitted",
@@ -259,6 +260,9 @@ export const TX_PHASE_LABEL = lazyMap<TxPhase>({
   dropped: "tx_phase.dropped",
   rejected: "tx_phase.rejected",
   reverted: "tx_phase.reverted",
+  // Nothing reached the network, so no validator saw it and no receipt exists.
+  // Distinct from `rejected`, which is a real MAJORITY_DISAGREE verdict.
+  not_sent: "tx_phase.not_sent",
 });
 
 // ---------------------------------------------------------------------------

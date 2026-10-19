@@ -604,4 +604,5 @@ export const de: Partial<Record<MessageKey, string>> = {
   "tx_phase.dropped": "Nicht abgeschlossen: Die Validatoren kamen zu keiner Entscheidung.",
   "tx_phase.rejected": "Nicht abgeschlossen: Die Validatoren waren mit dem Vorschlag nicht einverstanden.",
   "tx_phase.reverted": "Nicht abgeschlossen: Der Vertrag hat die Anfrage abgelehnt.",
+  "tx_phase.not_sent": "Nicht gesendet: Die Anfrage hat das Netzwerk nie erreicht, kein Validator hat sie gesehen.",
 };

@@ -2,7 +2,8 @@
  * TxStatus (UI-CivicLens 6) — the write lifecycle.
  *
  * The user-facing states are: nothing sent → submitted → validators reviewing →
- * accepted (still appealable) → final. Plus the three "didn't complete" paths.
+ * accepted (still appealable) → final. Plus the four "didn't complete" paths,
+ * one of which (`not_sent`) means the request never left the browser.
  *
  * Behavior rules enforced here:
  * - The tx hash appears as soon as it is known, with copy + explorer link.
@@ -19,7 +20,7 @@ import { CopyField } from "./CopyField";
 import { AcceptedMark, ExternalMark, FinalMark } from "./Marks";
 
 const IS_BUSY: TxPhase[] = ["submitted", "pending"];
-const IS_FAILURE: TxPhase[] = ["dropped", "rejected", "reverted"];
+const IS_FAILURE: TxPhase[] = ["dropped", "rejected", "reverted", "not_sent"];
 
 export interface TxStatusProps {
   phase: TxPhase;
@@ -89,7 +90,10 @@ export function TxStatus({ phase, hash, votes, detail, onRefresh, error }: TxSta
         )}
       </div>
 
-      {failed && onRefresh && (
+      {/* Only offered when there is a hash to re-read. After a write that was
+          never sent there is nothing on-chain to check, and a "Check again"
+          button would suggest otherwise. */}
+      {failed && hash && onRefresh && (
         <div className="tx__row">
           <button type="button" className="btn btn--quiet btn--small" onClick={onRefresh}>
             Check again

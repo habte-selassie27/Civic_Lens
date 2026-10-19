@@ -594,3 +594,57 @@ BLOCKED:
   — an unimported scratch file whose only content asserts
   `flex-wrap: nowrap`, which is the exact rule that caused the 360px overflow.
   It should be deleted rather than kept.
+
+## Session 9 — 2026-10-19 — registering in the browser: the wallet was never asked
+
+DONE:
+- **Every write from the browser failed with "No account set. Configure the client
+  with an account or pass an account to this function."** — while the header showed
+  a connected wallet. Root cause: `LiveService` built its SDK client as
+  `new CivicLens(CONTRACT_ADDRESS, undefined, RPC_URL)`. genlayer-js binds the
+  signing account when a client is *built*, so the account was permanently absent;
+  the SDK refused before the wallet was ever consulted. Reads were unaffected,
+  which is why it looked like a consensus problem rather than a wiring one.
+  The address is now handed to the SDK per write, from the account the wallet
+  reports, and re-read each time so switching accounts cannot sign from the old one.
+- **The failure was also mislabeled.** Any thrown write was reported as
+  "Didn't complete: validators disagreed with the proposal." Nothing had been sent,
+  so no validator had seen it; that copy is only correct for a receipt carrying
+  MAJORITY_DISAGREE. A write that never left the browser now reports a distinct
+  `not_sent` phase: "Not sent: this never reached the network, so no validators saw
+  it." The two paths stay apart in both directions (tested).
+- "Check again" is no longer offered after a write that was never sent — there is
+  nothing on-chain to check, and the button implied otherwise.
+- The write methods are declared `async` so a refusal always produces a rejected
+  promise. They previously threw synchronously from a method typed `Promise<TxHash>`
+  (found by the new test, not by inspection).
+
+PROOF:
+- New `frontend/src/tests/liveWrites.test.ts` (5 tests): a write with no account
+  refuses in plain words without calling the SDK; a write with an account hands that
+  account to the SDK; a second write after an account switch uses the new one; reads
+  keep working with no account.
+- `txLifecycle.test.tsx`: one test rewritten and one added, pinning that a thrown
+  write is `not_sent` and a MAJORITY_DISAGREE receipt is still `rejected`.
+- **End-to-end in a real browser** against a stub EIP-1193 provider (the same
+  surface a wallet extension exposes), on a build with the contract address inlined:
+  filling the register form and submitting called `eth_sendTransaction` with
+  `from = 0x5b3661c576c7001e6d6279c67f3779705d334c89`, and the page moved to
+  "Validators are reviewing". Before the fix this same flow never reached the wallet.
+- Same run with the stub refusing the send (the user-declined case) shows
+  "Not sent: this never reached the network, so no validators saw it." and no hash —
+  the honest label, not a validator verdict.
+- Gates: `tsc --noEmit` clean, `331 passed` (32 files), `vite build` ok.
+- Re-verified in genlayer-js 1.1.8 source that a wallet write only routes to the
+  provider when the account is an *address*, not an object (`isAddress = typeof
+  config.account !== "object"`); an object sends the call to the RPC instead, which
+  answers "Method not found: eth_sendTransaction".
+
+NEXT:
+- Drive the remaining five writes (evidence, review request, challenge, withdraw,
+  supersede) through the same browser harness.
+- Contract items 4 and 7, still open.
+
+BLOCKED:
+- Nothing. The stub-wallet harness proves the browser path but cannot sign; a real
+  wallet is still needed to put a commitment on chain, and that is the user's step.

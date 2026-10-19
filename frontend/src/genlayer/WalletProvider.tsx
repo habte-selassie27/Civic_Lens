@@ -23,6 +23,7 @@ import {
   isOnCorrectNetwork,
   switchToGenLayerNetwork,
 } from "@/genlayer/client";
+import { setActiveAccount } from "@/services/live";
 
 export interface WalletState {
   address: string | null;
@@ -54,6 +55,14 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     isLoading: true,
   });
   const [error, setError] = useState<string | null>(null);
+
+  // The SDK binds the signing account when a client is built, so the service
+  // layer has to be told which account is connected — and told again when the
+  // reader switches accounts or disconnects. Without this, every write fails
+  // inside the SDK before the wallet is ever asked ("No account set").
+  useEffect(() => {
+    setActiveAccount(state.address);
+  }, [state.address]);
 
   const refresh = useCallback(async () => {
     const [accounts, chainId] = await Promise.all([getAccounts(), getCurrentChainId()]);

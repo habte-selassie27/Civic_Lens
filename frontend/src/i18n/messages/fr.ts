@@ -605,4 +605,5 @@ export const fr: Partial<Record<MessageKey, string>> = {
   "tx_phase.dropped": "Non aboutie : les validateurs n'ont pas abouti à une décision.",
   "tx_phase.rejected": "Non aboutie : les validateurs n'ont pas accepté la proposition.",
   "tx_phase.reverted": "Non aboutie : le contrat a rejeté la demande.",
+  "tx_phase.not_sent": "Non envoyée : rien n'a atteint le réseau, aucun validateur ne l'a vue.",
 };

@@ -219,16 +219,37 @@ describe("useTxLifecycle", () => {
     await waitFor(() => expect(mocks.getTransaction).toHaveBeenCalledWith(HASH));
   });
 
-  it("surfaces a rejected write without claiming success", async () => {
-    mocks.writeContract.mockRejectedValue(new Error("EXPECTED: evidence window is closed"));
+  it("a write that never left the browser is 'not sent', not a validator verdict", async () => {
+    mocks.writeContract.mockRejectedValue(
+      new Error(
+        "No account set. Configure the client with an account or pass an account to this function.",
+      ),
+    );
 
     const user = userEvent.setup();
     render(<Harness />);
     await user.click(screen.getByRole("button", { name: "Submit" }));
 
-    await waitFor(() => expect(screen.getByTestId("phase")).toHaveTextContent("rejected"));
+    // `rejected` is derived from a receipt and means MAJORITY_DISAGREE — real
+    // validators, real verdict. Nothing was sent here, so reporting that they
+    // disagreed would state something that never happened.
+    await waitFor(() => expect(screen.getByTestId("phase")).toHaveTextContent("not_sent"));
+    expect(screen.getByTestId("phase")).not.toHaveTextContent("rejected");
     expect(screen.getByTestId("hash")).toHaveTextContent("none");
     expect(screen.getByTestId("busy")).toHaveTextContent("false");
+  });
+
+  it("still reports a real validator disagreement as rejected", async () => {
+    mocks.writeContract.mockResolvedValue(HASH);
+    mocks.getTransaction.mockResolvedValue({ status: "FINALIZED", result: "MAJORITY_DISAGREE" });
+
+    const user = userEvent.setup();
+    render(<Harness />);
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    // The two paths must stay distinguishable, or the honest label for one
+    // case would swallow the other.
+    await waitFor(() => expect(screen.getByTestId("phase")).toHaveTextContent("rejected"));
   });
 
   it("stops polling once the result is final", async () => {

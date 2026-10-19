@@ -603,6 +603,7 @@ export const en = {
   "tx_phase.dropped": "Didn't complete: validators did not reach a decision.",
   "tx_phase.rejected": "Didn't complete: validators disagreed with the proposal.",
   "tx_phase.reverted": "Didn't complete: the contract rejected the request.",
+  "tx_phase.not_sent": "Not sent: this never reached the network, so no validators saw it.",
 } as const;
 
 export type MessageKey = keyof typeof en;

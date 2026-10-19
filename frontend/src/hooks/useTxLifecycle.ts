@@ -23,7 +23,14 @@ import type { TxPhase } from "@/domain/copy";
 const PENDING_KEY = "civiclens.tx.pending";
 const POLL_INTERVAL_MS = 4000;
 
-const TERMINAL: TxPhase[] = ["accepted", "final", "dropped", "rejected", "reverted"];
+const TERMINAL: TxPhase[] = [
+  "accepted",
+  "final",
+  "dropped",
+  "rejected",
+  "reverted",
+  "not_sent",
+];
 
 export interface PendingTx {
   hash: TxHash;
@@ -152,7 +159,10 @@ export function useTxLifecycle(): TxLifecycle {
       } catch (err) {
         const message = err instanceof Error ? err.message : "The write didn't go through.";
         setError(message);
-        setPhase("rejected");
+        // Not `rejected`: that label means validators disagreed, and it is
+        // derived from a receipt. Here nothing was ever sent, so reporting the
+        // validators' verdict on it would state something that never happened.
+        setPhase("not_sent");
         savePersisted(null);
         return null;
       } finally {

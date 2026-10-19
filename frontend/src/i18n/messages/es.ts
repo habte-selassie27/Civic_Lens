@@ -605,4 +605,5 @@ export const es: Partial<Record<MessageKey, string>> = {
   "tx_phase.dropped": "No se completó: los validadores no llegaron a una decisión.",
   "tx_phase.rejected": "No se completó: los validadores no estuvieron de acuerdo con la propuesta.",
   "tx_phase.reverted": "No se completó: el contrato rechazó la solicitud.",
+  "tx_phase.not_sent": "Sin enviar: no llegó a la red, así que ningún validador lo vio.",
 };
