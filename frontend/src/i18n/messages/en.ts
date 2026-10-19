@@ -224,6 +224,7 @@ export const en = {
   "browse.title": "Commitments",
   "browse.lede":
     "Public commitments registered on CivicLens. Each one shows its criteria, the sources on file, and the result of every review round.",
+  "browse.action_register": "Register a commitment",
   "browse.filter_search": "Search",
   "browse.filter_search_placeholder": "Subject or number",
   "browse.filter_mode": "Data",

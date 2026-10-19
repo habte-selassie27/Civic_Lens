@@ -224,6 +224,7 @@ export const es: Partial<Record<MessageKey, string>> = {
   "browse.title": "Compromisos",
   "browse.lede":
     "Compromisos públicos registrados en CivicLens. Cada uno muestra sus criterios, las fuentes en el archivo y el resultado de cada ronda de revisión.",
+  "browse.action_register": "Registrar un compromiso",
   "browse.filter_search": "Buscar",
   "browse.filter_search_placeholder": "Sujeto o número",
   "browse.filter_mode": "Datos",

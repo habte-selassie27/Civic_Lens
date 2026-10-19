@@ -223,6 +223,7 @@ export const de: Partial<Record<MessageKey, string>> = {
   "browse.title": "Zusagen",
   "browse.lede":
     "Auf CivicLens registrierte öffentliche Zusagen. Jede zeigt ihre Kriterien, die vorliegenden Quellen und das Ergebnis jeder Prüfungsrunde.",
+  "browse.action_register": "Zusage registrieren",
   "browse.filter_search": "Suchen",
   "browse.filter_search_placeholder": "Subjekt oder Nummer",
   "browse.filter_mode": "Daten",

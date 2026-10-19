@@ -123,9 +123,17 @@ export function Commitments() {
 
   return (
     <div className="stack-lg">
-      <div>
-        <h1>{t("browse.title")}</h1>
-        <p className="hint">{t("browse.lede")}</p>
+      {/* The register action lives in the page header, not only in the empty
+          state: an empty state disappears as soon as one commitment exists,
+          and the way to add one must not disappear with it. */}
+      <div className="browse-head">
+        <div>
+          <h1>{t("browse.title")}</h1>
+          <p className="hint">{t("browse.lede")}</p>
+        </div>
+        <Link className="btn btn--small" to="/commitments/new">
+          {t("browse.action_register")}
+        </Link>
       </div>
 
       {reads.isSample && reads.sampleReason && <SampleBanner reason={reads.sampleReason} />}
