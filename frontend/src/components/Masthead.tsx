@@ -8,7 +8,7 @@
  *
  * Reading left to right: where you are, what you're reading it as, where you
  * can go — then the source status and wallet connect, placed beside the
- * "System status" entry at the far right of the navbar. The language control
+ * "Platform stats" entry at the far right of the navbar. The language control
  * stays on the right of the hairline as the lone per-reader preference. All
  * seven destinations are inline: a reader should be able to see the whole map
  * of the app at once rather than hunting behind a disclosure.
@@ -69,10 +69,11 @@ export function Masthead() {
             ))}
           </nav>
 
-          {/* Wallet connect button and network name sit beside the "System
-              status" entry, outside the navbar, in their own place. They are
-              one group so a narrower window drops them together rather than
-              leaving the network chip orphaned on a line of its own. */}
+          {/* Wallet, network/source chip, and language sit beside the
+              "Platform stats" entry, outside the navbar, in their own place.
+              They are one group so a narrower window drops them together rather
+              than leaving the account pill or the network chip orphaned on a
+              line of their own. */}
           <div className="masthead__chrome">
             <AccountPill />
             <span

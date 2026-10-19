@@ -362,6 +362,8 @@ code, kbd, samp, pre {
 @media (min-width: 1280px) {
   .masthead__inner {
     flex-wrap: nowrap;
+    min-width: 0;
+    align-items: center;
   }
 
   .masthead__lead {
@@ -399,39 +401,6 @@ code, kbd, samp, pre {
 
   .masthead__lang a {
     white-space: nowrap;
-  }
-
-  .masthead__lang__rule {
-    display: block;
-  }
-
-  .masthead__chrome {
-    margin-right: var(--space-3);
-  }
-
-  .masthead__lang {
-    margin-left: auto;
-  }
-
-  .masthead__nav a {
-    padding: 0 var(--space-1);
-    white-space: nowrap;
-  }
-
-  .masthead__lead {
-    flex-wrap: nowrap;
-    flex-basis: auto;
-    justify-content: flex-start;
-  }
-
-  .masthead__nav {
-    flex-wrap: nowrap;
-  }
-
-  .masthead__inner {
-    flex-wrap: nowrap;
-    min-width: 0;
-    align-items: center;
   }
 }
 
@@ -1244,6 +1213,28 @@ details.disclosure > summary:hover { color: var(--record-ink); }
 
 .banner p { margin: 0 0 var(--space-2); color: var(--ink-muted); max-width: var(--measure); }
 .banner p:last-child { margin-bottom: 0; }
+
+/* Restored-draft notice: quieter than a banner. It reports something the
+   browser did for the reader, not something the platform decided, and it must
+   not read as a warning about the commitment itself. */
+.draft-note {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-3);
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius-chip);
+  background: var(--microfiche);
+}
+
+.draft-note__text {
+  margin: 0;
+  font-size: var(--t-14);
+  color: var(--ink-muted);
+  max-width: var(--measure);
+}
 
 .empty {
   padding: var(--space-6) var(--space-4);
