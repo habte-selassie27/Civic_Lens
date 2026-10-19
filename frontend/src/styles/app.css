@@ -165,16 +165,24 @@ code, kbd, samp, pre {
   border-bottom: 1px solid var(--rule);
 }
 
-/* One full row at desktop widths: wordmark + appearance + navigation +
-   disconnect + network chip + language. */
+/* Wordmark + appearance + navigation, then the account group and language.
+   The row WRAPS rather than being forced onto one line: at 1280px the seven
+   destinations, the account pill, the source chip, and the language button
+   are wider than the 1280px inner width, and `nowrap` let the last link
+   ("System status") run underneath the account pill. Wrapping keeps every
+   control in its own space; `.masthead__chrome` carries the auto margin so
+   the account group stays at the right end of whichever line it lands on. */
 .masthead__inner {
-  max-width: 1280px;
+  /* Wide enough for the seven destinations, the account pill, the source chip
+     and the language button on one line; below that the row wraps instead of
+     drawing controls over one another. */
+  max-width: 1600px;
   margin: 0 auto;
   padding: var(--space-2) var(--space-4);
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  flex-wrap: wrap;
   min-width: 0;
 }
 
@@ -183,17 +191,17 @@ code, kbd, samp, pre {
   align-items: center;
   gap: var(--space-2);
   flex: 1 1 auto;
+  flex-wrap: wrap;
   min-width: 0;
 }
 
-/* Core navigation. Compact by design — the bar has to hold the brand, links,
-   and controls on one line at 1280px, so padding is removed from the links
-   by default. */
+/* Core navigation. Every destination is inline and each link keeps its own
+   width, so the row may wrap between links when a viewport cannot hold them. */
 .masthead__nav {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   min-width: 0;
 }
 
@@ -222,12 +230,19 @@ code, kbd, samp, pre {
   font-weight: 600;
 }
 
-/* Account + network chip + language: one unit per desktop row segment. */
+/* Account + network chip + language: ONE unit, sitting immediately after the
+   last navigation entry ("System status") with the row gap between them. The
+   auto margin parks the group at the right end of its line and `flex-wrap`
+   lets the language fall to a second line INSIDE the group, so no control is
+   ever drawn on top of a link. */
 .masthead__chrome {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   flex: 0 0 auto;
+  margin-left: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   white-space: nowrap;
 }
 
@@ -358,35 +373,13 @@ code, kbd, samp, pre {
 .colophon__inner a { color: var(--citation); }
 .colophon__spacer { margin-left: auto; }
 
-/* Desktop-only overrides: the one-line header. */
+/* Desktop spacing: the row packs tighter once there is room. It is NOT forced
+   onto one line here — that is what put the account pill on top of the
+   "System status" link at 1280px, where the contents are wider than the
+   1280px inner width. */
 @media (min-width: 1280px) {
-  .masthead__inner {
-    flex-wrap: nowrap;
-    min-width: 0;
-    align-items: center;
-  }
-
-  .masthead__lead {
-    flex-wrap: nowrap;
-    flex-basis: auto;
-    justify-content: flex-start;
-  }
-
-  .masthead__nav {
-    flex-wrap: nowrap;
-  }
-
   .masthead__nav a {
     padding: 0 var(--space-1);
-    white-space: nowrap;
-  }
-
-  .masthead__chrome {
-    margin-right: var(--space-3);
-  }
-
-  .masthead__lang {
-    margin-left: auto;
   }
 
   .masthead__lang__rule {
@@ -1454,6 +1447,7 @@ details.disclosure > summary:hover { color: var(--record-ink); }
 
   .masthead__chrome {
     flex-basis: 100%;
+    margin-left: 0;
     justify-content: center;
   }
 
@@ -1627,40 +1621,6 @@ details.disclosure > summary:hover { color: var(--record-ink); }
   color: var(--ink-muted);
 }
 
-/* ==========================================================================
-   Desktop-only overrides: the one-line header.
-   ========================================================================== */
-
-@media (min-width: 1280px) {
-  .masthead__inner {
-    flex-wrap: nowrap;
-    align-items: center;
-  }
-
-  .masthead__lead {
-    flex-wrap: nowrap;
-    flex-basis: auto;
-    justify-content: flex-start;
-  }
-
-  .masthead__nav {
-    flex-wrap: nowrap;
-  }
-
-  .masthead__nav a {
-    padding: 0 var(--space-1);
-    white-space: nowrap;
-  }
-
-  .masthead__chrome {
-    margin-right: var(--space-3);
-  }
-
-  .masthead__lang {
-    margin-left: auto;
-  }
-
-  .masthead__lang__rule {
-    display: block;
-  }
-}
+/* The header has no "force everything onto one line" override on purpose.
+   See `.masthead__inner` above: `nowrap` here is what drew the account pill on
+   top of the last navigation entry at 1280px. */

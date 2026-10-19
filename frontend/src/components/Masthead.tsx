@@ -4,14 +4,14 @@
  *
  * Layout is two groups in one row, left to right:
  *
- *   [wordmark] [appearance] [navigation] [source status] [wallet] · [language]
+ *   [wordmark] [appearance] [navigation] [wallet] [source status] · [language]
  *
  * Reading left to right: where you are, what you're reading it as, where you
- * can go — then the source status and wallet connect, placed beside the
- * "Platform stats" entry at the far right of the navbar. The language control
- * stays on the right of the hairline as the lone per-reader preference. All
- * seven destinations are inline: a reader should be able to see the whole map
- * of the app at once rather than hunting behind a disclosure.
+ * can go — then the account pill, placed directly after the last navigation
+ * entry ("System status"), then the network/source chip, and the language
+ * control after the hairline. All seven destinations are inline: a reader
+ * should be able to see the whole map of the app at once rather than hunting
+ * behind a disclosure.
  *
  * A hairline rule separates navigation from account chrome — without it the
  * controls read as part of the navigation and the bar has no hierarchy.
@@ -69,11 +69,12 @@ export function Masthead() {
             ))}
           </nav>
 
-          {/* Wallet, network/source chip, and language sit beside the
-              "Platform stats" entry, outside the navbar, in their own place.
-              They are one group so a narrower window drops them together rather
-              than leaving the account pill or the network chip orphaned on a
-              line of their own. */}
+          {/* Wallet, network/source chip, and language sit directly after the
+              last navigation entry ("System status"). They are ONE group so
+              they move together: when the row cannot hold them beside the
+              navigation they drop to a second line as a unit, right-aligned,
+              instead of the account pill or the language button being left
+              orphaned — or the account pill being drawn on top of a link. */}
           <div className="masthead__chrome">
             <AccountPill />
             <span
@@ -84,14 +85,13 @@ export function Masthead() {
               <span className="sr-only">{sourceLabel}</span>
               {network}
             </span>
-          </div>
 
-          {/* Language sits beside the wallet group as a per-reader preference,
-              separated from the wallet by a hairline so the row reads as: nav,
-              wallet + network, language. */}
-          <div className="masthead__lang">
-            <span className="masthead__lang__rule" aria-hidden="true" />
-            <LanguageButton />
+            {/* Language is a per-reader preference, separated from the account
+                by a hairline so the row reads as: nav, wallet + network, language. */}
+            <div className="masthead__lang">
+              <span className="masthead__lang__rule" aria-hidden="true" />
+              <LanguageButton />
+            </div>
           </div>
         </div>
       </div>
