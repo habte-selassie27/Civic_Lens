@@ -18,6 +18,7 @@ import { useWallet } from "@/genlayer/WalletProvider";
 import { ROLE_LABEL } from "@/domain/copy";
 import { canSupersede } from "@/domain/actions";
 import { lintCriterion } from "@/domain/criteriaLint";
+import { clearDraft, draftKeyFor, hasDraftContent, loadDraft, saveDraft } from "@/domain/draft";
 import { formatDate, formatMilli, parseToMilli } from "@/domain/format";
 import type {
   ContractConstants,
@@ -100,26 +101,108 @@ export function CommitmentNew() {
   const oldQuery = useCommitmentBundle(supersedeId);
   const oldCommitment = isSupersede ? oldQuery.data?.commitment : undefined;
 
-  const [subject, setSubject] = useState("");
-  const [subjectKind, setSubjectKind] = useState("organization");
-  const [registrantRole, setRegistrantRole] = useState("observer");
-  const [statementRef, setStatementRef] = useState("");
-  const [commitmentText, setCommitmentText] = useState("");
-  const [periodStart, setPeriodStart] = useState("");
-  const [periodEnd, setPeriodEnd] = useState("");
-  const [timezone, setTimezone] = useState("UTC");
-  const [guidance, setGuidance] = useState("");
-  const [criteria, setCriteria] = useState<DraftCriterion[]>([emptyCriterion("c1")]);
+  // A draft from an earlier visit, restored once — the field states below take
+  // their initial values from it. See domain/draft.ts for what is kept and what
+  // deliberately is not.
+  const draftKey = draftKeyFor(supersedeId);
+  const [restoredDraft] = useState(() => loadDraft(draftKey));
+  const [showDraftNotice, setShowDraftNotice] = useState(
+    restoredDraft !== null && hasDraftContent(restoredDraft),
+  );
+
+  const [subject, setSubject] = useState(restoredDraft?.subject ?? "");
+  const [subjectKind, setSubjectKind] = useState(restoredDraft?.subjectKind ?? "organization");
+  const [registrantRole, setRegistrantRole] = useState(restoredDraft?.registrantRole ?? "observer");
+  const [statementRef, setStatementRef] = useState(restoredDraft?.statementRef ?? "");
+  const [commitmentText, setCommitmentText] = useState(restoredDraft?.commitmentText ?? "");
+  const [periodStart, setPeriodStart] = useState(restoredDraft?.periodStart ?? "");
+  const [periodEnd, setPeriodEnd] = useState(restoredDraft?.periodEnd ?? "");
+  const [timezone, setTimezone] = useState(restoredDraft?.timezone ?? "UTC");
+  const [guidance, setGuidance] = useState(restoredDraft?.guidance ?? "");
+  const [criteria, setCriteria] = useState<DraftCriterion[]>(
+    restoredDraft?.criteria.map((c) => ({
+      key: c.key,
+      text: c.text,
+      measure: c.measure,
+      required: c.required,
+      hasThreshold: c.hasThreshold,
+      threshold: c.threshold,
+      operator: c.operator as Operator,
+      unit: c.unit,
+      deadline: c.deadline,
+    })) ?? [emptyCriterion("c1")],
+  );
+  // Never restored: the confirmation is an attestation, and one carried over
+  // from an earlier visit is not one the registrant just made (domain/draft.ts).
   const [confirmed, setConfirmed] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   /** One-time prefill guard: a refetch must never stomp the registrant's edits. */
   const [prefilledFor, setPrefilledFor] = useState<number | null>(null);
+
+  // Keep the draft current. Debounced because every keystroke would otherwise
+  // write to storage, and a write per keystroke is what makes forms feel slow.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      saveDraft(draftKey, {
+        subject,
+        subjectKind,
+        registrantRole,
+        statementRef,
+        commitmentText,
+        periodStart,
+        periodEnd,
+        timezone,
+        guidance,
+        criteria,
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [
+    draftKey,
+    subject,
+    subjectKind,
+    registrantRole,
+    statementRef,
+    commitmentText,
+    periodStart,
+    periodEnd,
+    timezone,
+    guidance,
+    criteria,
+  ]);
+
+  /** Start over: drop the saved draft and empty the form. */
+  function discardDraft() {
+    clearDraft(draftKey);
+    setShowDraftNotice(false);
+    setSubject("");
+    setSubjectKind("organization");
+    setRegistrantRole("observer");
+    setStatementRef("");
+    setCommitmentText("");
+    setPeriodStart("");
+    setPeriodEnd("");
+    setTimezone("UTC");
+    setGuidance("");
+    setCriteria([emptyCriterion("c1")]);
+    setConfirmed(false);
+    setErrors({});
+    // Let the supersede prefill run again, so "start over" means the original
+    // record rather than a blank page with no way back to it.
+    setPrefilledFor(null);
+  }
 
   // Supersede mode: start from the record being versioned so the registrant
   // edits instead of retyping. Nothing is copied that the contract would not
   // itself echo — this is a display convenience, not authority.
   useEffect(() => {
     if (!oldCommitment || prefilledFor === oldCommitment.id) return;
+    // A restored draft is the registrant's own work in progress and outranks a
+    // prefill built from the old record.
+    if (restoredDraft) {
+      setPrefilledFor(oldCommitment.id);
+      return;
+    }
     setSubject(oldCommitment.subject);
     setSubjectKind(oldCommitment.subject_kind);
     setRegistrantRole(oldCommitment.registrant_role);
@@ -143,7 +226,7 @@ export function CommitmentNew() {
       })),
     );
     setPrefilledFor(oldCommitment.id);
-  }, [oldCommitment, prefilledFor]);
+  }, [oldCommitment, prefilledFor, restoredDraft]);
 
   const required = criteria.filter((c) => c.required);
 
@@ -271,6 +354,11 @@ export function CommitmentNew() {
 
     const phase = await tx.waitForAcceptance();
     if ((phase === "accepted" || phase === "final") && tx.hash) {
+      // The commitment is on chain, so the draft has done its job. Any other
+      // phase — refused, reverted, no majority, or still in flight — keeps it,
+      // because the registrant may have to send this again and should not have
+      // to retype five criteria to do it.
+      clearDraft(draftKey);
       rememberTxForCommitment(isSupersede && supersedeId !== null ? supersedeId : 0, tx.hash);
       // The new id is not knowable client-side (the write returns a hash), so
       // return to the record being versioned — its superseded_by link points
@@ -354,6 +442,18 @@ export function CommitmentNew() {
             what was asked, and when, stays intact.
           </p>
         </Banner>
+      )}
+
+      {showDraftNotice && (
+        <div className="draft-note" role="status">
+          <p className="draft-note__text">
+            An unfinished draft was restored from this browser. It is not a record: nothing is
+            registered until you send it.
+          </p>
+          <ActionButton variant="quiet" onClick={discardDraft}>
+            Start over
+          </ActionButton>
+        </div>
       )}
 
       <form onSubmit={submit} noValidate>

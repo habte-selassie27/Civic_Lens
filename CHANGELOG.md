@@ -648,3 +648,69 @@ NEXT:
 BLOCKED:
 - Nothing. The stub-wallet harness proves the browser path but cannot sign; a real
   wallet is still needed to put a commitment on chain, and that is the user's step.
+
+## Session 10 — 2026-10-19 — the register form no longer loses work
+
+DONE:
+- **A half-filled commitment form survives a reload and a failed write.** This is
+  the most expensive form in the app — up to five criteria, each with its own
+  wording, measure, threshold and deadline — and losing it to a stray refresh, or
+  to a write that has to be retried, is the difference between a registered
+  commitment and none.
+- New `frontend/src/domain/draft.ts`: a browser-local draft store, deliberately
+  narrow. One browser, one form; nothing uploaded; a draft is never presented as a
+  record, because the contract is the only record.
+  - Strict read-back. A draft is a convenience, so anything corrupted, truncated,
+    type-drifted, from a future shape version or older than 14 days is *dropped*,
+    not half-applied — a form that silently submits what the registrant did not
+    type is worse than an empty form.
+  - Key per form: the register draft and each supersede draft are separate pieces
+    of work, so the register form can never inherit one written for another record.
+  - Storage failures (private mode, quota) are swallowed; the form being typed in
+    must not break because a draft could not be saved.
+- **The confirmation checkbox is deliberately not stored.** It reads "that summary
+  describes what I want reviewed" — an attestation. One carried over from an
+  earlier visit is not an attestation the reader just made, so it is the one field
+  the draft refuses to hold.
+- Visible honesty affordance: a `role="status"` notice saying the draft was
+  restored *and* that it is not a record, plus a `Start over` button that clears
+  storage and empties the form. Without it a restored draft would be sticky, with
+  no way back to a blank form.
+- Draft lifecycle tied to the write outcome: cleared on `accepted`/`final`, kept on
+  refused, reverted, no-majority, not-sent or still in flight.
+- Supersede mode: the prefill built from the old record no longer stomps a restored
+  draft — the registrant's own work in progress outranks a convenience copy.
+
+PROOF:
+- New `frontend/src/tests/draft.test.ts` (11 tests): round-trip of every field;
+  register/supersede keys kept apart per record; clearing is scoped to one key; the
+  snapshot has no `confirmed` field at all; a 15-day-old draft is dropped and
+  removed; truncated, type-drifted and future-version drafts are refused;
+  unparseable JSON does not throw; a storage that refuses to write does not throw;
+  an untouched draft is distinguished from one worth restoring.
+- New `frontend/src/tests/commitmentDraft.test.tsx` (6 tests): a seeded draft is
+  restored into the fields after render; the notice says "not a record" and
+  "nothing is registered until you send it"; the confirmation renders unchecked;
+  no draft means no notice; typing is persisted after the debounce; "Start over"
+  empties the form and the store.
+- **End-to-end in a real browser**, on a build with the contract address inlined and
+  a stub EIP-1193 wallet that refuses the send: filled all seven fields and
+  submitted, then hard-reloaded with cache ignored. Before the reload the page read
+  "Not sent: this never reached the network, so no validators saw it." (the honest
+  label — not a validator disagreement). After the reload every value came back:
+  subject, source statement, commitment text, both period dates, criterion wording
+  and criterion measure; the restored-draft notice appeared; the confirmation
+  checkbox was unchecked, as designed.
+- Gates: `tsc --noEmit` clean, `348 passed` (34 files), `vite build` ok.
+
+NEXT:
+- Drive the remaining five writes (evidence, review request, challenge, withdraw,
+  supersede) through the same browser harness.
+- Contract items 4 and 7, still open.
+- Optional tidy: delete `frontend/src/styles/app.test.css` (unimported scratch file
+  whose only rule, `flex-wrap: nowrap`, is the one that caused the 360px overflow)
+  and `frontend/test-results/`; fix the stale address in `frontend/.env.example`.
+
+BLOCKED:
+- Nothing new. Signing a real transaction is still the user's step; the stub wallet
+  proves the app reaches the wallet but cannot sign.
